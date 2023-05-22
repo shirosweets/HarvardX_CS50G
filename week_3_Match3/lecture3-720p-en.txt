@@ -1,0 +1,2148 @@
+[MUSIC PLAYING]
+
+SPEAKER 1: Hello.
+Welcome to lecture three of GD50.
+Today, we're going be talking about Match 3, as shown by the little cubes
+here on the slide.
+Match 3 originated a little earlier than 2001,
+but the first big game that came out that was
+a sort of genre staple of Match 3 was Bejeweled, shown here on the screen.
+This is a more modern incarnation of Bejeweled,
+but it came out originally in 2001.
+It was actually a web browser game, and the formula is very simple.
+The premise is you have a grid of different colored or shaped items,
+usually pretty small, like eight by eight, or so.
+And your goal is just to simply, like the name says, match three or more
+of them in a row.
+If you do, you get a certain number of points.
+Matching usually more than three gives you more points, or a bonus.
+And whenever you match three, the blocks will disappear from the grid,
+and they'll be replaced by more blocks.
+And the ones that you made holes for, the blocks above them
+will come down via gravity.
+This is a more modern incarnation of the formula.
+This is Candy Crush, which I think most people know.
+It was a very big hit on mobile devices, and otherwise around 2013, 2012,
+and that's probably the most recent big Match 3 style game that's come out,
+but there are a lot of other takes on it--
+different versions that try to add new features, and stuff.
+This is the game that we'll be putting together today, and I'll show you how,
+and we'll be covering a few other things as well.
+So the topics today, we'll be covering, first
+of all, a fundamental concept in dynamic languages, a lot of dynamic languages,
+and also Lua.
+It's called anonymous functions, which are functions
+that are first class, meaning that they operate as data types,
+and so we can do some fancy stuff with those.
+Tweening, which means just taking one thing,
+and interpolating its value between two values from 1,
+to a destination value over time, which is a very important thing in games.
+You can do things like move objects.
+We can also tween their opacity.
+Just sort of asynchronous behavior, and asynchronous variable manipulation.
+Timers, very important.
+We can time something to happen at certain intervals,
+or after a certain length of time has passed
+to get us past the idea of storing different timed variables,
+or different counters, and break away, and keep timer objects that
+will take care of this for us.
+We'll see how we do that with a specific library.
+And then we'll get to the actual details of Match 3, and how to solve matches,
+and how to account for that.
+Fill in the grid, account for when we actually solve a match,
+and repopulate it once we've done so.
+We'll talk about how to do this procedurally.
+It's very simple compared to, I think, Breakout's more procedural layout
+system, but it's still randomisation, and we'll talk about that.
+And then last, if we have time, we'll talk about sprite art,
+and palettes, which is a big fundamental thing when you're doing 2D game
+development, and something that this, and Breakout's sprite sheet
+took advantage of was the idea of using, on purpose, a restricted set of colors,
+a palette for creating your 2D art, and there
+are a lot of really cool, and impressive things we can do with that.
+But first, I'd like to actually show what we'll be running today in class.
+So I'm going to come here into my directory.
+Make sure I'm in the right place, which I am.
+So this is part of the distribution code, which is online.
+So there's a Match 3 directory.
+And would anybody like to come demo it in class?
+
+All right, [? Tony. ?] Come on up.
+All right, so whenever you're ready, go ahead, and just hit Return here.
+
+[GAME MUSIC PLAYING]
+All right, and so this is my implementation of Match 3.
+It uses a different set of tiles.
+We have things that are moving over time.
+It's arrow key based.
+
+So if you press Enter on any tile, you can flip it with another tile.
+It doesn't have to be a match, in this case.
+So you can-- yeah.
+Yeah, you kind of got an unlucky board.
+There, at the very bottom, I see there's a few that--
+some brown ones you can match together.
+So once you match them together, the tiles come down to repopulate.
+You get new tiles up top.
+
+And so notice, we have a timer on the left as well.
+It's something that's counting down.
+We'll see how this is actually done with the library we'll be using, as opposed
+to managing a counter variable keeping track of it over time.
+
+A lot of games will actually implement it so you have to-- you can only,
+and this will be part of the assignment, actually,
+where you can only move a tile if it creates a match.
+In this case, there's a--
+and we can see the timer counting down, and then once you-- yeah,
+if you don't get past the goal, there's a game over.
+But thanks, [? Tony. ?] I appreciate it.
+AUDIENCE: No problem.
+SPEAKER 1: So that's the game in a nutshell.
+And another thing I want to point out to is
+the transition, the white transitions, and then the level text.
+Those are all done with timers that we'll be using,
+and tweens, which we'll be covering in class here
+as some of our early examples.
+But there's a lot of stuff that we haven't touched on, but also
+a lot that we have.
+It uses sprites, and a sprite sheet, and we've done that thing before.
+We chop up a sprite sheet, and then take out the whatever individual quads
+you need, and draw them to the screen.
+Here's what our goal is, which is we have a title screen with Match 3,
+start, and quit game in this case.
+A little bit simpler.
+No high scores this time just because we've already covered that,
+but we also have a level screen.
+It tells us what level we're on before we can actually play,
+and there will be a transition box with text in it.
+It'll come down, stop, and then come down again.
+So almost like chain behavior, which we'll see how we implement that too.
+And then lastly, on the bottom there is our main game screen,
+where we have a level, a score, and then a goal.
+If you get the goal amount of points before the timer runs out,
+then you go to level 2, and level 3, and level 4,
+and the score increases by a multiplied factor each time.
+So the first thing I'd like to start talking about today
+is how we actually get timer behavior using something a little bit more
+than just keeping track of some variable that we set to 0,
+and then adding dt to it every update.
+There's a better way to do that, but first, why don't we
+go ahead, and look at timer0.
+And so what I'm going to do is go into the timer0 directory.
+I'm going run it, and we can see here, in the middle of the screen,
+just a very simple--
+just a label that just says timer, and then x seconds,
+where obviously the x is incrementing over time every second.
+So a crude way, what would be an easy way to implement this?
+
+AUDIENCE: Do you like [INAUDIBLE] random in Flappy Bird [INAUDIBLE] randomizer
+[INAUDIBLE] if you just keep track of your delta prime
+and add it to some variable outside [INAUDIBLE] you do something else?
+You could even just display the variable [INAUDIBLE]..
+SPEAKER 1: Yes.
+So the response was keep some variable that you modify with dt in update,
+or display the variable.
+Yeah, that's definitely a way.
+Did you have--
+AUDIENCE: Yeah, I was just going to say, keep a float variable,
+and constantly add a dt to it, and display it,
+but display the truncated version.
+SPEAKER 1: Yeah.
+So keep a float variable, but just truncate the delta time off of it.
+You could do that, definitely.
+We'll take a look here as to actually how I did do it.
+It's very similar to that.
+This is the wrong directory, though.
+So it's in timer0 in main.
+So we do have a variable.
+So the current second here, which we are going to keep track of 0, 1, 2.
+Lua doesn't really have the notion of truncate a float
+because when you take a number that's floating point,
+and you make it into a string, you actually
+have to do string substitution on it where
+you use a function called g sub to take off the last part manually
+because it doesn't really differentiate between ints and floats.
+It just has a number data type.
+But we can do this by just keeping track of
+whether or not we've passed a certain length of time
+because we know dt is given to us in seconds.
+We can just add to our variable, and then every time we've
+gone over 1, because it gives us--
+it gives you usually like .013, whatever 1/60 or approximately 1/60 of a second
+is.
+Once our timer-- we're going to keep a timer variable-- equals 1,
+we'll just increment current second by 1,
+and then we'll set that timer back to 0, and then
+we'll just repeat over, and over again.
+We'll actually use modulus so in case we go slightly over 1 second,
+we can account for that.
+We do that here.
+So second timer gets second timer plus delta time,
+and then if it's greater than 1.
+So if a full second has elapsed, just increment current second,
+and then modulo a second timer by 1.
+And Lua is a little different in that most languages only let
+you modulo something if it's an integer, but since there is no differentiation,
+you can actually modulo floats, and you'll
+get the floating point value leftover.
+And so that's the basic way of actually doing that,
+but there's a couple of things wrong with it.
+So does anybody want to suggest what is potentially bad or unscalable
+about this kind of approach?
+
+Well, I'll show you timer1 so we can maybe
+get a sense of how this could kind of get out of hand pretty quickly.
+So let's say-- first, I'll run timer1.
+So let's go into timer1 here, and notice now we have five labels.
+They're running at different intervals.
+The first timer, it's incrementing every 1 second,
+the second timer is incrementing every 4 seconds,
+the third one is incrementing every 4 seconds, and then so on, 3, and then 2.
+So if we wanted to do the same approach that we just did,
+this is what we would do.
+We have five variables, five timers.
+Because we want to keep track of whether or not
+something's gone over more than just one second,
+it's not super easy to just put this all in a table,
+and iterate over it, and use your iteration logic to do that.
+We actually, because they're in some sort of random, who knows what order,
+timer2 takes 2 seconds, OK, timer3 takes 4 seconds, timer4 takes 3, and then 2,
+you have to unmanageably keep all of this in separate variables.
+[? Yes, Tony ?]
+AUDIENCE: Couldn't you just use one second timer, or even one variable,
+and then just in the display [INAUDIBLE]
+SPEAKER 1: You could.
+Yeah, in this case, you could.
+Again, Lua's display, it's a little bit funky when you--
+you have to do g sub, and some weird string stuff,
+but yes, you could do that.
+AUDIENCE: Couldn't you just do modulo 1, and then take that value as a string?
+Is that the equivalent of truncating?
+SPEAKER 1: Modulo 1 would still give you the floating point value
+because there's only one number type.
+So if we modulo 1.00157 by 1, we'd get 0.00157.
+AUDIENCE: Oh.
+OK.
+If you subtracted from that value, from I don't know.
+So it's a value minus the value of modulo 1, I guess.
+SPEAKER 1: So yeah.
+It was proposed that we've used modulo, and we could.
+In short, we could, but what if we're not just
+printing a value to the screen.
+What if we have 10 different things, like 10 different creatures that
+are all doing different things over time,
+and we don't necessarily want to have to keep a timer for each,
+and every one of those things.
+In a simple example like this, yeah, there's probably a--
+on purpose, it's also a little bit convoluted just
+to illustrate the problem.
+But yes, there are shortcuts for this, but the fundamental problem
+is how can we get rid of having five different timers for something?
+And by the way, I'll go to the next slide.
+Timer0, the simple way.
+Timer1, the ugly way.
+Timer2 is the clean way that I found using this ecosystem.
+There's a wonderful library, and you could implement this yourself.
+The fundamental idea is have a global timer
+object that then manages all of these different things going
+on using the power of what I alluded to earlier, anonymous functions,
+and I'll show you how that works.
+So in main.lua of timer2, we have a set of intervals.
+We have a set of counters.
+
+And then what we're doing here is we're just saying for i gets 1 to 5,
+we're calling a function call timer.every.
+So if you're familiar with JavaScript programming,
+there's a set interval function which lets
+you do something every length of time.
+So first of all, timer is just a library.
+We've just required it here.
+It's part of the knife ecosystem, and then
+here, we have a couple of functions, timer.every, and timer.after
+that we'll use.
+Well, basically, what it does is you give it
+a length of time-- timer.every seconds.
+It's in seconds, and you can give it fractional seconds.
+You're passing in just a function here, just an anonymous function.
+It doesn't have a name, but because Lua, and a lot of dynamic languages
+treat functions as first class citizens, as it
+called, because they are data types, you can just pass them into functions.
+This allows us to do behavior like this that would otherwise
+be a little bit tricky to do.
+We can just say after this block of time,
+assuming we've built some structure that is probably just storing
+a table with a bunch of things that have a length of time in them,
+just call this block of code later.
+It's called a callback function.
+We're just going to call it back, and then we're just going to do this.
+We're going to say counters i gets counters i plus 1.
+So we have all of these intervals, and all of these counters.
+So it will just, basically, manage that for us,
+and now we don't have five variables.
+You do have to set whatever you want those to be.
+That's your that's your primitive at this point.
+You just need the lengths of time, depending on your problem.
+In this case, that's all we need.
+You might need more than that, depending on what you want to do with timer.
+But in this case, we just want to increment in value over time.
+So keep counters, and then just keep track of the intervals,
+and then our code's gone from I don't know how many lines.
+It was a lot larger--
+I think was 96 lines, down to 98 lines, down to 70,
+and this is incredibly scalable.
+If we wanted to add another one that's 8 for example,
+we just need to add 8, and then that.
+I guess I'd have to do this as well.
+I gets 5 to 6, and then you want to-- the computer that requires me
+to off my user so I can make changes.
+We'll just real quickly see if I didn't mess up.
+
+And so yeah, basically we're deferring everything to timer now.
+We get the exact same behavior, but a much smaller length of code.
+And the nice thing is it's very declarative.
+We can just say OK, every something seconds, I want this chunk of behavior
+to happen.
+I don't have to see OK, I've got timers up here, I've got counters here.
+OK, down in my draw function, OK, I've got to draw all these.
+It's iterative, and it's declarative, and that's the ultimate goal.
+And here, at the very bottom, it did actually work.
+Now it's working every eight seconds, which is nice.
+One, two, there we go.
+Super easy to extend.
+We're going to be using it a lot in this problem set,
+and also in future lectures just because it's a lot easier than keeping
+track of a bunch of counter variables.
+And there's another function that we're seeing here--
+timer.after because sometimes you just want to wait a certain length of time.
+Maybe you have every 1 second for 5 seconds you want a bomb to tick,
+and then after 5 seconds, you want it to blow up,
+and you could also model that with another function that we'll see soon,
+but these are probably the two core time-based functions.
+And you can go here to this URL able to see the knife library.
+There's a bunch of modules that are really nice.
+We just happen to be using timer, and it's
+tween, and every after functions primarily in this problem.
+But we'll use another one called the event in the Zelda [? p-set, ?] where
+we actually look at how to dispatch events, and triggers, and stuff,
+and to prevent us from checking every frame.
+Oh, what do we have to do?
+If some wall is broken, this frame, then do this.
+We can just dispatch an event that we blow up a wall.
+We'll get to that.
+Any questions at all about how those two models differ, and how they work?
+
+OK, cool.
+So the next thing I want to look at-- so we can tie that back into also,
+real quick, if we want.
+Match 3-- whoops, and then there's a timer that's
+manipulating the text on the screen.
+All of those letters in the-- this is in the start state of the game code.
+All of those letters have a color associated with them,
+but they're on a timer so that after every 0.075 seconds,
+they'll go to another color, and to another color.
+And so we don't have to keep track of every letter's
+individual color, and a timer for it.
+We can just change them all.
+If we start the game, something else that's on a timer, the timer,
+actually, there, which is just decrementing some value.
+Every one second, decrement timer by 1, and that's it,
+and we don't have to keep any-- we don't have to say anything more than just
+that, and that's what's really nice about using that kind of model.
+So another thing that you probably also noticed, and I'll run it again,
+is this fade out, and fade in, and also that animation.
+Those are things that are happening over time.
+We don't actually-- we can just sort of manipulate them.
+We can keep track of some sort of counter for it.
+We can also just say over this length of time, change this value to this value,
+and that's a much easier way to model the problem mentally.
+And so we'll illustrate that.
+First, I'm going to go to tween0.
+So tween0 is the simple way to do something.
+So I'm going to illustrate tweening here with Flappy Bird just going
+left to right.
+So up there, that's what happens when you print out the number, by the way,
+just by default.
+And so if you wanted to truncate it, yeah, you
+could just g sub the first two, I guess, depending on how large it is,
+and that would have the effect of displaying it as just an integer.
+But we can see that over two seconds, we've had--
+and there's a little bit of overlap just because delta time can
+go a little bit over two seconds when you're adding to it because it just
+adds whatever length of time as a float has elapsed since the last frame.
+In this case, we're just adding it until it's greater than or equal to 2.
+So in this case, we went 0.01 over 2 by the time that actually ended.
+Some iterations will be less than that.
+So this one will be--
+yeah, see, that one was less than 2.01.
+It just depends on your computer, and your specs.
+But Flappy Bird starts on the very left.
+So he's got an x-coordinate, and then at the very end,
+he's got another x-coordinate.
+So the simple solution is what?
+
+We know that we want this to elapse over two seconds.
+So what we can do is I'm going to pull up tween0.
+
+And MOVE_DURATION here, it's a constant of 2 seconds just
+for the sake of this example.
+A sprite here, just a simple image.
+I'm putting everything in one code file this time, as opposed to breaking it
+out into subclasses just for simplicity because these are such small examples.
+But we're setting it's x and y.
+Oh, and this is another Lua trick, by the way.
+You can assign two variables to two values using a comma here.
+So flappyX comma flappyY gets 0, and then VIRTUAL_HEIGHT
+divided by 2 minus 8.
+Setting this x to 0, we have a timer here, and then it's end x.
+So we want it to end at the end of the screen.
+So we're going to say virtual width minus his width, an then
+the usual boilerplate for getting a project set to go.
+If it's less than the move duration-- so if timer is 0 going up to 2,
+but it's not quite 2 yet, we're going to add dt to it, and then we're going to,
+basically, assign it to either the lowest of end x,
+so it will never go higher than end x, or end x times the ratio of timer
+over move duration.
+So timer over move duration, if it's less than 2,
+that's going to be some value, some fractional amount less than 1.
+So it's going to basically just scale it,
+depending on how far we've moved the timer between 0 and 2.
+So just a scaling operation.
+This happens to only work in the context of moving something from left to right,
+or from 0 to something else, but it's a crude, basic way of illustrating
+a very basic tween operation.
+That's what it essentially is.
+It's a multiplier of some ratio of how much time has passed,
+versus how much time we're actually looking to elapse.
+And that has the effect, once again, of just--
+it's scaling the ratio because it's timer over moved duration.
+It's something over 2, but it's not quite 2 over 2.
+Until it gets 2 over 2, and it's 1, then end x times 1 is going to be end x.
+But before that, it's going to be some fraction of end x between 0 and end x.
+So it has the effect of giving us a very basic tween, but it's a little bit--
+we have a little bit to manage here.
+It doesn't really feel super clean.
+Do you guys have any questions about how this works?
+OK.
+So we're going to go here.
+So first of all, any thoughts about how that might not be super scalable,
+looking back at the last example?
+
+AUDIENCE: I guess like the situation before,
+getting a lot of objects moving on the screen.
+SPEAKER 1: Yeah, and what if your index is different for every single one?
+Then you have kind of a mess.
+What if we had something like this?
+
+You don't want to keep track of an end to x.
+They all happened to have the same end x,
+but notice they're moving at different rates.
+They're all moving at some sort of random amount.
+AUDIENCE: How many are there?
+SPEAKER 1: There's 1,000.
+We could go crazier if we wanted.
+This is a fun thing to do, is stress testing.
+So if I go to tween1, and I go to main, timer max is 10.
+So we're saying that the longest possible time
+any bird can take to get from left to right is going be 10 seconds.
+So right here, we're using a table based approach here.
+We're actually keeping track of 1,000 birds, and we're saying,
+OK, here's an empty table from 1 to 1,000.
+Add a new bird, and in this case, we're not adding a bird object, or anything.
+It's just a table.
+They all start x equals 0, left side.
+Their y is random.
+So they can be anywhere between the top and the bottom of the screen.
+So VIRTUAL_HEIGHT minus 24.
+24 happens to be the height of the sprite,
+and I should have probably put Flappy sprite get height right there.
+And then rate, they're all going to have their own rate.
+So rate gets math.random.
+Math.random without a value passed into it
+gives you a fractional value between 0 and 0.999999.
+What this has the effect of doing is math.random with just two values,
+if you pass in 10 and 50, it's going to give you 10 to 50,
+but they're always going to be integer values.
+You can't say like 10.0 and 50.0, and assume that it
+will know what you're talking about.
+It's just going to be integers.
+So if you give it one value, it will know.
+OK, you're asking me for a float between 0 and 0.999999.
+That's going to act as the fractional part of whatever value we
+might want to generate using a math.random with a value passed in.
+So here, we're saying OK, math.random, TIMER_MAX minus 1.
+So TIMER_MAX is 9.
+So our TIMER_MAX is 10, sorry.
+So if we subtract 1 from that, this is math.random 10.
+So we're going to get a value between 1 and 9.
+So TIMER_MAX minus 1 is 9.
+Sorry if I said 10.
+TIMER_MAX is 10, TIMER_MAX minus 1 is 9, but we're
+adding math.random, some fractional amount.
+So whatever value we choose between 1--
+actually between-- yeah, between 1 and 9,
+it's going to be that value, point something.
+So this is how you get random--
+basically, at the end of the day, this is
+how you get random floating point numbers in Lua and Love2D.
+Does that make sense?
+Do you guys have questions about that?
+AUDIENCE: So your final rate could be anywhere from 0 to--
+SPEAKER 1: Final rate is going to be anywhere from 1-- in this case from,
+1 to 9.999999.
+If we wanted it to be 0, we could do that,
+and that'll give us the effect of taking whatever we get, and subtracting 1.
+So now it will be between 0 and 8.999999.
+And if we did this--
+
+AUDIENCE: Couldn't each math.random end up at 0?
+SPEAKER 1: No, because math.random, if you pass in a value,
+it'll always do from 1 to some value.
+The question was will math.random give you 0 if you pass in a value?
+And math.random, by default, gives you between 1 and something else.
+And so that's why we do this.
+That's not why we do this.
+We do this to add the fractional part so that we can get
+fractional floats between some value.
+But yeah, if you wanted it to be between 0, and something else,
+you would just subtract 1 from the final result
+because we know that we're always going to get from 1 to some value.
+If you minus from 1, you will never go below 0.
+It will always be 0 to something else, and then in that case,
+we probably would just take off the minus 1
+from TIMER_MAX so that it will be between 0 and 9.999999 in this case.
+But as a design decision, I made it so that we would always
+have at least a rate of 1 because then it
+could get really, really slow if it's like 0.005 or something like that.
+You wouldn't want that.
+It would take ages.
+
+OK, so we have a timer.
+We're not using knife.timer in this case yet.
+Basically, in update, we're just saying as long as timer max is less than--
+timer is less than timer max.
+This update logic will only run as long as we haven't gone over timer max.
+Increment it, and then for each bird, basically, we're
+doing the same thing that we did before, except we're using
+that bird's rate as the scale factor.
+Yeah, the denominator of that ratio, and that
+will have the effect of multiplying all of those birds
+individually, based on their own rate, rather than
+some global rate, if that makes sense.
+And then here, we're just drawing all of them at their own x and y.
+And just again, we're just storing birds are just
+a table with a few variables in this case.
+Just a very simple shell, and it has the effect of--
+oh, and one thing I wanted to do is just add a 0 there.
+I've got to do this every time because I didn't
+set my permissions appropriately.
+But now there's going to be 10,000 birds.
+So let's see how this looks.
+So it looks pretty similar, actually, but it's a little more condensed now.
+I don't notice a frame rate drop.
+If we wanted, we could go down to love.draw, and love.graphics.printf
+at FPS, and then to string, love.timer.getFPS, and then
+let's set it to 4, and then VIRTUAL_HEIGHT minus 16,
+and then got to do this again.
+This should have the effect of giving us our frame rate.
+So we can really stress test this, and see what the--
+oh.
+I made a mistake.
+OK, let's see.
+What did I do?
+Push.start.
+I'm guessing I missed a--
+yeah, I missed a--
+
+do that, and then that, and then save it again.
+Sorry about that.
+There won't be too many of these edits, but I figured
+this would be fun to illustrate.
+So now, this should work.
+
+Printf, so we have that.
+Oh, right, and then it just needs to be print.
+It doesn't need to be printf.
+Got to save again.
+Sorry.
+This will be worth it, I hope.
+There we go, 5160.
+OK, it takes a couple of seconds.
+It has to interpolate between the last couple of times
+that it's pulled for frames, and when you start up,
+it doesn't have the data it needs.
+So 10,000, easy.
+Let's do like a million.
+So we have 10,000, 100,000, a million.
+I really got to change those permissions.
+Getting good at practicing my password, though.
+Going to go ahead, and do that.
+Ooh.
+Oh, my laptop is suffering.
+Oh man, but they're all moving independent of frame rate.
+This is just a testament to how powerful delta time is.
+They all move there after 10 seconds.
+We've got to 10.6 seconds, which is not good.
+That means that's how long passed between the last frame,
+but my laptop clearly can not handle a million birds on the screen,
+but it can handle 10,000, or maybe even 100,000.
+And that's just a fun way--
+a fun thing to do.
+In general, when you want to stress test your game,
+just put the frames per second on, and just go nuts.
+Just add a lot of stuff.
+Just see what your computer is capable of because you
+can find new, fun things that way, I guess, and maybe just
+see how good your code is too.
+So tween0, simple way.
+We have just variables, and one counter.
+No tables or anything.
+Tween2 is a good way for if we have a lot of things
+that we want to manipulate over time.
+But what if now we want some of them to change
+their opacity over time or something?
+It starts to get a little bit more complicated.
+And this is, by the way, I should've put this earlier in the code,
+but this is the knife library is responsible for timer,
+and a lot of other things that we'll be looking at,
+and it's got a bunch of modules here listed--
+behavior for state machines, which is like what
+we've been doing for state machines, but they have their own version of it.
+Knife.bind, so you can pre-bind arguments to functions,
+and create subfunction.
+It's called currying, but create subfunctions of other functions
+that have pre-determined variables.
+Knife.chain, we'll see, actually, how that can be used coming up later.
+Convoke is for coroutines.
+We'll see coroutines in the context of Unity,
+but basically, they're functions that can pause their state for later.
+Knife.event we'll use in two weeks for Zelda,
+maybe even next week if I can fit it in for Mario.
+Memoize is for memoization.
+It's like a dynamic programming related thing.
+Serialized system.
+System is going to be useful to know about in context of Unity as well.
+Unity uses an entity component system for much of its structure.
+Knife.test, and then lastly, knife.timer,
+which is what we'll end up using, and this is probably my favorite library
+that exists in the Love2D ecosystem.
+And so with that said, we'll look at tween2 now.
+I'm going to go here into tween2, and so now we have not just movement, but also
+their opacity.
+They all start at different opacity levels,
+and we want to not only change their movement
+over time, but also the opacity.
+So it would get a little bit trickier if we decided
+to do that with our current situation.
+Totally doable, but how would we go about changing, just right now,
+their opacity just as is?
+How do you change a spite's opacity?
+AUDIENCE: The variable and the graphics [INAUDIBLE]
+SPEAKER 1: Is it a variable-- can you say that one more time?
+AUDIENCE: I forget the exact function name,
+but it's like love.graphics to put an image on the screen.
+SPEAKER 1: The love.graphics.draw.
+AUDIENCE: Wasn't there an argument in that?
+SPEAKER 1: So it's actually not an argument to that function.
+So I'll show you now.
+So in order to draw something at some different opacity,
+it's actually love.graphics.setcolor, and we do that here.
+So recall that Love2D is a state machine, and how it draws things.
+You can basically set a color onto anything
+that you draw, whether it's a font, an image, or a shape.
+And if you just pass in 255, 255, 255, that's white.
+And then if you give it an opacity, which
+is the fourth parameter, which is the alpha component of that,
+then that's how transparent it will be.
+And so we could have done this with other colors too.
+We could have done this with like if we wanted to tint it red,
+and also have it be sort of transparent.
+We could do that if we just did 25500 bird.opacity.
+But if you just want to manipulate opacity independent of--
+or its transparency or its alpha independent of its color,
+and keep it the same exact color, you just do it white.
+If you did it black, nothing would show up.
+Is that true, actually?
+Let me verify that.
+
+Pretty sure that's right, but I could be wrong.
+
+I'm right, thankfully.
+OK.
+That or they're just black, and there's a black background too.
+Do you have a question, [? Tony? ?]
+AUDIENCE: No.
+SPEAKER 1: Oh, OK.
+So we'll take it on faith that that is correct.
+And back to the gist of this example.
+We have TIMER_MAX again.
+Actually, we really haven't changed much.
+What we have changed is we still have our birds.
+We need to keep track of their x, of their y, of their rate.
+Well, not necessarily their rate.
+Oh, well, their rate, yeah, because we're actually
+going to loop over each of these, and then create
+a timer between operations for them.
+And their opacity.
+Oh right, they start with an opacity of 0,
+and faded to 55, regardless of their--
+
+their opacity changes at the same rate as their x does.
+So the farther away, the longer they take,
+the slower they fade to fully opaque, and we see this here.
+So for k bird and pairs of birds.
+So for every bird, we're just going to set a tween, and then this is tween.
+So timer.tween is I think I have a slide on it here, right?
+A super cool useful function, super easy to use too, it
+takes iteration just like timer.every, timer.after, and it takes a definition.
+So in this case, it doesn't take an anonymous function
+like the other ones did because we're not really
+saying I want to do some sort of undefined behavior
+over the course of this operation.
+What I want to do is just change some values.
+I want to interpolate them.
+So what we're going to do is just pass in a-- this is the syntax for it.
+We pass in square brackets, the actual thing that we want to change.
+In this case, I want to change bird.
+I want bird to change in some way, and then
+what I want it's values to change toward are these.
+I want it's x to change to end x, and I want it's opacity to go to 255.
+And I wanted to do it over bird.rate, and so this bird.rate,
+every bird is storing it.
+So for birds that got a rate of 2, then it's
+x is going to go to end x over the course of 2 seconds,
+and it's opacity is going to go to 255 over the course of 2 seconds.
+And you can put as many things as you want, and as many--
+you can put as many variables here, and as many entities.
+Entities being anything that you want to change that
+has a field, any table-based or class-based structure.
+You can pass any of those in here, and just tween them all at the same--
+if they all have the same rate, and then just get that operation that way.
+And so that has the effect here of all we need to do is just add--
+it's like two lines of code, but now we've easily changed it so
+that we can just tween two things at once,
+and that's the power of timer.tween, and we'll see that.
+So back to, actually, Match 3, if we want to look at that again.
+
+This is a tween, that's a tween, that's a tween, and that's a tween.
+So the white, the foreground there, is just a rectangle
+that fills the whole screen.
+It's just a white rectangle.
+I have it set to timer.tween opacity from 0 to 255.
+Before that gets called, if we go from the start to the begin game state,
+and then if we go from at the beginning of the game state,
+before the level text comes down, it's going from 255 to 0.
+So it's just the reverse of that is the tween, and then all it's doing
+is just drawing a rectangle to the screen.
+But that's how you get a very simple transition.
+Same thing for fade to black.
+If you want to fade the whole screen to black,
+just draw a rectangle the size of the screen,
+and then just tween its opacity from 0 to 255, and then vise versa.
+That's how you get a simple transition.
+It can be any color you want.
+It can be a red transition.
+And then the level text, that's just a tween on the y, right?
+And then I just have some rectangle, love.graphics.rectangle with text,
+and it just says timer.tween to like VIRTUAL_HEIGHT divided by 2 minus 8,
+and then timer.after1.
+So we can actually pull this up if we want.
+We can see how this works.
+Today's going to be a little wider on the main distro code
+just because a lot of this is more conceptual.
+But in the begin game state-- well, actually, in the start state
+is when we go.
+So these colors, and letter table, and stuff that's all for the Match 3 text,
+if you're curious.
+So these are all back to what I said earlier about the beginning screen
+having Match 3 with the different colors going on a timer.
+These are just tables of colors.
+So notice this is RGBA, and then I'm just performing
+a shuffle on them every 0.075 seconds.
+So 2 will get 1, and vise versa.
+It'll all go down, and then 6 will come up here to 1 every 0.75 seconds.
+And then M gets mapped to this one, A gets mapped to this one,
+T to this one, C, H, 3, and that's it.
+That's done here at line 44 of the start state.
+But what I was going to show you was the tween for the transitions.
+So here in start state, in the update function says,
+it says if we press Enter, and our current menu item
+is 1, meaning that we're on start game, not quit game, timer.tween here.
+And notice that we have a finish function, which will show--
+I'm actually going to show you in the next couple of examples, the chain
+examples.
+But finish is just a function that you can
+run after any timer that just says, hey, when this is finished,
+run this block of code, and notice that takes anonymous function here,
+just like that.
+So we can say OK, tween, over the course of one second,
+notice we're passing self into here because we want to manipulate ourself.
+We have a value that we want to manipulate.
+So self.transitionAlpha.
+So we're saying I want to take my transition alpha,
+and I want it to go to 255, and we set it to 0 by default. So at the very top,
+here, at line 60, transition alpha is just our white rectangle that
+fills the screen.
+I'm just saying set it to 0 so we don't see it at all.
+It's going to be invisible.
+It's still there no matter what.
+It's hidden, but after we press Enter, tween
+it to 255 over the course of 1 second, and then when that's finished,
+notice this is familiar, right?
+gStateMachine change begin game.
+We're going to go with the begin game state after that.
+Our passing level gets 1.
+We're starting the game, and then we're going to remove this color.
+Remove that timer from the-- this is actually
+unnecessary in this circumstance, but you can remove timers from timer.
+If you have something going constantly--
+in this case, the color timer, and let's say we move from this state
+to the next state, the next state doesn't have all those colors,
+right, the Match 3 colors.
+So we don't need to keep-- because timer is a global object,
+it's going to keep updating over, and over again.
+We don't need certain timers to exist indefinitely.
+We can just remove this one because it's not relevant anymore.
+But this is all it takes just to give us a simple transition from one screen
+to another.
+Just give this transition alpha 255 down in the actual render function.
+Where is it?
+It is right here.
+So right here.
+Draw our transition rect.
+It's going to be drawn last so that it draws over everything when we finally
+do get a transition, but self.transitionAlpha,
+and that's all we really need.
+We need to keep the variable, and then whenever
+we want to perform like some sort of operation over time,
+just use timer.tween.
+It's that easy.
+But that was a little bit of a--
+it was a relevant tangent.
+We would have talked about it anyway, but that's the first use case
+that I think of in this project, and then also the label.
+I'll show you the label in a little bit.
+But I think before we do that, let's talk about chaining.
+So you guys have probably played a lot of games
+where maybe there's a cut scene, and you're looking at a character,
+and they walk, and then maybe they turn, and they walk in another direction,
+and they walk up, and then they speak to you.
+There's a dialog box, and then maybe they do an animation or something,
+and then maybe some other things happen that are
+on some sort of predestined path.
+It's a very discrete path.
+It's not random.
+It's laid out in advance.
+It's a series of steps, one consecutive.
+That's the concept of chaining things together is relevant
+when we get to sort of timing things because when we finish timing
+something-- because usually, a lot of those things
+happen over the course of time.
+Over the course of five seconds, NPC1 will walk up north,
+and then they'll turn left, and then they'll say something.
+We want to model that.
+We don't want to basically have variables that say
+if NPC1 is at this tile, then do this.
+If NPC.dialogueOpen, then do this.
+We basically want to say walk here, do this, do this,
+do this in a flat, easy-- or at least semi-flat, easy sequence of steps.
+I have a few examples to illustrate how we can do that using timer
+for some semi-basic use cases.
+So chain0 is the first one.
+So this one is just Flappy Bird.
+He's going left to right, then he goes down, then he goes back left again,
+and then he goes up.
+What's the basic way that we model this--
+that we implement this?
+Just off the cuff.
+
+AUDIENCE: We can use that finish thing to do the--
+SPEAKER 1: We would.
+If we didn't know about finish, how would we probably do it?
+I shouldn't have given away finish before I got to that example.
+I kind of got ahead of myself.
+
+We can imagine somebody maybe saying OK, I
+want Flappy to move left to right, right to bottom, bottom to left,
+bottom to up.
+Maybe they're going to say if Flappy is less than--
+or has reached first point, move left, else if he's reached bottom or point 2,
+move down, and then move left, move up.
+And in both of those cases, they're changing the x and y value of Flappy,
+and it's basically just a lot of ifs, and state variables.
+
+I see it in a surprising amount of code.
+Just state being kept all over the place.
+The first implementation of that that we'll look at uses something similar.
+So in chain0, and there's only two examples here, actually, for chain.
+But chain0, there's a movement time, and then a timer.
+We're going to be semi-clean about it.
+We have some destinations.
+OK, so we have destination1.
+I know that I don't necessarily want to keep track of a bunch of if statements,
+but I'm going for--
+assuming that I don't know what timer can do for us,
+here, I'm just saying OK, I want this first destination
+to be virtual width minus his width, and then
+keep him at y0 So right edge of the screen, assuming that he starts at 0,0.
+And then I want his second destination to be that same side on the x-axis,
+but I want the y to be virtual height minus his height.
+So go to the bottom of the screen.
+Then I want it to be 0 in his height from the bottom of the screen,
+and then back to 0,0.
+So we have those modeled, and then I want to keep a flag in each of those.
+I want to know whether he's reached that state yet.
+So I'm going to iterate over that table I just created,
+and just add a new key to each of these called reached,
+and just set it to false.
+Just by default, he hasn't reached all of them yet.
+And then in the update, basically, I'm going
+to set a timer to the min of movement time.
+So it will never go higher than movement time, and then timer plus delta time.
+And then for every destination in destinations, if it wasn't reached,
+then set its x and y, FlappyX and FlappyY, which are, in this case,
+we're uncleanly using global variables to keep track of this.
+FlappyX and FlappyY gets baseX.
+So notice another problem.
+We have to maintain where we are relative to our next spot in order
+for this math to work because before, we just took Flappy Birds--
+basically, the timer divided by movement time
+was a ratio where we scaled the end destination,
+and assigned that to Flappy, which had the effect of moving
+Flappy left to right.
+But if we do that in the opposite, right to left,
+the math isn't the same because he's going backwards.
+He's getting negative values added to his x value.
+So we need to keep track of a base that he started at for each
+of these operations baseX, baseY.
+So at the very beginning, baseX, baseY is 0,0.
+So it's actually going to be much the same,
+but as soon as Flappy get to the right edge of the screen,
+we want baseX to be the right edge of the screen, baseY still 0,
+and then if he goes down, we want baseY to then be bottom edge of the screen,
+baseX to be right edge, and so forth.
+So what we do is we just scale.
+We're still using a timer over movement time as our scale factor,
+but we're adding the difference of our destination and our base,
+and we're multiplying by that scale factor instead.
+And so this difference, if we add it, whether we're
+moving left, or right, or down, or up, it's
+going to have the effect of filling in that gap of bridging that no matter
+where we are, no matter which direction we want to go.
+And so this is basically a fairly complete linear interpolation
+algorithm, which is the basis of tweening.
+Just interpolate some value between another value.
+It's usually modeled in geometry as the line between two segments.
+
+And then if timer gets movement time, we've
+reached our destination, reset the timer, reset or baseX and Y,
+and that has the effect of just doing what we saw earlier, which was just
+putting him point by point.
+So any questions as to how this interpolation-- how
+this way of modeling the problem works?
+
+All right, so there is a better way, a much better way thanks to timer.finish,
+which you can apply to any timer operation, including timer.tween.
+So we can basically say OK, once that operation is finished, do something.
+And this is all we have to do, we just have to say timer.tween.
+We no longer have to interpolate at all.
+That's taken care of for us by timer.
+So we're doing timer.tween over movement time.
+Flappy, set it to-- this was before we add all this in a destinations table
+with reached flags as well.
+Now, we just have the x and y here.
+So on the first movement, we want his x to be right edge of the screen,
+just like before-- y get zero.
+Once that's finished, anonymous function with another timer.tween.
+So we're saying OK, once you're finished,
+then tween him from the top right edge to the bottom right edge.
+So y gets VIRTUAL_HEIGHT minus FlappySprite getHeight.
+And then once that's finished, another anonymous function,
+another timer.tween, another finish, another anonymous function,
+another timer.tween.
+And this is, in its own way, unscalable.
+It's nested.
+There's a term for it called call back hell
+because you just get infinite downwards sloping anonymous functions with all
+this behavior.
+There are ways to flatten it, and we potentially will talk about it.
+It's part of knife.chain.
+Knife.chain has a way to turn all of these--
+basically, it would look something like this.
+It would be chain, and then it would be like moveFlappy x, y.
+MoveFlappy x2-- it wouldn't be x2, y2.
+We'd actually write these out here, but it would have the exact same effect.
+This is if you're looking to maybe implement a cut scene system, or just
+some sort of scripting system for your game
+that's very declarative, and imperative in style.
+This is the holy grail of changing behavior, and getting it to work,
+and just making it look nice, and readable.
+Yeah?
+AUDIENCE: Well, you could also pass in--
+you could pass in a table to your function of x's and y's [INAUDIBLE]
+simpler for [INAUDIBLE] to chain a lot of things.
+SPEAKER 1: Yes, you could do that too.
+The response was you could pass in a table to--
+you could iterate over a table, and within that table,
+generate a timer.tween.
+The only issue comes about with finish, and there is a way--
+I guess you could get a reference back to the timer,
+and then add a finish block to it, but then you would lose out on--
+that does work for the same function if all you're doing
+is moving something to a bunch of locations, it's absolutely true.
+But if we wanted Flappy say something, and hero disappear, and then
+hero flash, it gets a little bit trickier to do stuff like that.
+But yes, I agree.
+There are ways of modeling-- this particular example is a little bit
+repetitive, and could be modeled, I think, better
+with a function that takes advantage of the fact
+that timers can be returned, and then given new finish variables.
+I'd have to experiment with it to see because I'm actually not
+100% sure that you can add a finish.
+No, I think you can, actually.
+I think you can add a finish function to a reference
+because it's just a function on an object.
+So yeah, but independent of that, I think the goal probably
+is one, knowing how we can now chain behavior, and then two,
+striving towards flattening it.
+But in the purpose of this problem set, we'll see this a couple of times,
+and it's just worlds better than before.
+What's this, 76 lines?
+And then tween1 or chain0 was 96.
+OK, so 20 lines of code.
+And also the fact that now we have a declarative interface for modeling
+asynchronous behavior, that's really the fundamental thing,
+is not having some value that models your duration, or your counter,
+or whatever value, but just saying, hey, over this length of time,
+I want you to do this.
+I want you to do this.
+I want to do this.
+I want you to do this.
+After this length of time, I want you to do this.
+
+I always like to try and strive towards making code as declarative as possible
+just so that you can read it in the future,
+and then the people working on your code base
+can also read it well in the future, and I
+think timer does a pretty awesome job of that.
+And this is just a reference for timer finish.
+So it just takes a callback, and then once a timer function
+tween every or after has completed, it triggers that callback.
+So we're going to take a break for five minutes now, and then once we get back,
+we'll talk about swapping, and some of the algorithms we use in Match 3,
+starting with just rendering a board, getting tiles to swap, tweening them,
+and then we'll actually look at how we take falling tiles,
+and account for them, and then repopulate them.
+
+All right, we're back.
+So recall, before break we were looking at timer,
+and how to take code that was previously managed by timers, and asynchronous,
+but also very stateful, and sort of messy, and all over the place,
+and putting it into a more declarative, clean,
+easy to express format via timer.tween, timer.every, timer.after, timer.finish,
+timer;finish for any timer objects.
+So with all that out of the way, now we'll
+start talking about the actual Match 3 mechanics.
+And the very first thing that we'll look at is swap0,
+and this is the sprite sheet for Match 3 that's included in the distro.
+So as we can see, it's something that we can easily chop up with generate quads,
+as we saw before.
+Just a function provided in util.lua.
+These are all 32 by 32 pixels.
+So it would be very easy just to go through all of them,
+and basically just generate quads with the sprite sheet 32, 32,
+and just get a table with all of these individual things.
+But notice that they're blocked up into patterns of colors,
+and this has actual meaning, and value for our game
+because when something is the same color,
+and only when something is the same color, a tile is the same color,
+are we allowed to trigger a match with it.
+If we get any three or four--
+anything higher than three together in a line, vertically
+or horizontally, that's a match, and we need to remove it from the table.
+So we need some sort of way of identifying these tiles as being
+of some color, and then they also happen to have a different pattern on them.
+This one's got nothing, but then an x, and then a circle, and a square.
+So those patterns-- it's not implemented in the distro,
+but part of the assignment.
+It's actually going to make them relevant.
+But the part that is implemented is the actual matching of the colors.
+And so the first thing that we'll need to do, probably, when we actually
+get into the core code of the distribution
+is instead of just putting them into one table, categorizing them.
+Splitting it up into maybe one, two, three, four, five, six, seven, eight,
+nine times two--
+18 tables, so that we can just say gframes at color.
+So color being one to 18, and then get the index into that.
+So there's six within each one.
+So it'll be one to six.
+One to six will be the variety, with one being the base variety.
+And part of the assignment will be make sure
+that the base variety is the only one that we start with on level one,
+but then gradually introduce these other varieties.
+And you can put them in whatever hierarchy
+you want to, but make them have some sort of value
+later on top of a few other things the assignment will cover.
+But that's the spreadsheet in a nutshell,
+and we'll be splitting it that way.
+So 18 tables of quads, instead of one quad of whatever
+this amount is-- eight by 16.
+Not sure how many that is off the top of my head.
+But let's take a look at swap0 in the distribution
+so we can get a sense of what we need to do
+to begin implementing our Match 3 game.
+Notice we have require util for GenerateQuads.
+We're just going to generate for this basic example.
+We're not going to differentiate between colors, and varieties, or anything.
+We're just going to put them all into one quad, or one table of quads.
+So we're just going to use the regular GenerateQuads function.
+We're not going to differentiate them.
+We're just going to use our sprite here, our match3.png
+provided in the distro, which is the exact same image that we just
+saw on the screen.
+I'm going to just generate them.
+They're 32 by 32--
+generate the quads for them.
+They're 32 by 32 pixels.
+I'm assigning it to a table here called TileQuads.
+And then here, we're calling generateBoard,
+and so generateBoard isn't all that dissimilar to what we saw before
+with maybe the level maker in Breakout, where we just spawn a bunch of bricks,
+or a bunch of tiles, in this case.
+Except in this case, they're kept in a nice 2D array that's
+always going to be eight by eight, and that's never
+going to change just by one of the constraints of the game.
+Match 3, traditionally, is an eight by eight grid that's
+always full of tiles of some variety.
+So local tiles, it's going to be an empty table,
+and then we're going to do a nested for loop here--
+y to x.
+The standard is usually y first, and then x,
+and then we index y before x just because the individual rows in a 2D
+array, or sprite, or table will be such that, for example, if our table was
+equal to this-- oops, sorry.
+Syntax bug.
+If we did this, and then we have a table here, and a table here, and a table
+here, and we had like 0, 1, 1, 1, 1, 1, 1, 1, and then 1, 1, 1, 1.
+If we index into this table--
+so table at 0, that's going to give us another table.
+That's not going to give us--
+let's say we wanted to get the value at table 2, 3.
+The instinct might be to think I'm going to index at x, y
+just because x, y tends to be more commonly seen.
+But if we did that, and assumed that x was horizontal,
+and y is vertical in this arrangement, which is how we have it,
+then table2 wouldn't be this value here table2 would be this table here.
+The first value you passed into indexing some table when it's a nested table
+is just, in fact, the table itself, which
+is why we actually need to do-- when we want to get some value,
+we have to index at table y, x.
+So it's flipped for that reason because x is actually going to be--
+the first index is going to be these sub tables,
+or sub arrays if you're in C, or Java, or something like that.
+So when you see table y, x, and you're wondering why it's not table x,
+y, that's the reason.
+So any questions as to why that is, or how that works?
+AUDIENCE: [INAUDIBLE]
+SPEAKER 1: In this case, I was using zero based indexing,
+but Lua is one index.
+That was just habit.
+
+It was pointed out that I was using zero based indexing in my example.
+You want to use one based indexing when you're actually programming,
+and not zero based.
+But the same principle applies.
+Zero would be one in that case.
+In a general purpose language--
+most languages, if we were to abstract the problem out in a C 2D array,
+or C++, or Java, zero would be appropriate there.
+But anyways, we have a nested for loop.
+We're starting at y, and then we're going to x,
+and then basically, that has the effect of y,
+and then x, x, x, x, x, y, x, x, x, x, x.
+Just insert a blank table.
+Fill it with-- we're just using tables here.
+So we're not using any sort of tile class,
+or board class, or anything fancy.
+We're just using raw data types here.
+So we're just saying insert into tiles y, which
+by the way, if we're at x equals 1, 8, here,
+and we're in any given iteration of our outer y loop,
+tiles y will be the last table that we just inserted--
+the last blank table on the first iteration of this x loop.
+So basically, it's saying, in the inner table that I just
+put into the table that's going to represent our board, the tiles table,
+insert a new table.
+So we have a table of tables of tables.
+In the third table are the actual tiles themselves.
+You can think of this table as being a tile data type, more or less.
+Just implemented using a table.
+That has an x-coordinate, a y-coordinate, and then a tile,
+and the tile is going to be a random number that's
+going to be the index into our quads.
+So each tile holds x and y, and then notice
+that we're multiplying by 32 because we're
+going to use this to draw the tile, and the tiles are 32 pixels tall by high--
+sorry, wide by tall.
+We are going to multiply x minus 1, recall,
+because even though tables are one indexed, coordinates are zero indexed.
+So x gets that times 32, y gets that times 32,
+and then get a random number between 1, and the number of quads
+in our tile quads table.
+So recall this number sign here is just a shorthand for length of the table,
+and then we're going to return it.
+So we generated our board.
+It's a y by x grid of table rows of little tables
+that all have an x, y, and a tile ID, and the tile ID maps to the quads
+that we just generated.
+OK, that's it for the init function.
+Sorry, love.load in this example.
+The love.draw uses a function called drawBoard, and we pass in 128 by 16.
+The 128 by 16 is just xy offsets.
+We're just going to draw our board at 128, 16,
+and is it going to center our board.
+And then if we go down to drawBoard at line 89,
+gets an offsetX, offsetY, nested for loop again.
+We're just iterating back over the tiles that we got,
+and recall, actually, generateBoard returns tiles,
+and then we set board equal to the result of generateBoard.
+So down here in line 89, again, in drawBoard-- actually at line 95.
+Within this nested for loop, we're going to get a tile at board y, x,
+just so we have a shorthand reference for it.
+We don't have to say board y, x several times, which you would have to hear.
+We're going to draw the sprite--
+the quad at tile, tile, tile.tile, which, recall,
+is a random number between one and whatever
+the number of quads we have in our tile quads table.
+And then that x plus offsetX, and the y plus the offsetY, which
+has the effect of drawing every single tile in our grid at some given offset.
+And that has the result--
+and I probably should have run this, actually, in advance
+just so I could illustrate it.
+
+But we have a simple board.
+Looks nice.
+It's colorful, but it's very, very basic.
+Just a 2D render of our game.
+There's no behavior or anything.
+This is just how we draw the board.
+So any questions as to how just the drawing, and the creation of the board
+work?
+
+OK.
+So swap1 is a little bit more complicated.
+It builds on what we did before, what we just
+built, which was getting the board implemented, and drawn onto the screen.
+But there's no behavior at all.
+It's just a static-- basically, the same thing
+as drawing an image onto the screen.
+And so for that, what we want to do is implement swapping.
+So how do we think we can accomplish this?
+Anybody have any ideas as to how we can swap?
+
+AUDIENCE: [INAUDIBLE] using tweening to have it go in opposite directions.
+SPEAKER 1: Well, we could.
+That will have the effect of--
+the response was we could use tweeting.
+We could, and we actually will for swap2,
+but it's going to be a little bit more complicated than that
+because they're in a 2D array.
+So if we just tween their x, y--
+AUDIENCE: [INAUDIBLE]
+SPEAKER 1: They will be in the same place in the array.
+But yes, ultimate--
+AUDIENCE: You could switch the position in the array,
+and then reload the array.
+SPEAKER 1: Switch their position in the array, and then reload the array.
+We will switch the position.
+We don't have to reload the array, but we will switch their positions.
+That's effectively, what it is.
+Literally just take two tiles, and swap in CS50,
+where we just take two variables, and get a temp variable that
+points that one variable, gets its values
+while the second variable gets the values of that one, or vise versa,
+I think.
+This one gets this one's values, this one gets this one's values,
+and then this one comes down to this one, basically.
+There's the middleman that keep-- because if this one gets this one's
+values, it's going to get overridden by this one's value.
+So there would be no reference to it's x, y, or anything.
+So that's why you need to store this one up here, so this one can come here,
+and this and come back down here.
+So we've done a swap, effectively.
+And there's ways in Lua to do swaps, as we saw before,
+without even needing a temporary variable.
+You can just do xy get some other xy, which sort of bypasses that.
+But when you start to do four things getting swapped at once,
+and you have four commas, it can get a little tricky, a little bit unwieldy.
+I'm actually not 100% sure you can unpack more than two things in Lua.
+I'll have to double check on that, but right off the gate,
+we're seeing that double assignment here on line 32,
+highlighted x, highlighted y gets 1, 1.
+And let me actually run just so we can see.
+There's actually a couple of pieces here besides just that.
+
+Swap1.
+So we have the board as before, we also have
+something to show us where to swipe because we have
+to know where we're swapping the tiles.
+In an ideal implementation, which is an optional part of the assignment,
+you would have mouse behavior for your game.
+So you could just click on two tiles, or click, and drag, and swap them.
+In this case, we're not doing that.
+We're just implementing key based behavior.
+So when I press left, right, up, or down, I can move.
+If I press Enter on a tile, and then move around, it's an indicator to me
+that I've selected that tile to swap with something else
+because it needs to keep track of OK, you want to swap this tile.
+What do you want to swap it with?
+I want to swap it with this tile.
+So they get swapped.
+I want to swap it with this tile.
+So they get swapped.
+Or this tile.
+So you can swap it with whatever tile you want to.
+There's no constraints.
+The actual distro code implements a constraint, and so offhand,
+what do you think a constraint would be for making sure that we can't--
+AUDIENCE: They have to be adjacent.
+SPEAKER 1: Yeah, they have to be adjacent.
+So what would that entail?
+AUDIENCE: That their x [INAUDIBLE]
+SPEAKER 1: Exactly.
+And the shorthand for that, really, is if the absolute value of their x's
+minus their y's is equal to 1.
+Because if you subtract one's x from another one's x,
+and then one's y from another one's y, and then
+you add the differences together, that'll
+tell you whether they're directly adjacent to each other.
+It has to equal one.
+If equals zero, then their x's and y's are the same.
+If equals two, then it's two tiles away on the x-axis,
+or it's away on the x and the y, in which case it would be diagonal to it.
+So the only way is it's x's minus it's x's.
+Tile1.x minus tile2.x, and tile1.y minus tile2.y,
+if they're absolute value of their difference is one,
+then they're adjacent.
+That's in the implementation.
+
+So this is why we have these variables here, highlighted tile.
+Basically we're setting a flag saying, do we have a highlighted tile?
+If we do, we're going to perform some drawing logic later down in the draw
+function.
+Basically, how would we draw a highlighted tile, do you think?
+AUDIENCE: Add a rectangle with transparency.
+SPEAKER 1: Exactly.
+So the answer was add a rectangle with transparency.
+That's exactly what we do.
+I'm going to go down to this part here.
+So on line 173, if we have a highlighted tile,
+and basically, this is in the middle of a loop--
+our y, x before.
+We've put it into a draw board.
+We have the drawBoard function, but x, y, or y, x,
+the tile is going to be whatever tile we're currently on,
+and if we do have a highlighted tile, and that tile's gridX--
+notice we now have a new variable called gridX, as opposed to it's regular x
+so that we can check for these sorts of things to see where it is in the array.
+If it's gridX is equal to whatever we've set highlightedX to,
+and gridY is equal to highlightedY, then love.graphics.setColor
+half transparency, and then just draw a rectangle with this 4
+at the end of it, which actually draws a rounded rectangle.
+If you pass in no 4, it will just draw straight rectangle,
+but if you pass in an int at the very end, that's how many
+rounded segments basically that rectangle will have.
+So you can get rounded corners on your rectangles,
+and it's good for UI drawing, and stuff like that.
+We use it a little bit in the distro.
+So that's how you get a highlighted tile.
+There was also a selected tile, and a selected tile
+is just draw a rectangle, same thing, but it's a line this time,
+and there's always going to be a selected tile no matter what.
+So we're always going to draw it here at the end of our render function.
+It's just 255--
+234 for the opacity so that it's just kind of transparent, but not super
+transparent.
+Set line width to 4 so that it's not just a very thin rectangle.
+If you set the line width, and then you draw a rectangle with the line format--
+the line mode of drawing, it will use whatever the current line
+width is when drawing the rectangle.
+So we set it to 4, then draw a line rect at selectedTile.x
+plus offsetX selectedTile.y offsetY, and we draw it 32 by 32
+because that's the size of a tile, and then
+we set our color-- remember to always set your color back to 255, 255, 255,
+255 because if you don't, and I did this when I was debugging, actually,
+you get some fun stuff.
+Wait, was that the right one?
+
+Oh, I might have fixed it up above where we--
+there was an issue.
+If you don't set, basically, your color, and you set it to red,
+everything will draw red after you've done something.
+So if it ever happens, remember to set your color back to 255, 255, 255, 255,
+anytime you change the color in some way, like I'm doing here.
+AUDIENCE: Alternatively, you could also just
+make sure to always set the color before you draw something. is that right?
+SPEAKER 1: Yes.
+The response was make sure you always set
+the color before you draw something.
+I think that's what I ended up doing in this distro, which
+is why it's not working anymore.
+I think it was--
+where was it?
+It was here, but I must have fixed it because I accidentally
+left that out when I was debugging, and it ended up drawing-- everything
+was red.
+So just as an aside just because Love2D is a state machine.
+Drawing it beforehand is definitely the safer way to go too.
+
+So the core of this, because we're running a little low on time--
+the core of this overall block of code is just the swap here.
+So if there is no highlighted tile-- so basically,
+if we pressed Enter or Return--
+now, we have all input handling in love.keypressed key.
+And by the way, this is input handling to change
+the x and y of our selected tile.
+
+If we press Enter, and we don't have a highlighted tile,
+then we need to have a highlighted tile, otherwise we should swap them.
+So we get a reference to tile one and two, we swap, we create temp variables.
+Recall, we need to have that middle man up here that
+keeps track of this tile's information.
+So it's going to keep track of all of tile2's information
+with tempX, tempY, tempgridX, and tempgridY because we
+need to not only change their x-coordinates,
+but also their grid positions.
+And then we need to create a temp tile here.
+Basically, here's where we actually swap their places in the board.
+So tile1.gridY, tile1.gridX gets tile2, and then we're getting a reference
+to temp tile so that we can--
+because if we set board at wherever tile1 is to tile2,
+we won't have anything where tile2 is.
+We need to have a temp tile to keep track of--
+sorry, we won't have anything at tile1 if we overwrite it with tile2.
+So we need a reference to tile1 here, so that we can put it
+into where tile2's spot is, right here.
+And then we need to do all that before we end up swapping their coordinates
+and tile grid positions, otherwise you get weird buggy behavior
+when you're moving the selected tile around.
+And then we can on the highlight, and then reset our selection
+because their selection is also going to get changed after we do the swap.
+So we need to put it to the second tile because it gets swapped with whatever
+tile we highlighted.
+And that's the overall gist.
+It's basically taking two tiles, flipping the information,
+storing a middleman.
+Same thing in swap in CS50, a little more complicated,
+though because these all have subfields that all need to get manipulated.
+And a lot of this can actually be done mathematically.
+You can actually have its x and y mathematically derived
+from it's gridX and gridY.
+Just multiply by 32.
+In this case, I just kept them as variables, and separate.
+But yeah, you could just do that too, and that
+has the effect of swapping the variables whenever we move them,
+and then that's the fundamental first step in Match 3,
+is just swapping any two tiles in a given position.
+So does that make sense altogether?
+OK.
+So this example is actually not that much different at all from swap2.
+I'm going to show you swap 2 right now.
+So if we go to swap2, the only change we really have made
+is that now tiles flipped instead of instantly changing, they tween.
+And this is a piece of cake at this point.
+We already know-- what's the function we need to do?
+Just timer.tween.
+All we need to do is just take the two, and then just
+tween tile1.x and tile1.y to tile2.x, and tile2.y,
+and do the same thing in reverse.
+Tween tile2.x, and tile2.y to tile1.x, and tile1.y.
+And so if we open up swap2, go to main, nothing in this program
+really changes, except in update, where we go to line 99,
+and we're just doing it here.
+Notice the definition.
+Over 0.2 seconds, it takes in the definition table, here,
+and it's taking in two entities because we're modifying two things.
+We're modifying tile2, and tile1.
+We're just setting x to tile1.x, and y to tile1.y,
+and then tile1 is getting the tempX and tempY
+because before, it was just getting it directly from the temp,
+and now it's just tweening it over time.
+But that was before just a bunch of tile2.x equals tile1.x,
+tile2.y equals tile2.y, tile1.y equals tile2.y.
+That's all it is.
+That's what's really nice about it.
+Now we don't have to really work hard at all
+to get nice, smooth transitions in whatever we do,
+whether it's a UI, or the game.
+It's just super nice, and convenient.
+So that's all we need to do to get basic swapping done.
+That was swap2, the tween swap.
+And so I put together a set of slides here just
+to illustrate the algorithm that we use to calculate the matches.
+So right now we've got swapping in, but we
+don't know when we've gotten a match.
+So just offhand, does anybody have any idea as to maybe
+how we can go about calculating whether we've got any matches?
+
+AUDIENCE: Well, we already figured out how to track if a thing is adjacent.
+So you, I guess, have a table of adjacent--
+you go through [INAUDIBLE] block, and if you have an adjacent--
+or for every adjacent block, you check if that color equals your color.
+And if it does, you check if--
+well, then I guess you need to figure out what direction it's in,
+and then you check, continuing in that direction,
+if there's another of the same color.
+SPEAKER 1: So their response was when you're
+looking at tiles, look at all adjacent tiles,
+and if there is a color that's the same one, then figure out its direction,
+and then move from there.
+So like a recursive style.
+I guess you could implement it recursively.
+It probably would be a little bit trickier to understand, and probably
+not as efficient.
+The way that we are actually going to implement it
+is going to be a little bit more iterative.
+So all we really need to do is check every row, and every column one time,
+and then go basically, left to right.
+So in this case, we have to check every row and column one
+time in this direction, and then one time in this direction
+because we can get vertical and horizontal matches.
+So we start off.
+Let's just arbitrarily decide we want to start going left to right down the data
+structure.
+So we'll go, what color is this?
+That's brown.
+OK, check the next one.
+Is it the same color?
+If it is, then say OK, the number of matching tiles that we've found so far
+is two.
+If it's greater than three, then later on we'll
+need to add that group as a match to our list of matches, basically.
+But if it's not, OK, then the number matches is one again.
+So set it to one, and then do the same thing.
+Same color?
+No.
+OK, number of matches is one.
+In this case, here we have the number of matches is going to be two
+because this is blue, and then we're going to go ahead,
+and then same color again.
+The number matches is three, and then we've gotten to the end of the row.
+So we can say OK, what was our last number of matches?
+Was it greater than or equal to three?
+If it was, add that group of tiles to our table of
+matches if we've gotten a match, and then move on.
+And we do that over, and over again, and if it's in the middle of a group,
+like it is here-- so this isn't at the end of the row.
+This is just in the middle of the row.
+What we do is number of matches one, two, three, and then we go here,
+and it's set to one.
+Well, first of all, we check number of matches
+when we get to a different color.
+We say, OK, this isn't the same color as this tile.
+This is purple, and this is gray, but number of matches is three.
+So what we do is we just add these three tiles to our--
+we're keeping a table of matches because we're going to go through,
+and we're going to delete all of them.
+And then, eventually, we're going to do some tweening as well,
+but we're going to delete all of these.
+And then in order to do that, we need to walk backwards.
+We need to say, basically, for x gets position
+minus number of tiles in the match, just add that to a match,
+add that to a match, add that to a match,
+and then add the match to our table of matches.
+And that's it for the x direction.
+And for the y direction, it's the exact same thing.
+Going down here-- different color, different color, different color,
+different color, and then same color, same color, different color,
+but number of matches is three because one, two, three, and then
+it's going to walk backwards, up to the top, add that match,
+and then just continue down here.
+Same thing, same thing, and then same thing there.
+This is at the end of the column.
+So it's going to get to the end.
+It's not actually going to look for the next tile
+because there are no more tiles, but every time
+we complete a row, or a column, we check at the very end,
+do we have the number of matches equal to three or greater?
+If we do, then we need to do the same logic
+as we did before by adding that match to our list of matches.
+So it's actually quite a simple algorithm, and this is the set of steps
+that I just illustrated.
+We have a match found there.
+Oh, sorry. [? Tony, ?] yes?
+AUDIENCE: If you complete two matches at once, would it see both?
+SPEAKER 1: It would.
+The question was if you complete two matches at once, would it see both?
+Yes.
+If you complete-- and it wouldn't if you deleted
+them as you went because let's say you had like one, two, three here.
+I'm assuming that's what you mean, one, two, three, one, two, three.
+If you just deleted them as you went, then no, it wouldn't see them.
+It would go here, it would get these three, delete them,
+and then it would just see these two.
+But because we walk over the entire thing,
+and then we only delete matches after all of the matches have processed,
+we're going to add this one first, and then when we do our vertical one,
+we're also going to see this one, and so it's going to count as two matches.
+And you could make your code a little bit more complicated if you wanted to,
+and say if there's an intersection between two matches,
+I want to give the player more points.
+Or I want to give him some sort of effect like in Candy Crush,
+I think you get like explosions, or Bejeweled,
+you get explosions if you get like a T pattern.
+And if you get four in a row, you get a laser or something across the screen.
+And actually, part of assignment is clear a row.
+If you get four in a row, you should clear that row, or call them.
+If you do that, then yeah, you can have logic.
+But currently, all the distro does is just this simple iteration--
+horizontally, then vertically, and adding matches as you go.
+And actually, there is an optimization that you can make.
+If you go here, for example, let's say we're going here, here,
+and then we're here, and we're at a different color than the last one.
+We can just go to the next one.
+We can just skip because we know we only have two left.
+There's no point in looking for a match if you're at the n minus 2
+because there's no possible way to get a match.
+So that's just a shortcut.
+A little optimization you can make, and that's actually in the code.
+Just break off if you're at--
+in the code, it's x or y equals 7.
+Just break out of that for loop basically,
+and go to the next row, or column.
+
+Any more questions as to how that works?
+
+If you're actually looking in the code, we won't go over it
+in too much detail in class.
+It's fairly straightforward, I think, once I walk you
+through the algorithm a little bit, but I'll point you to the relevant lines.
+It's in the play state.
+No, sorry.
+It's in the board in the calculate matches function.
+Here, on line 50, calculate matches.
+So horizontal matches, y gets 1 to 8.
+You keep a color to match, and basically, you just
+keep track of how many you've matched.
+Match numbers one always when you're doing a brand new color,
+and then starting at x 2 to 8, because we already
+got the first tile, basically, if the color is the same, increment matchNum.
+Otherwise, set our current color to that color, the next tile.
+If we've done this, and our match is greater than or equal to 3,
+then we found a match.
+We can add a match.
+We create a new table.
+We go backwards from where we are with x 2 gets x minus 1,
+and then x minus matchNum.
+So it works for no matter how long the match is,
+whether it's three, four, or five.
+And then we're subtracting 1, and then you just
+insert into that match, the tile at that x 2 position
+because the matches are made of tiles.
+So a match is just a group of tiles put together,
+and so you can intersect to any given match just by comparing the tiles,
+and just seeing if they have the same tiles, basically.
+That's how you'd get a cross match.
+And then after that's all done, just insert into matches that match.
+Here's a little optimization.
+If x is greater than or equal to 7, and this is in part of the loop
+where we already know that we're on a new color from the last color,
+we'll just break, and then set matchNum to 1 if we haven't gotten to that point
+yet.
+And then this is the part of the code that accounts for a last row--
+the row ending with a match because we're not going to be on the next loop
+to see whether we're going to a different color.
+We just need to check to make sure at the end of any row iteration,
+or column iteration when we go to the next row, or column.
+Before we go to the next row or column, that matchNum
+is greater than or equal to 3, and if so,
+then do the same logic here, but start x at 8.
+And same thing for vertical matches.
+Exact same logic, just x and y are inverted.
+And then that's it.
+And then self.matches, we keep a reference to self.matches in the board
+so that later we can remove them here, and I
+believe we use it for something else.
+And then we return, basically, if the number of matches is greater than 0,
+we're going to return matches, else we're just going to return false.
+And we can use this later.
+We can say if matches from our play state,
+then we can call a few other functions, and bring
+in new tiles, and stuff like that.
+But just for the sake of being thorough as an illustration,
+this is how the algorithm works.
+In this case, actually, this was before I made the optimization.
+We wouldn't actually do this in this particular case.
+This would have shorted down to the next column before it even checked this,
+but if your algorithm didn't make that optimization, then yeah,
+I would just see two tiles there.
+Go to the next one, nothing there, no matches.
+Same thing here.
+There is a match there, and the match would
+be found not at the end of the diagram here,
+it would be calculated when it's pointed here,
+but it knows matchNum is greater than or equal to 3 at that point.
+And it does the exact same thing here.
+We just go column wise, and then nothing there,
+nothing there, and then we've got one right there.
+And so the next part--
+oh, any questions on how that works at all?
+
+The next part-- we have the matches now.
+We have them in tables.
+We have the tiles.
+We have references to the tiles.
+How do we remove the tiles once we have--
+how do we get rid of them as soon as we have the matches?
+
+Assuming that our board is a table, a 2D table, and each array within there just
+has a tile object, how would we clear the board of our tiles?
+AUDIENCE: Are you including what you're shifting [INAUDIBLE]??
+SPEAKER 1: No, just remove it from-- just like like.
+Just remove it from play.
+AUDIENCE: Oh.
+I guess you can [INAUDIBLE]
+SPEAKER 1: Yeah, you could.
+Yeah, with a little bit of finagling, you could get it
+to where you could set a tile to be invisible,
+and then you could just give it a new tile ID, I guess,
+and then shift it up above, and then make it come.
+Well, I don't know if that approach necessarily
+works super well for this because of gravity
+because the tiles have to come down.
+So then you'd have to bring the lower ones, if they were at the bottom here.
+Those would have to come down.
+
+That kind of approach would be a little tricky.
+You could make it work, I think.
+The simple approach, which we used in this distro,
+is actually just setting them to nil because if you set something to nil,
+it's just not going to render, in this case.
+So we're just setting all of these tiles that were previously there to nil.
+They're nothing at this point.
+They effectively would render like this if you tried to render them,
+assuming that your code accounted for it, or it didn't break.
+And then the next stage would be the actual getting the board fixed
+because we have the tiles removed.
+So now, we have this thing here, but there
+is a step that has to happen before we get new tiles, and that's gravity.
+We have to actually shift everything down.
+So how do we go about shifting tiles down?
+So this first column, we don't really have to do anything, right?
+This column is all set, but what about this column?
+How would we shift?
+How would we get that tile to go down?
+AUDIENCE: [INAUDIBLE]
+SPEAKER 1: Sorry?
+AUDIENCE: Tweens again?
+SPEAKER 1: Tweens.
+Yes, we could do it with tweens, but from a data structure
+standpoint, how would we--
+because that will just tween the xy, but that won't necessarily
+fix-- the underlying data structure still
+has to represent-- because we're going to do iterations over it,
+we have to have references to the tiles in the right spots.
+AUDIENCE: So just shifting it was the table
+from the fourth row to the fifth row.
+SPEAKER 1: So how would you start by getting this tile down
+to this position?
+AUDIENCE: Switching it from the fourth row to the fifth row.
+SPEAKER 1: You would.
+How would your algorithm work step by step to making sure that would happen?
+
+AUDIENCE: Is it start from the bottom, and if that's nil, it would go up more
+SPEAKER 1: Exactly.
+That's exactly you do.
+You start from the bottom, and then whenever we have anything that's nil,
+we need to look for the first tile above it that's not nil, and shift it down.
+So in this case, we start from the bottom, and we go up this way.
+Not nil, not nil, not nil, not nil, not nil.
+So none of those are spaces in the code.
+It's called spaceY, or space and spaceY.
+So we go to the next column over, and we only
+have to check vertically in this case.
+We don't have to do a horizontal check for anything
+because gravity can only follow in one direction.
+So we just go over here.
+So we're only looping through this code, effectively, in this case, five times,
+but in our code, eight times.
+But it needs to be a while loop rather than a for loop,
+and we'll see why in a second.
+But start here.
+We see oh, we have a space there.
+So what we need to do is say, OK, the lowest space is here.
+So we need to look for the next tile above it, and shift it down.
+So we keep a reference to this, and we look up here,
+and we say oh, this is a tile.
+Perfect.
+So I'm just going to take this tile, and I'm
+going to set that space index to that tile,
+and then I'm going to set this index to nil.
+And then we just have to start again, though, from here
+because this tile is now space.
+So we have to look up here, and say OK, so basically, our y counter
+stays at that thing, and then just goes back up because our y counter could,
+theoretically, come all the way up here before it finds a tile,
+and then shift it all the way down, but we can't just-- or here, let's
+say there are two tiles right here.
+Our y counter might end up here because these are all spaces,
+and the tile gets shifted down here, but we can't just
+start our y counter back here again, and go up to the next tile,
+and look for spaces because we have all these spaces down here.
+So it's a while loop.
+So while, basically, there are no spaces on any of these points,
+we need to make sure that we keep lowering the tile.
+So keep a reference here, tile here, bring it down, space here.
+So we keep a reference with space.
+We say oh, there's a space here now.
+We can look all the way up, but there's no tiles anywhere.
+So we know that we can just move onto the next iteration of the loop.
+We haven't found any tiles.
+We don't need to bother with it.
+Same thing here.
+We have a space reference here, tile, found a tile,
+shift it down, space here, tile here, shift it down, space here, tile here,
+shift it down, space, space, done, and then we rinse, and repeat that.
+It's kind of almost like a bubble sort type of algorithm.
+Not a sort, but it has the same sort of look and behavior to it, more or less.
+Here's just a visual illustration of it.
+So start from the bottom, go up, we're looking for spaces here.
+No spaces; column is perfectly stable.
+We found a space here, tile is there, shift it down.
+Restart the loop from the tile, space, space, space, no more spaces;
+column stable.
+Space found, tile found, shift, space found, tile found, shift, space found,
+tile found, shift, and so on, and so forth.
+And so that's the gist.
+Super, super basic.
+But now we actually have to replace the tiles.
+AUDIENCE: You don't even need to check.
+Once you shift a block down, you don't even
+need to check the space above it, whether it's a space
+or not because you know that's automatically a space when you just
+shifted a block, right?
+SPEAKER 1: Yeah.
+Actually, that's true.
+Yeah, I guess in that case, you wouldn't need to.
+But we do need a reference to that space, and keep checking above it.
+But yeah, I guess you probably don't need, necessarily,
+to check whether it's a space or not.
+You can just assume it's a space, and I actually think my code does that.
+I'm not 100% sure off the top of my head.
+We can check, and see.
+
+I think it's down here.
+No?
+Is it?
+
+Oh no, it's in get falling tiles, I think, which is on line 177.
+So for 1 to 8 in x, we keep a spaceY.
+So spaceY, we set it zero because that's just a variable.
+We don't have a space yet.
+So just because you can't index a tile--
+you can index Lua tables by zero, but because they're not by default,
+we're just setting the zero as like our false space flag.
+y gets 8, starting at the bottom.
+So while y is greater than or equal to 1, tile gets self.tiles y of x.
+In that case, it's going to be at the eighth position.
+So space is set to false, but space is our space
+found flag, and also whether or not the tile that we just looked at
+was a space.
+Sorry, no, it's just our space flag.
+We check to see if there is a tile at our current position.
+So recall, everything gets set to nil.
+So we can just say local tile gets self.tiles y x.
+This will be nil if there was no tile there.
+So if tile, which means if it's not nil, if it equal something, spaceY of x
+is going to equal that tile.
+We keep a reference to spaceY, which is our last space.
+We set tile.gridY to spaceY because we have to reset it to gridY.
+We're going to tween it here.
+This is how we actually get the falling, tweening behavior.
+We're going to tween it's y to tile.gridY minus 1 times 32,
+recall, because coordinates are zero based, but Lua tables are one indexed.
+Space is false, y is spaceY, and then spaceY gets zero.
+
+Basically, we're going to start at the--
+we're going to put spaceY to that tile, and then we're
+going to set spaceY to 0.
+I think it actually does, in this case, it is actually checking that tile
+to make sure that it's--
+yeah, because it's just getting set to the tile--
+spaceY being the tile that we just replaced, and just put
+into an actual spot.
+So it does actually make the check up above to see whether that's a space
+or not.
+Only one caveat though actually is--
+actually, no, that wouldn't be true.
+I was going to say, if you're at the top of the screen,
+but no because there's no way we can be at the top of the screen,
+and have-- yeah, I don't think it would work.
+A small optimization you could make is you just assume always a space.
+Yeah.
+
+That's the get falling tiles in a nut shell,
+or at least the ones that are falling from gravity.
+And then we also have tiles that we want to add to replace them,
+and so we'll see that here.
+So this code.
+So what we need to do to replace--
+what do you guys think we need to do to get replacement tiles?
+
+AUDIENCE: Check response, and check if it's empty, [INAUDIBLE]
+but if it's not, then you're done.
+SPEAKER 1: Yeah, exactly.
+So the response was check to see from the top
+if there are any tiles that are empty, and if there are,
+then spawn some tiles, and then ideally, tween them to their new positions.
+You can basically just assign them to their values here.
+So what we need to do, actually, though, is
+if we spawn a tile up here to put into any of these positions, their gridY's
+need to be set in advance because they're
+going to occupy that space anyway.
+Their actual y position needs to be tweened.
+So because the x and the y are separate from the gridY, and the gridX,
+those are just table indices, but not their coordinates.
+We can tween those, and it won't actually
+have any effect on the data structure.
+The data structure itself can maintain-- we can still use the data structure--
+put a tile in its right spot in our table,
+and then give it the right gridX, and gridY, but tween the x and y value.
+We can do whatever we want with those.
+We can make them spin around, and stuff as long
+as the data structure is intact, and ideally,
+as long as we can't input while it's doing it's movement,
+and stuff like that because that could create some visual bugs.
+And so what we do is we actually disable input when a swap is taking place,
+and you'll see that in the distribution code.
+But yes, count how many spaces there are.
+Spawn four tiles, spawn two tiles, spawn two tiles
+spawn four tiles that have already been given their right gridX, gridY,
+and then just tween their y to wherever it needs to go.
+It's gridY times 32--
+gridY minus 1 times 32.
+And so that's what we're doing here.
+We're just count, and then boop.
+That was my favorite part of putting this show together.
+And so we're going to get into a couple of minutes of talking about sprites,
+and palettes, but I think the one thing--
+blanking for a second.
+I was going to talk about one last thing.
+Let me see if I can figure out what that was.
+Oh, right, so in the board--
+sorry, in the play state, I believe, is where this is, there is a function.
+
+So play state has it's own calculateMatches, basically,
+where it waits for you to--
+where once you've basically swapped any two tiles,
+it will calculate whether those tiles have made a match.
+
+And we're going to get matches via self.board calculateMatches,
+the function that we were looking at before.
+If there are any matches--
+well, we play a sound effect here for every match.
+This is where you also calculate the score.
+You just multiply the number of tiles in a match by 50,
+and part of the assignment will be adding some value
+to the individual varieties of the tiles.
+
+Here, we tween.
+So we return also from the board class a table
+of tweens for all of the new tiles that we just spawned,
+and so what we're going to end up doing is tweening all of them here.
+So notice that we're passing in a timer.tween,
+this variable, tilesToFall.
+That's a definition file that we're just returning from our board class.
+And so once those are all finished, then we get new tiles,
+and then we tween here.
+I think this line is redundant, actually.
+I think this might have been a debugging line.
+I don't think we need this.
+
+No, we don't need this at all.
+So sorry.
+This is the important part.
+We're going to tween--
+wait, we do need it.
+Self.board getNewTiles.
+What am I thinking of?
+
+Sorry, a little bit confused for a second.
+I thought this was an empty function that I defined.
+Get new tiles.
+Yeah, this returns an empty table.
+But basically, the gist of it is the play
+state, when it calls this function, it will call itself every time.
+
+And I think this is actually having the result of doing it
+instantly here because newTiles is just an empty table.
+I think all this should be is just this inside all of this like that.
+But that has the result of calling itself again
+because when we get new tiles coming from the top of the screen,
+we could potentially have a case where we've gotten some matches,
+and it's not shown here, but new falling tiles could give us new matches.
+So after we calculate matches, let's say maybe this tile dropped here,
+but it was a purple, and these two were already there.
+We've already calculated matches, but then we
+need to do it again, and then do it again if it keeps happening.
+And so you should be recursively call self calculateMatches
+in that case, which will have the effect of accomplishing that because this
+will always look for matches.
+And so when we call self calculateMatches here, over, and over
+again, until there are no matches--
+as long as there are matches, this should keep happening.
+You should keep getting scores, and tiles should keep getting cleared.
+But as soon as that's not the case anymore,
+then self.canInput equals true, and we're not calculating matches anymore.
+We don't recursively call the function anymore, and we're done.
+And so that's just the point I wanted to illustrate.
+Got slightly confused by, I think, what was a vestige of my old code.
+Maybe I was trying something, but I think this, ultimately,
+should just be this, and I'll test it, and make sure, and then push
+the change.
+
+And it doesn't need to be over 0.25 seconds.
+It can just be instant.
+
+Palettes, really quickly, with something I wanted to cover,
+which was just the idea of taking art, and then just-- and I
+have a couple of cool examples to show.
+Just taking some sort of picture, and then giving it--
+only using or some sort of image, and only using 32, in this case,
+or some arbitrary number of colors.
+This is some fancy stuff that some person named DawnBringer online did.
+He generated a very famous 32 color palette called DawnBringer's 32 color
+palette.
+But basically, it allows--
+this is done with just 32 colors we see on the screen.
+Those are all dithered.
+Dithering is a term which means to just draw two colors pixel by pixel,
+interleaved, so that from far away it looks like a brand new color,
+and this is a dithering chart.
+This just shows you every color here at the very top.
+These are all 32 colors.
+These are 32, and those are 32 intersected with each other such
+that they're just like dot, dot, dot, dot, dot.
+Every other dot is every other color.
+And so you can do some pretty amazing things with just a few colors.
+This is actually done with 16 colors.
+All four of those are only 16 colors.
+This is just to show you what it looks like when you do it to an actual image.
+This is an example of what using a color palette on an image that
+doesn't work well with it looks like.
+So this is a regular image with I don't know
+how many colors, thousands of millions of colors, and this
+is using DawnBringer's 32 color palette.
+So still looks very similar to what it should.
+It's a cat, but there's a lot of weird things going on in the background
+because taking an image with a lot of blur, and a lot of distorted color,
+has the effect of giving you blotchy patterns when you go down
+to a few colors.
+But this is an example of an image that has a lot of flatter colors.
+There's still a lot of colors in this image.
+There are some shades, and stuff like that, but this is thousands of colors,
+and this is 32 colors.
+So clearly, if you do it on the right thing,
+you can actually get really good effects with it.
+And so again, not a whole lot of difference, but this one's
+got I don't know how many hundreds of thousands of colors,
+and this one's only got 32.
+And so how it ties back into what we're doing
+is this is using a 32-bit color or 32 color palette on purpose.
+This is actually DawnBringer's 32 color palette.
+Breakout used the same palette, 32 colors,
+and a lot of our 2D future lectures will use limited color palettes.
+If you're trying to draw sprite art, and you want some quick, and easy ways just
+to give your work a little bit of consistency,
+I recommend trying to pick 8, or 16, or 32 colors,
+and just adhering to using just those.
+And you'd be surprised at how much you get out
+of it, and how much more cohesive your work will look just
+by imposing that constraint on you.
+It's an artifact of a real world constraint of former hardware.
+The NES only had so many colors it could color each sprite,
+like four colors, or something that.
+And so you also get a-- if you're going for an authentic retro look,
+it will help you in that sense.
+And then different from palettes, but related
+is palette swapping, which is another term you've probably heard,
+which is basically all of these Mario sprites--
+
+they'll probably start with a gray scale Mario, some like gray version
+where each of these separate colors are mapped out
+to some table where one equals red, two equals blue, or whatever.
+And then you can just shift all of them, and then you
+get all of these different nice effects, assuming
+that you've created a good palette.
+You can get a lot of reuse, and this is actually
+how Super Mario Bros. used to do some of its programming.
+The clouds and the bushes were the same sprite.
+One was just colored green.
+It was palette swapped green from the white that the cloud was colored.
+So that's the gist of Match 3.
+Assignment 3 is going to have a few parts to it.
+So time addition on matches.
+So when you get a match, you should get time added to the clock.
+Currently, right now, you only get 60 seconds.
+It's a little bit hard to actually get past level two at this point.
+So getting points for every tile in a match.
+Make it so that level one starts with simple flat blocks.
+So earlier, we saw the array of tiles, and it
+was flat tiles on the first index of every color row,
+but there were several other patterns like x's, and circles, and triangles,
+and stuff.
+Make those worth some higher amount of value, each one.
+Create random shiny variants of blocks that will destroy an entire row when
+you get a match.
+So have a block.
+It should have some field, shiny or something.
+If it's shiny, render it with something to make it look shiny.
+You can use particle effect if you want.
+You can put a very opaque, or a very transparent maybe yellowish or whitish
+rectangle on it to give it a brighter look.
+And then if it's in a match, that entire row
+should get cleared instead of just that match.
+Only allow swapping when it results in a match.
+This is an important thing because right now, mathematically,
+it's actually very unlikely that you'll get a board that
+has matches on it to begin with.
+So you're going to have to pick a subset of tiles in your implementation,
+and actually use those instead of just using all of them.
+Pick six tiles, which you can get variants on, or just whatever flat
+colors, and then use only those to spawn your board.
+Don't use all 18, or however many there are.
+And then optional, if you're curious, if you want, probably,
+an arguably better gaming experience with this,
+just implement actually playing with the mouse.
+Being able to click and drag, or just click individual tiles.
+And to do that, you will need to convert--
+because we use the push library for virtual resolution,
+you'll need to convert the window mouse coordinates
+to push coordinates so that they'll map into the game space appropriately,
+and so you'll use a function called push to game, where
+it takes an x and y, where the x and the y will be your mouse coordinates.
+Next time, we're actually going to get into a little bit
+more robust of a game, arguably, like a Mario clone.
+This is actually where this course started
+was I taught a seminar on Super Mario Bros.
+We won't be using Super Mario Bros. assets because of copyright,
+but we'll be using this tile sheet here, which is very similar.
+It's got a nice aesthetic.
+We'll cover tile maps.
+So how to generate levels using individual tiles.
+2D animation, so rather than just like static things
+that we've had going on so far, you'll have characters that actually walk,
+and jump, and do different things.
+We'll talk about how to actually procedure
+generate platformer levels, which isn't terribly difficult.
+It sounds kind of difficult, but it's actually pretty--
+for very simple stuff, it's not too bad.
+Basic platformer physics, so hitting blocks, and jumping,
+and stuff like that.
+We've covered a lot of that with Flappy Bird, actually, and actually,
+the bricks from Breakout kind of tie into it a little bit.
+Hurt boxes so we can have enemies that hurt you, and visa versa.
+And power ups so that you can change your state in some way to make you
+larger, or invincible, or whatnot.
+That was Match 3.
+Thanks a lot, and see you next time.

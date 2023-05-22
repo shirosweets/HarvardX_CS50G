@@ -1,0 +1,2276 @@
+
+COLTON OGDEN: All right.
+Welcome to Lecture 9 of GD50.
+Today's topic is Dreadhalls.
+So last week we ventured into Unity, our first foray into 3D, and not only 3D,
+but also just getting our heads and hands
+around the Unity game engine, which is among Unreal and others
+sort of the most popular game engines in use for 2D and 3d games.
+And last week we did sort of a 2.5D style helicopter game whereby
+everything was in 3D, but we were still aligning things based on just two axes,
+the x and the y, I believe, possibly the z and the y.
+I don't remember, but two axes versus three axes.
+Today we'll actually be diving into using all three axes available to us
+in Unity 3D in the context of a game called Dreadhalls.
+And so what Dreadhalls is--
+it was a VR game, actually the first VR game
+that I ever played on the Oculus, the gear VR, Samsung Gear VR.
+And it pits you in sort of this dark and eerie 3D maze
+where you don't really know what's going on.
+And you can go around and get collectibles
+and encounter creatures and stuff as you can see
+in the bottom right screen shot there.
+Today's example is going to be a little simpler.
+But it allows us to explore things like procedural maze generation
+and first person camera control.
+So last week recall we were using sort of a third person camera
+whereby we were sort of far back on the scene.
+Today we'll actually be using a first person camera
+where the camera is effectively our eyes as if we were
+walking around in the maze ourselves.
+Unfortunately, we won't be using a VR demonstration this week,
+but next week I hope to put together sort of a VR sampling
+using this project so we can see how this works in VR
+and how Unity's toolkit works in VR.
+So some of the topics we'll be covering today--
+we'll be talking about texturing.
+So recall last week the helicopter and all of the items in our game
+were just sort of flat colors.
+They didn't really have any texture associated with them.
+We'll talk about how to assign textures to materials
+and how to apply those materials to objects in our scene.
+We'll talk about materials and lighting, so not only materials but also
+the different kinds of lights that Unity supports and a few details about those.
+We'll talk about, again, 3D maze generation,
+so we'll have a simple but effective algorithm for creating a 3D data
+structure to represent our level as opposed to previously
+where we had just a tile map that we could
+generate to give us the appearance of walking around
+in some sort of 2D world.
+Now we'll actually perform a similar operation on Data, a 2D array.
+But we'll take that array and we'll actually create 3D blocks
+and create a maze that we can walk through in 3D space, which
+is kind of fun and interesting.
+Last week we only had one scene in our game, which was just a play scene.
+And even though we had like a game over state within that scene,
+we didn't transition between scenes.
+We just sort of reloaded the same scene.
+Today we'll have a title screen and a play scene, which
+is an evolution of the idea that we had in LOVE 2D
+where we had a state machine that was governing our entire game in terms
+of the different states that we could be in, whether it
+was the title, the game over, the play state, and so forth.
+Unity does the same thing with scene objects, which are effectively
+a snapshot of a series of game objects aligned
+in a particular way in the editor.
+We'll talk about fog and also global lighting
+and certain other things that allow us to create
+a atmosphere conducive to the sort of feel
+that we want to get in our game today, which is sort of creepy and eerie.
+And lastly, when we talk about how to create UI elements in the game,
+we'll talk about Unity 2D, its canvas object, and text labels
+and some other things and how those all operate,
+which is sort of two sides of the same coin.
+Unity 3D also comes bundled with Unity 2D,
+a set of tools used to make not only 2D games but also 2D interfaces that you
+can apply to your 3D games.
+So first, a demo.
+Now I've been sick for the last week, so I'm not
+going to ask for anybody to come up and demo just because I don't
+want to get anybody else sick, so I'm going
+to just go ahead and show, just this lecture, the game
+that I put together for you.
+So here I have two scenes.
+Notice here I have a title scene and a place scene.
+I'm in the Unity editor right now.
+I'm going to load up the title scene here, which I've done.
+And then notice that it has sort of a game view and a scene view.
+I'm going to hit play.
+We're going to make sure that it's set to maximize, which it is.
+And so we have sound here, so we should hear audio.
+And hit play.
+And notice that we have sort of like this ambient creepy music track
+playing.
+We have a very-- we could have easily done this in LOVE 2D.
+This is just a black screen with two text labels on it.
+And this is done with Unity's 2D UI toolkit.
+And so it says--
+it tells us to press Enter.
+So if I press Enter, We instantly get teleported into like this maze,
+this creepy looking maze.
+And so I can walk around in this maze.
+And there are a few things going on.
+So anybody-- can anybody tell me some of the things
+they notice about the scene, what jumps out at them?
+
+What are some of the elements?
+If you were to put this together yourself, where would you start?
+What are the pieces that we can put together here?
+
+Yes.
+
+Yep.
+There has to be a ground that you can stand on, and there is.
+So we're generating not only walls in our scene, of course,
+but we need a ground to sit in.
+And also if you look up top, it's kind of difficult to tell,
+but we also have a ceiling so ground and the ceiling and walls.
+
+Some kind of lighting.
+Yes.
+And so in this case, we're actually using ambient world
+lighting as opposed to having a light source.
+So we'll take a look at that.
+In last week's lecture, we used--
+two weeks prior's lecture, we used a directional light object.
+But in this case, we have no lights in the scene.
+We're actually using Unity's world lighting,
+which we'll take a look at soon.
+
+When we walk around, notice that I can move where
+my camera is looking with my mouse.
+So we're actually controlling the camera with a first person controller, an FPS
+controller, which is actually a component that Unity provides to you.
+And then notice eventually if we keep exploring the maze,
+we come across this little thing here, which is sort of a pickup.
+And when we pick this up, we get like this weird creepy piano
+sound and then the scene reloads.
+
+Does anybody notice anything about what we see in the distance,
+like how that's affected?
+
+Like if I'm looking at this wall right here,
+for example, it's kind of hard to tell, but as
+opposed to like down this hallway, what's the difference there?
+AUDIENCE: The light source is further away, I guess.
+COLTON OGDEN: The light source is further away.
+Kind of.
+So what we're experiencing here-- we're seeing it's
+a graphics sort of concept called fog.
+And so what fog lets you do is it effectively adds color
+to the scene based upon how far away the objects are in the scene
+and multiplies color onto them.
+And it gives you the illusion of looking--
+as if you're surrounded by fog basically.
+And it's been around for a very long time, back even as far as the N64 days.
+And we'll talk about that later today and it's actually incredibly easy
+to add that into a game with Unity and its world lighting system.
+Any idea as to how fog, not only in terms of aesthetics,
+but how it could maybe help with performance?
+
+Yeah.
+AUDIENCE: Don't need as much pixel clarity because it's already
+[INAUDIBLE].
+COLTON OGDEN: You don't need as much pixel clarity.
+Kind of.
+The big thing about fog and the way that it was used a long time ago
+is that, because eventually things are completely
+opaque beyond a certain point, you don't need far draw distance in your game.
+So you can actually like dynamically-- you
+can omit rendering things that are a certain distance away
+because you wouldn't be able to see them anyway.
+And so this was an optimization technique used a lot back
+when draw distance was a huge bottleneck on computers
+and game video game consoles back in the 90s for example.
+Like Silent Hill, the game for PS1, was almost exclusively fog.
+And you can see very little in front of you.
+And we'll see a screenshot of that later.
+And they use that to boost their performance
+and also to provide a certain aesthetic.
+And then one other thing you might be paying attention to
+is there's a sound on a loop, just sort of this creepy sort of whispering sound
+and that's to just add atmosphere.
+Right.
+Just because without it, we would-- it's little things like that, especially
+in horror games like this, the atmosphere can be everything.
+So with very simple ideas, fog, some whispers, first person controller,
+so you have tight hallways, you can produce something that's pretty scary.
+Now there are a few things missing from this,
+namely there's nothing that's going to come at you and attack you.
+But it would be not terribly difficult to add,
+but because we're using procedural generation,
+you would need what's called a nav mesh.
+And you would need to generate that procedurally so that things
+could follow you in 3D space.
+We might have some time to talk about how to do that a little bit
+later today, but that's not implemented in this particular lecture.
+But it would be not too infeasible to accomplish.
+But those are some of the pieces that we'll take a look at today.
+So this is the title scene.
+Notice that there's not a whole lot here actually, so if I zoom back out,
+we can see canvases are huge in Unity just
+because it's more optimized for the engine to render them that way.
+But we can see, even though it's a 2D UI, it's very visible in 3D space.
+And if you click this button here, we end up getting--
+oh, no.
+That just brings us into-- sorry.
+Click this button here.
+That brings us into the 2D Unity 2D mode.
+So now we're interacting with things in 2D.
+And I can actually click on this label and move it around
+in 2D as if we were using a 2D game engine as opposed to a 3D game engine.
+So we'll look at that a little bit later.
+This is just the title scene.
+So the play scene itself--
+I'm not going to save that.
+The play scene itself--
+I'm going to go from 2D back to 3D here--
+is pretty much empty.
+So we have a first person controller here.
+This is the FPS controller object.
+Does anybody-- anybody tell what basically constitutes an FPS controller
+just by looking at the scene here?
+What are some of the pieces that jump out at you?
+
+AUDIENCE: I thought you just put the camera right where the player is
+or right in front of the player.
+COLTON OGDEN: Exactly.
+You put the camera right where the player is, effectively
+where your head should be relative to where their body is.
+And their body-- what's constituting their body here?
+Can you tell?
+AUDIENCE: It could just be a-- it looks like a cube in the middle there.
+COLTON OGDEN: It's actually this capsule right here.
+I don't know if you can see it.
+There's this capsule here, this green capsule.
+It's a little bit more organic feeling than a cube necessarily,
+but you could use a cube as well.
+But a capsule is how character controllers in Unity are represented.
+And character controllers come for free in Unity, which is really nice.
+They're part of the standard assets.
+So if you go to import package, in Unity--
+if you go into Assets, Import Package, there's
+a lot of packages that come for free that sort of bootstrap you.
+Notice there's like 2D packages, the cameras, characters.
+The characters package has 3D characters or third person characters,
+first person characters, some that are physics based,
+some that are not physics based.
+This particular controller is not physics
+based, meaning that we don't apply forces to it.
+We move it around.
+It's kinematic.
+It is affected by gravity, so in a sense it kind of is physics based,
+but it's not strictly physics based like a rigid body and a rigid body would.
+And the collisions that occur between this and another rigid body
+aren't the same as they would be if we were
+to make this a purely rigid body based character controller.
+There is a purely rigid body based character controller
+that you can import-- haven't experimented with it a lot,
+but you could probably figure out a good use for that in terms of a game
+or maybe you want to move precisely on surfaces that have different materials,
+like icy surfaces or whatnot, and have it apply it
+in a very physically realistic way.
+And a few things that we have here in our play scene--
+we have a dungeon generator object.
+So this dungeon generator object is just an empty object
+with a level generator script here.
+And then we have a few other objects, a floor parent, a walls parent,
+and a whisper source.
+So we'll get into the details of what all of those mean.
+Our goal today will be talking about a few things.
+So we'll be talking about-- here's a picture of just our maze.
+So we talked about some of those things at a high level.
+We'll actually explore how to implement them in Unity today, so making a maze,
+making the fog effect, walking through it with our character controller.
+We want to be able to have some kind of game play here,
+so we have collectibles in the form of this red coin.
+This is actually part of another standard assets pack, the prototype
+assets pack.
+It comes with a prototype little coin object that you can throw in.
+Anybody notice anything about this coin beyond the fact
+that it's just a red coin?
+What else do you know it's about this scene here?
+AUDIENCE: It's emitting a glow.
+COLTON OGDEN: It's emitting a glow.
+Any ideas as to how it's emitting a glow?
+AUDIENCE: There's a light source inside of it?
+COLTON OGDEN: There's a light source inside of it.
+Exactly.
+So we'll talk about that.
+We'll show you how that's implemented.
+Very easy to do in Unity.
+And then we'll also talk about, towards the end, our 2D scene, our title scene,
+and how to construct it, which is actually very easy in Unity
+as opposed to doing something by code.
+You very rarely actually for interfaces need to touch
+code, at least in terms of how to lay them out.
+In Unity you can do everything very visually and with the mouse.
+Actually, it's a pleasure to make interfaces
+if you're used to just making them in code.
+So texturing-- so last week or two weeks ago, we did nothing with textures.
+Well, that's not true.
+We had one texture on the background, which
+was the sort of scrolling background.
+But we didn't really look at that too much.
+In today's example, you know the helicopter and the coin
+and the buildings and all that stuff, those
+were all just polygons with flat colors associated with them.
+Today we'll be talking about how to actually texture things with materials.
+And so this is very easy to do in Unity.
+So I'm going to go over to my title scene
+here, just because it's lit in a fairly normal way as opposed to the play
+scene, which is not lit in a normal way because we're
+using environment lighting.
+We don't have a sky box.
+The title scene has a fairly normal lighting set up.
+So if I add a cube here to the scene, you
+can see right off the bat by default we do get a material here,
+which has what's called an albedo component.
+Albedo just means like what's its surface color look like.
+It has a much more technical definition.
+And you can look up on Wikipedia what albedo means.
+It has something to do with the way that light interacts with surfaces.
+There's a lot of other elements here.
+You can make something look metallic.
+You can make it look smooth or rough.
+And you can also add normal maps, height maps,
+and a few other things, which gives it more of like a bumpy texture,
+and so forth.
+And you can also make things emit light this way,
+which the coin actually not only emits light but also is a light source.
+So it does both.
+And there's a few other things here.
+For example, let's say you have a very large cube and a small texture.
+If you put a very small texture on a large cube,
+what's it going to look like?
+
+What's your instinct?
+What if we have a very large cube, but a very-- like
+say we have a 64 by 64 pixel texture, but our cube is humongous?
+What effect is that going to have on the cube?
+
+It's going to look kind of like an N64 cube, right?
+What basically happens is it's going to interpolate between the texture
+pixels, the texels when you apply a texture to your cube.
+And so when you apply a small texture to a large surface,
+it's going to look stretched.
+It's going to look stretched.
+It's going to look also filtered as like you sort of see in some YouTube videos
+if you watch them and they're recorded a very small resolution,
+but you blow them up.
+They look filtered or if you've ever stretched
+a picture in the right software and it looks interpolated in a filter,
+it's going to have that look.
+So what you can do is you can apply tiling.
+So here we can see there's a tiling element x and y.
+So a one in the x and y direction, because it only
+applies on a flat surface.
+So the effect of tiling would be such that if you have a 64 by 64 texture,
+you could just tile that texture several times to get the desired
+look that you want on whatever surface that you're
+trying to look at in your game world.
+Maybe it's a very small object or maybe it's a very large object
+that you're looking at as a character and you want
+to tile bricks for example or stone.
+So to apply a texture to a 3D object in the scene, I'm going to go into here.
+So you need a material first.
+And so these are all Unity material objects.
+You can tell because they have a circular--
+they all look like as if they've been wrapped around a sphere.
+These are all Unity materials as opposed to textures.
+Textures are just 2D objects, 2D textures, 2D images.
+So this is part of an asset pack that I downloaded
+for this lecture called low poly dungeon modules, which is in the asset store.
+And so what I'm going to do is I'm going to apply--
+let's say I want to just apply this rock material to this object.
+Right.
+Then I go over to that.
+I'm going to first add a--
+I think because I went into the material it had a incorrect appearance.
+So do that.
+Oh, that's strange.
+I'm going to create a new scene.
+
+And then I'm going to add a cube and then a--
+not pop but maybe the beam.
+I wonder why it is not--
+that's very strange.
+For some reason, it might be a setting that I
+have enabled that's not allowing it to correctly render.
+But the effect of that should be that we apply-- normally
+if you apply a texture to a material, it'll
+have the effect of creating-- it'll instantly texture it.
+But what I can do is I can go to textures here.
+And this should work too.
+I can go to that and then it'll apply it that way.
+So normally, if you're in a fresh project and you add a new 3D object,
+and you just click and drag a material onto a 3D object,
+it will texture it for you.
+In this case, I think because it's automatically
+assigning a material to these objects based on some project setting
+that I off the cuff just unable to--
+I don't know for sure--
+you can instead just go to the albedo component here.
+So albedo functions not only as a color but also as a texture for your object.
+And so you can apply a texture, just a 2D image,
+to your albedo component of a material.
+Right.
+And that will have the same effect as texturing it immediately.
+So normally what this is supposed to do is create a albedo--
+create a new material with that texture as the albedo when
+you set a material to the 3D object.
+Now I wonder if I--
+Yeah.
+I'm not sure.
+I'm not sure exactly why it didn't work like right off the bat
+like it's normally supposed to.
+In a fresh project, it will.
+I'll try to investigate.
+But if it ever happens like that where for some reason you're--
+I think it has to do with the way the shaders are set on here.
+Maybe there's a setting I'm just not sure about.
+But you can just set the albedo component here manually.
+It'll have the same effect.
+So the albedo component of your material, setting that with a texture,
+textures objects.
+And so that's effectively how we get from this sort of look
+of a flat shaded or flat color shaded object to a texture shaded
+object just like that.
+And texture mapping in itself is a very wide field and fairly complicated,
+but ultimately it looks something like this.
+So does anybody-- can anybody tell me what this looks like here?
+So we see here obviously we have a fully textured model.
+But if we're looking at this, what does it look like we've done here?
+
+So what does it look like?
+Ignore all the lines.
+But what does it sort of look we have on the surface?
+
+It's just a texture, right?
+Oops.
+We can sort of see the colors here.
+For example, maybe his belt here or actually that
+looks like the top of his head here.
+This being the top of his head, and then we have like his belt and other things.
+This right here, we can pretty clearly see that's like sort of his face mask,
+right?
+But it's just on a 2D surface, like this is a regular texture.
+And so what we've done here is basically taken
+all of the polygons that comprise the model and laid them out flat, right?
+Lay them out flat as if on a table where our texture is
+and that's what UV mapping is.
+And this is usually something that you do in whatever 3D modeling software
+that you're using.
+In Unity, when you apply a texture to a material, or a material with a texture
+to an object, it will use its standard--
+it has its own built in mapping algorithm
+that will apply material to a model.
+And so it does it differently for different objects.
+We can create like a sphere for example.
+Move the sphere over here.
+And I'm going to try again and just to see if applying the material
+works on that.
+No.
+It doesn't.
+So applying a-- so if we go into this material
+here, which is, for some reason, grayed out.
+
+New scene again.
+Create a new 3D sphere.
+And then oh, this time it looks like it's-- oh, I can't tell.
+No.
+I don't think that's working.
+
+Oh.
+Now it allows us to accept a texture.
+OK.
+So we can apply a texture.
+Whoops.
+Can apply a texture to that.
+And so now we can see our sphere has been mapped as well.
+And it looks fairly convincing.
+It's been wrapped around in a way that it doesn't
+look too distorted or too weird.
+And so Unity has its own ways of mapping for its primitive objects,
+whether it's spheres, cubes, we have a few other ones, capsules, cylinders,
+planes.
+It'll depend, obviously, on what your texture is.
+If your texture is fairly ornate, it might end up looking distorted.
+But for most purposes, for simple primitive objects, for most textures
+it should work pretty well.
+Now if you imported a model that was like a table or a character
+and you just applied a texture to it, it's not going to look good.
+It's going to look messed up.
+And so your 3D software will export a material
+with the model assuming that you've modeled
+in that software with a texture.
+It'll actually give you a material that you can then
+reference that will properly apply a texture to your character,
+but the same sort of apply a texture, just
+a regular texture to a complicated model,
+just isn't going to work because it hasn't been UV mapped in a smart way.
+Unity's not going to know I have a table.
+I want to map the texture to the table in a way that looks convincing.
+You can see this kind of if we create a cube.
+And then if we go ahead and--
+
+been making apparent for some reason.
+If we go up here, I'm going to first assign--
+OK.
+For some reason that worked instantly.
+But you can see we've applied a sort of wall texture to it.
+And then if we scale it down-- so this is the scale button up here.
+You can move, rotate things.
+If unfamiliar, these top buttons up here are transform operators.
+So you can move things, rotate things, and scale things.
+So if you scale this along this y-axis a bit and then you zoom in,
+the texture looks pretty compressed and distorted,
+because it's just doing the same algorithm
+and assuming it's the same kind of surface
+without taking into consideration how it's been warped.
+Right.
+So ideally you wouldn't have this flattening happening.
+And so in your 3D software, you would unwrap your model
+and then apply a texture to each separate polygon of your model
+in a way that looks convincing.
+And so this isn't anything that you necessarily
+have to do for the lectures, or for the demonstration for your project.
+But if you are creating your own 3D assets, if you're importing 3D assets,
+and if you want to use textures in a way that we're doing today,
+you will need to probably become familiar with UV wrapping, UV
+unwrapping, UV mapping in whatever software that you're using.
+And if you're just unfamiliar with it in general
+and have wanted to know what goes on in turning a flat white polygon
+character into something that has a texture,
+this is effectively what happens.
+You unwrap it, make it flat, sort of like stamp
+the material onto it effectively, and that maps the UVs of the texture,
+so the texture's virtual coordinates to your 3D model.
+So any questions as to how this works at all
+or about unity and applying textures?
+AUDIENCE: What's the general way that you make the textures on the right
+where it's like a world that's been flattened?
+COLTON OGDEN: How do you make the textures on the right?
+I mean that's kind of an art form in itself.
+You do have to do it by hand and know--
+I mean, there's a good amount of trial and error
+that will go into it, too, as you're making your model
+and unwrapping it and noticing, oh, this looks weird,
+as I am applying this polygon to the surface.
+I'm going to go ahead and change that texture.
+But you could use any-- you could use Gimp or Photoshop or any standard
+texture creation software and just--
+it's something-- I don't do a lot of it, but it's something
+that I imagine that you just get better at with time.
+And texture artists and modeling artists probably develop sort of like
+an attuned sense of what makes a good texture versus what doesn't.
+Generally, you'll make the model first and then you'll make the texture.
+
+OK.
+So we already talked a little bit about models--
+sorry, about materials.
+We'll go back over it really briefly again.
+There is a resource that I really like and I
+think does a really wonderful job of teaching far
+beyond the basics of Unity.
+And that's catlikecoding.com, and it's totally free.
+They just have a bunch of free articles on there which are very in-depth.
+And this is a screen shot taken from one of the articles
+where they talk about how to make really interesting materials.
+So you can see here, this one of the left,
+it looks very-- you know, it looks like a fireball,
+like it's made out of magma.
+And it's got bumps on it.
+It has contour you can see that there's sort of like a glow to the fire on it.
+On the right, you can see that this model
+has sort of conditional shine on certain parts of it.
+Like the metal part of it is shiny but the rest of it isn't.
+And so how do we make certain parts of the material shiny?
+How do we make certain parts of it flat?
+The article goes in depth on that.
+Effectively what they do is they use several layers of maps,
+like a shininess map, which is a texture that tells you--
+that you reference in a Unity custom shader that you write,
+which the article teaches you how to write.
+Which will make certain parts of the texture glossy and certain parts
+of it not glossy, so matte.
+And so you can do a lot of really cool, very interesting things,
+and Unity's shading system is very--
+sort of the sky is the limit.
+Because it's effectively a standard shader language like you would--
+it's effectively the same thing as HLSL, I believe,
+which is High Level Shading Language which is a--
+if I'm not misremembering--
+Microsoft originally came up with it, and it's
+very similar to GLSL, which is the open GL shading language.
+And so what these are, effectively, is just little programs
+that run on your graphics card.
+We talked about this before.
+But they tell your scene how to process lighting
+for the objects that are within it.
+And everything in Unity has a shader associated with it,
+even if it's just the standard shader, which by default is just a white color.
+But you can write your own shaders and you're
+capable of virtually unlimited possibility.
+And this effectively is all a shader, and it's all a shader
+that's been written in code.
+But we have a lot of these variables that are exposed to us,
+and albedo is one of them.
+And albedo is sort of conditional.
+If it gets a texture applied to it, it will just render that texture.
+But if you apply color to it, it will apply that color to your material.
+And so that's how you can get, you know, textured
+things versus non-textured things.
+Metallic just computes shininess and reflectivity off of surfaces.
+And that's just something that's written into the shader
+and produces the lighting responsible to make that happen.
+And all of these different things are just part of a single shader.
+And a material is effectively a shader.
+They're kind of one in the same.
+A material is a little bit different in that
+you can also specify how its surface should interact with other things.
+So for example, if you're in an ice level,
+a material can not only be like the sort of glossy, icy look of something,
+but also, how slippery is it when I walk over it?
+And should I slide?
+And how should other things interact with it that have physics?
+So those two hand-in-hand are sort of what a material is.
+But likely, as you're starting out the only real things
+that you'll need to consider--
+and you're sort of bound only by your curiosity--
+our albedo and maybe metallic, and maybe emission.
+And then depending on how much you-- how big your thing is
+and how small your texture is, maybe tiling.
+And then recall last week we manipulated offset.
+So offset is how much the texture is shifted, and recall it
+loops around back to the other side.
+And so by manipulating offset on the x-axis,
+we were able to get an infinitely scrolling texture, right?
+And so all of these things have their uses.
+And pretty much everything in Unity has its uses.
+It's a very vast toolkit to use.
+But those are probably the important things that you'll see.
+And this article and many others on this website,
+which I highly recommend if you're looking to get really deep into Unity,
+will give you a lot of insight into how things work far beyond just the surface
+level there.
+So any questions on materials?
+
+All right.
+So we're going take a look now at lighting.
+So materials are one part of the equation.
+So that sort of defines how things should look when light hits them,
+but we also need light itself in our scene to illuminate things.
+And so this is taken from another article on Catlike Coding on rendering.
+And so this is a scene with a lot of lights, a lot
+of glowing lights, emissive lights.
+And there's a lot more going on here, but this
+is another great series of articles on how to understand the lighting
+model in Unity.
+And it teaches you a lot.
+It teaches you almost down to the very bare ingredients of the,
+sort of, the software and the rendering, if you want to go that deep.
+I certainly haven't gone through every article
+because there's a tremendous amount of content and it's very deep.
+But if you're looking to really get a sense of how it works,
+I would encourage you to explore that.
+So we'll look at a few different types of lighting.
+Beyond the more complicated things that this article talks about,
+we'll look at the different styles of lights, which you'll probably
+use more often as you're starting out.
+So point lights.
+Anybody have an idea as to what a point light might be based on this picture?
+AUDIENCE: Pointing in a very specific direction?
+COLTON OGDEN: It's not pointing in a very specific direction.
+That's actually a spotlight.
+So a point light is a source of light that actually shoots out
+in all directions around it.
+So it emits light in all directions, but within a confined area,
+at a specific intensity.
+A spotlight shines light in a specific direction.
+So only one direction.
+And what's interesting about spotlights is you can actually
+apply what's called a cookie to them.
+And what a cookie does, very similar to what the Batman light does,
+it allows you to apply a texture to a light
+and therefore cast shadows, specific shadows, on the light.
+So if you wanted to make something like the bat signal,
+you could put the Batman icon cookie on your spotlight.
+And that will shine a light, but the Batman logo
+will be in the middle of it.
+It's effectively the same thing as taking a literal spotlight
+and putting a object onto it.
+It produces a shadow.
+A manual shadow.
+AUDIENCE: It's called a cookie?
+COLTON OGDEN: It's called a cookie, yep.
+
+A directional light.
+Does anybody know what a directional light is?
+So despite its name, it's actually not the same thing as a spotlight.
+
+So directional light-- we used a directional light last week, actually.
+Last lecture.
+Directional light casts light in a single direction,
+but throughout the entire scene, as if it's the sun.
+So this allows us to illuminate globally the entire scene,
+but all light gets cast from one direction.
+So if you want to produce the appearance of daylight in your scene,
+just a single directional light will illuminate everything.
+And then the last thing, which is used less, is called an area light.
+So does anybody know-- can anybody guess what an area
+light is based on this picture here?
+
+Yes.
+AUDIENCE: It's light that's only on the surface?
+COLTON OGDEN: Light that's only on the surface.
+Kind of, yes.
+So it's light that will emit from the surface
+of a specifically-designated rectangle, effectively, in one direction.
+So you can define a large area.
+For example, maybe you want like a wall strip in your game or something
+on the wall to emit light specifically to the left or something like that.
+That's what an area light is capable of.
+Now, area lights are computationally expensive,
+and so you can only use them when you bake your lighting.
+Does anybody remember what baking means when referring to lighting?
+
+So baked lighting just means that, instead of real-time lighting,
+calculating things dynamically, the light gets calculated one time
+and saved, and almost like freezed onto all of the objects in the scene.
+And so there are pros and cons to this.
+What's a pro to baked lighting, do we think?
+AUDIENCE: It's less computationally intensive.
+COLTON OGDEN: Less computationally intensive.
+What's a downside to baked lighting?
+AUDIENCE: Can't be dynamically affected.
+COLTON OGDEN: Can't be dynamically affected.
+So if you're walking through a baked lighting scene
+and you're expecting to cast a shadow on something, or for something
+to cast a shadow onto you, it's not going to happen.
+Because the environment's already been--
+the lighting for that scene has been pre-baked.
+It's almost as if we've just recolored the world in a specific way,
+but we're not actually doing any lighting calculations.
+But this is how lighting worked in, like, the N64 era.
+And it's how it still works now for certain situations.
+If you know nothing is going to cast a shadow on something,
+you can make really nice looking lighting for a scene
+without needing to do it in real time.
+You can just bake it, right?
+So those are the different types of lights.
+So we can see that, in Unity--
+so if we go here.
+I'm going to-- so right now we have a directional light.
+So this directional light is this object here.
+By default, all-- and you can zoom in as much as you want,
+but it's sort of like--
+oh, there we go.
+This directional light is only shining in one direction.
+So I can move it here.
+So currently I'm in--
+it's a little bit weird to navigate, just
+because it's been rotated a little bit.
+Given that it's a directional light, its rotation--
+
+So notice how it changes.
+So if I shine it upwards, notice that everything becomes black
+because the lighting is just shining upwards, right?
+So as if it's coming from below.
+And if I shine it towards there, notice that the lighting
+on the sphere and the little cube there sort of change a bit, right?
+Because they're getting affected by the direction of the light a little bit.
+But they both get affected the exact same,
+because the directional light is omnipresent.
+It's throughout the entire scene.
+It's a global object.
+Now if I delete the directional light--
+Notice have no light now, so these things just
+look kind of, like, statically shaded.
+You can add a new light through--
+if you right click in your sort of game object view, and then you go over here,
+you can see we have all the different lights we talked about.
+There's also things called reflection probes and light probe groups.
+And those are a little bit more complicated.
+But those allow you to effectively get pseudo-real-time lighting
+and reflection with baked lighting and reflection.
+We won't talk about those in today's lecture.
+But here's a point light, for example.
+So, let's see, where is it?
+It's right over here.
+So I'm going to move it over here.
+So you can see it's not global like the directional light was, right?
+It's just affecting this very limited-- and I'm going to zoom in a little bit
+so you can see a little bit better.
+But it's affecting just sort of these two objects
+relative to where its position is.
+
+And so this works perfectly for things like lamps in your scene.
+If you want to have a street light, or whether you want to have
+maybe like a fire going on in a house.
+Or if you want the power up that we had--
+or the pickup that we had in the Unity scene, right?
+We have just the--
+it's just emitting a purple light that is within a very small radius.
+Notice here we can change the color of the light.
+So if I make it like that--
+
+there we go-- so I'll do that.
+So notice now it's emitting a purple light.
+So you can color a light however you want
+to produce whatever effects you want.
+So fire is not going to emit white light.
+It's probably going to emit like an orange red light.
+Street lights are probably going to emit kind of like a yellow orangey light.
+So depending on what your scene looks like and what you're trying to emulate,
+you can accomplish pretty much anything with just these very simple objects.
+So I'm going to get rid of the point light.
+And then I'm going to create a spotlight.
+I'm not going to create an area light just because I need to actually bake
+the lighting into the scene.
+But I will create a spotlight just so we can see what it looks like.
+
+Get it in the right position.
+
+Sometimes it can be a little tough to figure exactly where you are.
+OK, getting close.
+There we go.
+Perfect.
+So this little spotlight right here is being produced by our object.
+So you can see we can move it around.
+And then we can apply a cookie to it if we want to, as well.
+It's right here.
+So in your-- if you're in a spotlight and you want to apply a texture to it,
+just this little cookie--
+and it just expects a texture.
+So whatever image you want.
+And if you're creating a cookie texture, white means full light and black
+means full shadow.
+And so you can make it a grayscale image.
+You can make it anywhere in between white and black,
+which will allow you to produce some interesting effects.
+For example, the manual in--
+
+It's not here.
+I didn't include the picture here, but the manual
+shows there are some kind of like the lights that you put on a stand.
+And they have a bunch of LEDs, right?
+And they're sort of in a grid, and they shoot out a spotlight.
+You can create a cookie that's kind of a grayscale with those gridded lines,
+and it'll shoot light onto the scene as if it's being
+broadcast from a sort of grid of LEDs.
+So there's a lot you can do with just some very simple ideas.
+Those are the kinds of lighting that we can use.
+And in today's lecture, we only really used the point light.
+And in the last lecture we used the directional light.
+And spotlights you could, for example, programmatically
+change, for example, the rotation of a spotlight,
+if you want to have like a swinging spotlight in your scene to illuminate
+some wall or some surface.
+There's a lot of cool things you can do with it.
+So those are the core types of lights in Unity.
+Does anybody have any questions as to how they're used or how they were.
+AUDIENCE: For directional light, does it matter
+where it's placed or only the direction it's facing?
+COLTON OGDEN: It does not matter-- so for the directional light,
+it does not matter where it's placed.
+You could place it anywhere in your scene--
+00 or some far distance away--
+it'll have the exact same effect on the entire scene.
+Any more questions?
+OK.
+Cool, cool.
+So those are lights.
+Bump mapping, we'll talk about very briefly.
+So bump mapping is--
+we actually do use this in the game.
+A bump map effectively is-- so what you see here on the left
+is an actual 3D scene.
+These are actual models being shaded in real time.
+Or, not in real time, but they're actually real models being illuminated.
+In the middle, we can see what's called a bump map, and on the right,
+we can see a-- that's just a flat--
+like a flat plane.
+With a bump map-- with that same bump map-- applied to it,
+and then illuminated.
+So what a bump map allows us to do is to take a flat wall or flat surface
+or whatever you want, and then simulate an actual three-dimensional contour,
+three-dimensional bumps, or whatever you want on that surface
+without needing to create the actual geometry to make it possible.
+And so there are different tools that will allow
+you to create bump mapping objects--
+or bump mapping textures.
+Often 3D packages will have these, so you can create them.
+Or other software.
+But they are effectively just the encoding
+of what are called surface normals.
+So just a vector going from outside of the polygon at that given point.
+And they tell the lighting system in Unity,
+pretend as if there's actually geometry pointed in that direction
+when you calculate it.
+And so, even though it doesn't distort the geometry in a way that's--
+like, this is still completely flat.
+The lighting thinks that the geometry is kind of, you know, contoured.
+And so it allows us to create--
+this is kind of a toy example, but it's actually
+relevant in the case of walls that have--
+and we covered this last week, just not in as much detail.
+But walls that you want to be flat and you
+don't want to have a lot of polygons for, you can create a bump
+map for and apply that bump map.
+And then when you're rendering it, when you walk past a wall,
+it's going to look as if the wall actually has cracks and bumps in it,
+for a realistic effect.
+And this is used in the game to a slight degree.
+And you can crank it up if you want to.
+I didn't on my computer because my specs aren't sufficient.
+But every texture in today's example has a bump map associated with it.
+So you can actually see the effect of bump mapping at various degrees of use.
+The materials here-- I'm going to go--
+I'm going to load up the scene that has the actual stuff.
+
+I'm going to-- actually, I don't need to load up the scene.
+All I need to do is go to the materials.
+And the floor, for example.
+Where is the floor?
+Right here.
+So notice that before, we talked about albedo,
+and then I also mentioned normal map.
+So right here, all you really need to do in order
+to get Unity to detect normal maps-- and this is just
+part of the standard shader.
+Normal maps and bump maps, by the way, are effectively synonymous.
+You can just drag your normal map texture
+into this field here, this little square,
+and then give it a degree at which to apply that normal map.
+And so if you look at this here, you might be able to see--
+I don't recall.
+Yeah, we can sort of see how it changes the texture, right?
+So at zero, there's no normal mapping taking place at all.
+That texture is just completely flat, as if we
+had done just the regular apply texture to a sphere.
+But the degree at which we apply normal mapping-- so notice that at degree one,
+it kind of looks pretty realistic, as if we've got kind of a stony texture.
+And the more we go, the more exaggerated it starts to look, right?
+And you can just keep doing that, and it'll eventually just
+look really distorted.
+But that allows you--
+and depending on how strong your computer is,
+you can go higher or lower--
+to affect just how bumpy--
+just how strong the bump map, the normal map, affects the lighting rendering.
+So it's that easy to get just a fairly, sort of,
+extra sense of realism in your scene.
+So you'll notice, if you're walking through the scene,
+if you turn off lighting it's even easier to see
+all of the surfaces, the floors, the ceilings, and the walls
+have a bump map as well as a texture map.
+So that's-- in case you're wondering what these weird colored textures are,
+RGB or XYZ for the surface normals and their permutations thereof.
+And that's how it gets encoded into this.
+And so often you can see--
+if you're looking at a bump map and a texture map--
+you can kind of see together, like, oh, OK this makes sense.
+The parts that I would expect to be bumpier or do
+have a correlation to how they look on the actual bump map texture.
+You can see it here.
+Everything that is bumpy or contoured is very visible in the bump map.
+And that's just by nature of the way the data is encoded.
+So any questions as to how bump maps work or what they are
+or how to use them in Unity?
+
+All right.
+Cool.
+So now we're going to start getting a little bit more
+into how this all comes together in our maze on our game,
+and we'll talk about maze generation.
+So I'm going to just start up the scene here.
+So I'm in the actual play scene.
+So in scenes, I loaded up play as before.
+I'm going to hit Play.
+I'm going to turn off my sound, just because the creepy sound
+is a little disorienting after a while.
+And then I'm going to--
+
+actually, I'm going to go to a 2 by 3 view.
+
+And then hit Play.
+So we have the regular game view down here below.
+And then also, if I zoom out, you can see that our scene was empty before,
+but now we've got a maze.
+And currently it's not very visible at all because one,
+we're applying fog, right?
+And recall fog allows us to effectively add color
+to objects that are farther away from us.
+And two, there's a ceiling on top of our--
+a roof on top of our maze.
+So it's actually blocking out what the maze looks like.
+So we can fairly easily make a couple of changes
+here in order to see our maze a little bit better.
+So I'm going to go to Window, I'm going to go to Lighting, Settings.
+And so if you go to Window, Lighting, Settings,
+those are your sort of global Unity lighting settings.
+You can set your skybox, you can set environment lighting,
+you can set things like fog, you can choose how things are baked.
+There's a lot of things here.
+We won't cover nearly all of them.
+We will cover a few of them.
+Environment lighting is a big one.
+That's actually how we're lighting the scene in this game.
+So all of the lighting that's not--
+well, all of the lighting is environment lighting.
+That's how we're doing it.
+We're doing it with color.
+So notice that you can choose Skybox, Gradient, and Color.
+So if you choose skybox Environment. lighting, it's going to have sort of--
+it's going to look kind of like this skybox that we have here.
+This sort of in the far distance, looks blue.
+Kind of a little bit more natural.
+But I didn't-- but when it's applied to our scene,
+it doesn't look quite the way we want it to look.
+So what we went with instead was just color.
+And I chose this sort of murky greenish brownish color.
+And that gave the result that I was looking for.
+But you can make this any color you want to.
+We can make this some sort of bright yellow color.
+I have no idea what this is going to look like.
+This is probably going to look horrible, but--
+Yep.
+I mean, actually, this--
+is in a weird way this kind of looks interesting.
+It actually looks closer to the original Dreadhalls game than what I did.
+But it's not very scary.
+Kind of looks like we're in a pyramid.
+
+That is-- am I able to go back?
+No.
+OK.
+Well, I screwed up the color.
+Now I'm trying to find kind of what color I had before.
+It's kind of like a nasty green.
+Kind of like that.
+That's probably good enough.
+OK.
+Something like that.
+And so we play it again, we can see we're back to the nasty dark color.
+But that's environment lighting.
+So it applies a lighting, uniform, just ambience.
+Kind of like a directional light, but it doesn't have a direction.
+It just applies to everything in your scene at a given intensity.
+And that is how we are lighting our scene.
+It's that easy.
+Just environment lighting in our scene and our lighting scene window.
+Now, the other important thing here is the fog.
+So fog is as easy--
+almost as easy as just clicking this button here that says fog,
+and then choosing a color for it, probably.
+You can choose the density, so obviously if it's a higher density fog
+it's going to look as if you're in a foggier place.
+It's going to sum the color to things that are closer to you
+faster than it would if you had a lower density fog.
+And there are some other features here, some of which
+I'm not terribly familiar with.
+But for the sake of today's example, just the click--
+make sure fog is selected.
+And then click, make sure you have the right color for your fog.
+So if you have like a ridiculous red color for your fog,
+it's probably going to look weird.
+Yep.
+But you can see how you can do all kinds of weird effects
+just by adding these things together.
+Like, if you want to have the effect of being in some sort of, like--
+I don't know, noxious foreign world, maybe you want like a purple fog
+instead of like a dark green fog or whatever.
+That's super easy.
+You produce a lot of very basic but effective effects that way.
+Let me find-- I think it was just that kind of the same nasty green color.
+AUDIENCE: How you bring this screen up again?
+The one that says lighting?
+COLTON OGDEN: So to bring up this lighting screen, all you need to do
+is, if you're on a Mac--
+I think in Windows it's the same thing-- there's
+a Window option in the top menu.
+Window, and then Lighting here, and then Settings.
+And so this will bring you to all of the settings that are pertinent to at least
+today's example.
+And so we're not using any lights in our scene
+that we talked about before, at least for the lighting of the scene itself.
+Now, there are point lights being used for the pickups,
+and I'll show you that in a second.
+But what I wanted to illustrate was how we can look at our maze
+after it's been generated.
+And so what we need to do first--
+notice that before we couldn't really see our maze at a distance
+because it was just purely dark green because of the fog.
+It was adding green to that geometry because it was so far away.
+So I'm going to disable fog for now.
+It'll actually remember your settings, which is kind of nice.
+So just going to disable fog.
+And I'm going to actually add a directional light to the scene.
+So I'm going to go here, add a directional light.
+And then I'm going to hit Play again.
+
+So now, our scene is lit.
+
+And, you know, it looks a lot different, a lot less scary.
+And we can see our maze lot better.
+We can actually see that it is a collection of blocks.
+It's tiled blocks.
+Now, we can't see into the maze because the maze has a roof.
+So what I did was I just made a generated roof,
+an option in the script, and so if you unselect that and then we try again,
+now we can see our maze.
+So this is what our mazes look like.
+And so the cool thing about Unity, which I really love,
+is just this ability to look through your scene independent
+of the actual game, just to help debug.
+It's hard to know if you're generating your maze correctly
+when you're creating it in 3D.
+You know, in 2D you can easily just look at it.
+But in 3D, especially in a first-person game, you can't really see it.
+So being able to split your view like this-- the scene and the game--
+and actually see, oh, my algorithm's working, or it's not working.
+Super helpful.
+So we can see that it is carving a maze for us.
+It looks a little bit weird.
+It's not a traditional maze in the sense that it has the classic maze
+shape to it.
+But it effectively functions as a maze, and it works very well
+for its intended purpose.
+And the algorithm is incredibly simple, and we'll talk about that.
+So that's our maze.
+I'm going to go ahead and revert all of the--
+I think if I just reload the scene it should just revert it.
+Don't save.
+Yep.
+OK, so everything's been reverted, all the lighting and everything.
+Just going to do a sanity check and make sure.
+Yep.
+Everything works perfectly well.
+So anybody have any ideas as to where to get
+started if we were to implement a 3D maze?
+AUDIENCE: The way I did it once before is
+you put a bunch of x's where you want something to be drawn in an array.
+And then you loop through the array and draw, instantiate the walls.
+COLTON OGDEN: Yes.
+So create an array.
+Populate it with x's where you want--
+data wherever you want something to be instantiated,
+then loop over and instantiate everything.
+That's exactly how it works.
+Now, in terms of actually creating the maze,
+do you have any ideas as to what--
+how would you go about implementing a simple maze generator?
+And there are, obviously, very complicated maze generation algorithms,
+so nothing terribly fancy, but just a simple--
+how would you make a maze?
+AUDIENCE: So it's random?
+Or--
+COLTON OGDEN: It's random.
+
+So starting with the idea that we have an array, right?
+It's got to be a 2D array because we have two axes upon which
+we're generating things here.
+Even though we're in a 3D environment, we don't need a 3D array.
+We just need a 2D array.
+Because if there is a positive value for wherever
+we want to generate a block in our 3D maze,
+we just generate a column of blocks.
+We don't need to worry about a third dimension, right?
+Our maze isn't taking into consideration multiple levels, at which point
+we would need to maybe consider three dimensions.
+And even still, you can still divide those into separate 2D arrays of mazes.
+We just have an x and a y.
+So how would we get started--
+what would we start populating the arra-- let's say we have an array,
+it's just a bunch of zeros, right?
+What are we populating with the array after we have initialized it?
+
+AUDIENCE: So I'm thinking maybe you would kind of start
+off with just four walls add corridors, maybe?
+
+COLTON OGDEN: So start with a bunch of walls and then add corridors.
+That's exactly what we do.
+The algorithm is actually pretty simple.
+So I'll try and maybe draw a little bit, just to see
+if I can illustrate how this works.
+AUDIENCE: How do you make sure that you can get from one side to the other
+and there's no wall in between?
+COLTON OGDEN: By making sure that every thing that you change is orthogonal.
+Every block-- every step that you move is orthogonal.
+That will ensure that you start at one point, end at another point,
+and those points will always be accessible to one another,
+just by virtue of how simple the algorithm is
+and the orthogonality of it.
+So if we start with walls--
+so 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.
+These are all-- in the distro, these are all Booleans
+because we don't need-- we only need zeros and ones so we're just
+going to use true and false.
+We don't need to use integers for that.
+So this is our starting maze here.
+And actually I'm going to add another dimension because--
+or not another dimension, but another size,
+just because the walls always need to stay-- to be there.
+These are basically untouchable.
+I'm going to try and draw that as best I can.
+Right.
+So we effectively have this as our working area for creating a maze.
+Because we want this to be--
+we want walls no matter what because we don't
+want our person to be able to walk outside the maze
+or see the outside world, ever.
+We want them to be locked in.
+So we have all of these ones here, these trues, effectively.
+And so all we need to do is start at some random position,
+let's say this value.
+At 3, 2-- or, well, it's actually, technically
+it's 2, 3 because we index at y and then x in a 2D array.
+So we go 2, 3.
+We go here.
+And then we basically can move either left--
+or we can move either left or right or up or down.
+But we can't move both at the same time.
+And why can't we move both at the same time?
+Let's say that we're-- let's say, first of all, let me say that we're--
+let's say we're going to carve our way through the maze.
+So we're going to turn these ones into zeros, but we can only move either--
+we can only move orthogonally, meaning left or right up or down.
+We can't move diagonally.
+So we can only--
+let's say we have an x move, right?
+And a y move.
+
+And those can be set to--
+by default they're 0, so we're basically saying,
+where on this step of the generation are we going to move?
+And actually, technically, it's direction because we're-- the way that
+we do it is via directions.
+AUDIENCE: So if you're moving down, then what's in front of you
+will have no wall.
+And there'll be walls on either side of you except for where you came from.
+
+COLTON OGDEN: Yeah.
+So if you're here and they move down, this is going to be 0,
+this is going to be 0, and so those points are linked.
+And then from there we're going to move in a given direction.
+And so all of tho-- let's say they move here.
+All of those are going to be linked.
+And so if we move here, all of those are going to be linked.
+Just by virtue of the fact that we're moving orthogonally,
+we can't create a maze that's unreachable.
+Because the way that--
+just by virtue of the fact they're moving orthogonally.
+Now if we move diagonally, if I were to move here, right?
+There's walls right here and then two spaces there.
+That's not going to work because we can't access that.
+We see a-- we're going to see a cube here and a cube here.
+And we're going to see-- we won't be able to move diagonally through walls.
+So that's why we need to ensure that we only
+move either in the x or y direction, not both at once.
+And so what the algorithm does is it randomly chooses should I move x
+or should I move y.
+And should I move positive or negative.
+So it'll do-- math dot random, equal--
+you know, two equals 1.
+Effectively in the code it's random dot value, less than 0.5,
+because random dot value in Unity gives you 0 to 1 as a float.
+So you say if random dot value less than 0.5,
+which is a random chance between true and false, effectively 50%--
+move in x or move in y.
+And then same thing, but should I move in the negative or positive direction?
+So if I'm here, I'm thinking, OK, let's see.
+X move or y move?
+Again it's going to be an x move, so I'm going to move either left or right.
+OK, so am I going to move either negative one or one
+step, one to the right or to the left?
+So if it's negative 1 and that is going to move to the left, right?
+And if it's positive 1 it's going to move to the right.
+So that's the essence of the algorithm, just looped over a bunch of times.
+Whenever I move to another tile, turn that into a zero.
+So actually, this becomes a zero.
+Change the color.
+So this will become a zero.
+So that's now an empty space.
+And in the code, that instantly teleports the character to that space,
+too.
+So we know that our character is always going to be in an empty space,
+because he gets placed in the first open space that gets generated in the maze.
+And so let's say x move is equal to negative 1 on this iteration.
+So let's say we're looping until we've cleared x blocks.
+So I want to clear-- let's say I want to clear five blocks.
+So to clear equals 5.
+That's how many blocks--
+when we've cleared that many blocks, we're done with the maze generator.
+So cleared one, so our current counter is one.
+So x, we get-- flip a coin.
+We're moving to the x direction by negative 1.
+So we move to here, and then we turn this into a zero.
+Now, this implementation of the algorithm moves one step at a time.
+And so because of its randomness, what this ends up doing is
+it produces very large chunks of deformed space,
+just because the crawler is just constantly moving around,
+kind of, like, haphazardly.
+So what's a refinement that we can make to this algorithm
+to make it look a little bit more like corridors or like hallways?
+AUDIENCE: Just keep going until you hit the other wall?
+In the same direction?
+COLTON OGDEN: You could do that, yeah, keep
+going until you hit the other wall.
+The result of that--
+you mean to hit the side of the maze?
+Yeah, because it-- well, if you did that,
+it would effectively just be like--
+it would kind of be--
+it might work in some cases, but it will be very long hallways
+and not a lot of turns or anything like that.
+So the result, what we actually want to do, is when we flip a coin
+and we say x move or y move, we want to also say times to move.
+We want to create a new variable called number of times to move, effectively.
+To move, and then we just set that to a random number between 1,
+so we're going to move 1 tile, or the size of the maze minus 2.
+Taking in consideration both walls, right?
+So let's say we get the--
+let's say we-- let's say we did x move minus 1,
+and we only got to move equal to 1, right?
+So we only move here.
+We move once in this direction, so we've got two spaces.
+And then let's say we flip a coin again and then we got y move--
+positive 1.
+And then two move, we got two.
+So we're going to move two directions in the y-axis by one.
+So this is a result of us going down here, so we go 0 and then 0.
+
+And so the effect of this is that we move--
+we can move in more than just one block at a time
+and avoid the sort of random, like, haphazard, weird, organic, large room
+aesthetic that we want.
+If we want like a hallway, grid-like, dungeon looking room generator, right?
+Now there's a caveat to this, and that is if we start here, for example,
+and then we want to--
+let's say we flip a coin.
+It's x move, but it's positive four.
+We can't obviously move four tiles to the right because one,
+it will go into our walls on the outside, and two,
+it's actually beyond the bounds of our array.
+So we need to clamp that value down.
+When we add 1 to our value, to wherever our x--
+we have to basically keep pointers.
+We keep pointer to whichever tile we're currently at.
+We need to keep--
+when we actually go to the next tile in our step,
+we need to clamp that value within the range of our walls.
+So we need to clamp between one--
+so because we don't want to be at zero--
+we want to clamp it between one and main size minus two, actually.
+Because we want to make sure that we don't go any farther than this one
+here.
+Does that make sense?
+This is how-- that is effectively how our generator works.
+It's a step beyond just the move one block at a time,
+just because the mazes look away too empty and weird.
+With this approach where you're moving in a direction,
+and for a random number of tiles as opposed to just one at a time,
+you actually get pretty nice looking, simple mazes.
+This isn't how actual maze generation works, for mazes that you would see
+and an actual maze that you do in, like, a crossword puzzle book or a maze book
+or something.
+Those are more complicated.
+But this solution works well.
+It's very fast and very cheap, and actually pretty simple to understand.
+So any questions as to how the maze generator-- the algorithm, at least
+as applied to our 2D, array works?
+
+All right.
+Cool.
+That's the-- that's basically the gist of it.
+So we're going to take a break here for about five minutes, and then as soon
+as we get back we'll dive a little bit more
+into sort of how the character controller works, and the pickup,
+and a few other aspects of the game.
+All right, welcome back to Lecture 9.
+So before the break we were talking about the way
+that we implemented procedural maze generation.
+So a fairly simple algorithm that creates this sort of hallway
+look where we can easily get lost.
+But they aren't technically mazes in the traditional sense
+like you might have seen growing up in puzzle books and such.
+Another pitch for Catlike Coding, because his articles are amazing.
+He has another one on how he did a maze generator.
+And in this one, beyond just regular blocks--
+oh, I'm sorry.
+I didn't have the slide there on that thing.
+So this is a screenshot of another article
+from Catlike Coding where he talks about how to make his own maze generator.
+And the cool thing about his is that he has
+a bunch of different geometry involved in the scene.
+It's not just blocks.
+He has doors and windows and other things.
+And his algorithm is a little bit different than mine
+and produces some pretty interesting looking things.
+And you can see here, also, it has a view of the scene
+sort of superimposed on the actual scene, which
+he does with a trick using two cameras.
+So here's another maze slash dungeon generator article
+that I really like where he creates sort of like Dungeons
+and Dragons-style generators.
+And this is sort of pertinent to my interests as a developer
+because I really love roguelikes and dungeon generators and RPGs,
+but he goes into extensive detail on how to make
+a really nice and efficient 2D maze slash
+dungeon generator that produces really nice looking dungeons.
+As you can see here, it's got a very variable layout, lots of corridors
+and rooms and stuff like that.
+So implementing some like this in Unity would be really cool,
+and there's a plethora of generators and assets
+like this that will do the same kind of thing in Unity
+available in the asset store.
+So you don't have to make this yourself most of the time.
+You can create-- you can just go find either free or paid assets that
+will do all this for you and save you a tremendous amount of time.
+And how much of them are also very customizable, too,
+so that you can tailor the generator to fit the demand of your game.
+So we saw how the lighting works in our game.
+We've seen the maze, sort of how, it's generated, what it looks like.
+We have not taken a look yet at the character controller.
+So we'll briefly just take a look at that.
+It's actually incredibly easy to do in Unity, at least
+to get something fairly basic up and running.
+The way that we get a FPS controller in the case of our game is Unity has,
+which I alluded to before, a set of built-in standard asset
+packs that allow people getting used to the game engine,
+or just trying to bootstrap their game, up
+and running with some very basic components.
+Very basic things that are super helpful for getting your game running.
+So actually we used the prototyping standard assets pack for our pickup.
+We use the characters one for the character controller, the FPS
+controller.
+So if you're in a fresh project and you just go to Import Package
+and you import this character thing here, it'll import into your game.
+So that you can immediately use the prefabs that it gives you to create
+a character object.
+So it will, by default, just put it in your assets folder.
+Underneath Standard Assets, and then Characters,
+and then there's a first-person folder.
+And within the first-person folder there's
+a prefabs folder which has the FPS controller game object.
+And so all you need to do is just drag it into the scene,
+and then that becomes your default camera.
+
+AUDIENCE: That comes with Unity?
+COLTON OGDEN: It comes with Unity, correct.
+That's just a standard asset.
+AUDIENCE: And it's always in the prefabs folder?
+COLTON OGDEN: It's always in the-- the FPS controller will always be in the--
+so you have to import it first.
+You have to import the asset package.
+The characters package.
+Once you've imported the characters package,
+you'll go into Standard Assets in your assets folder.
+There'll be a new folder called Standard Assets.
+Within Standard Assets you'll go to Characters, then First Person, and then
+Prefabs, and then that's where you'll find the FPS controller.
+AUDIENCE: Thank you.
+COLTON OGDEN: Yes.
+No problem.
+So the FPS controller, if we take a look at it--
+we talked about it before, briefly.
+But effectively, it's just a capsule collider,
+which is sort of defying physics, because it's kinematic.
+Kinematic with gravity applied to it.
+And it has a camera sort of towards the top of it
+where the head is to simulate the perspective of somebody
+from first person view.
+And there's some programming involved that
+allows you to control it with the keys and the mouse,
+to control the camera's rotation with the mouse and the position
+of the collider with the WASD keys.
+And if you want, you can dig into the actual script for it, too.
+They're all included with the standard assets pack.
+When you import that into your project, it
+comes with all the scripts that make all that possible.
+I haven't dug through all of them in too much detail, but it's all there for you
+if curious as to how it works.
+And so if you want to get just a simple FPS controller in your game,
+a character in your game, to walk around and play a first person game,
+it takes about a minute to get up and running.
+Now, there's a lot of customization that you
+can apply to your character controller to make it
+not just the standard, basic character.
+So you can set a walk speed, you can set a run speed.
+You can set jump speed, you can set the sensitivity of the mouse look
+on the game-- on the FPS controller.
+You can apply what's called FOV kick, which means when you're sprinting--
+which it allows you to sprint with pressing Shift,
+which multiplies your speed--
+it'll actually-- it'll expand your depth of field a little bit to make it
+look as if you're kind of claustrophobic.
+Things kind of go out, and so it looks more narrow,
+and it kind of gives you that look as if you're sprinting down a path,
+and you can set just how much it increases by.
+You can see the curve of how that is applied here.
+So this is one of the components that Unity allows you to do,
+is there's a curve object, and you can use this curve
+to influence various things in your game.
+I actually haven't used it much, myself.
+But if you're looking for something to apply a curve to,
+Unity has an interface for making that visible within your inspector.
+Head bob, which means when I walk, should the camera kind of
+go up and down?
+When you do have a head bob, what's the curve look like?
+So here's another curve.
+This is sort of what the head bob looks like, kind
+of a sine wave but a little bit distorted.
+And a few other things.
+So, for example, footstep sounds.
+Maybe you don't like the sounds that come by default with the controller,
+so you give it your own footstep sounds.
+Super easy to do.
+Just drag new sounds here.
+Jump sound and a landing sound.
+Two more sounds that you can add to it.
+And that'll allow you to customize most of the feel of how your character moves
+around in terms of just a basic FPS controller.
+And so just by applying those very basic things, customized them a little bit--
+we got lucky with this maze.
+And this means that the maze went all the way around and then
+looped right back to where we were and ended there.
+So this is-- that's that maze, OK.
+I'm going to go ahead and turn up the sound.
+You can hear the footsteps, right?
+Along with the creepy whispering.
+But the footsteps are just provided to us by the FPS controller,
+and again, you can customize those to be whatever you want.
+And so this gives you the ability to walk around
+in your scene for a first person view.
+It doesn't really give you much more than that.
+In order to do an FPS where you have maybe a gun or a weapon or something,
+you need to program some more things and it's a lot more complicated.
+But for just basic navigation of a 3D scene, it's a great foundation,
+a great way to get started.
+So any question as to how the FPS controller works?
+
+There are other controllers, too.
+There are third-person controllers.
+So if you want to use those.
+They don't come with a camera-- based on my experimentation,
+they don't actually come with a camera by default.
+So I think you have to parent a camera to them in the way
+that you want for your game.
+Like, for example, some games have the camera super high above your character
+while you're walking around, and some of them
+have a behind the shoulder look, almost like Fortnite or Gears
+of War, really close to the character.
+And then some kind of have-- like in Banjo Kazooie,
+you could be walking up a mountain and so the camera
+is kind of like perpendicular to where you are, and sort of follows you.
+Around so camera programming for 3D characters
+is a little bit more complicated than it is for first person games.
+And so that's why I mentioned it doesn't come with a camera by default,
+so it can be a little bit more complicated.
+But I do believe there are a lot of assets on the asset store
+that can help bootstrap you if you're getting a programmatic camera
+setup going for your character in a third-person view.
+Yeah.
+AUDIENCE: I've noticed when you're walking around your maze,
+occasionally you're clipping the wall and kind of seeing what's behind it.
+COLTON OGDEN: Yeah.
+That-- I believe that's a result of the collider being a little bit too big.
+So what he said was that walking through the maze,
+you can kind of clip through the wall a little bit.
+Let's see if you can actually experience it.
+Yeah, like right there.
+Yeah.
+And that's the-- I believe that's just the camera or the collider
+being a little bit too large.
+And so we could probably get rid of that altogether just
+by shrinking the collider a little bit.
+Just a detail that I didn't iron out.
+But you'll see that in a lot of games, actually.
+A lot of games have clipping that you can observe,
+depending on how they program the game.
+
+But, yeah.
+Any other questions as to how character controllers work,
+and how the import process works, and how to get it in your scene?
+OK.
+Cool.
+Yeah, it's super easy.
+Again, here's what the FPS controller looks like.
+Capsule collider with a camera.
+And then the third-person controller.
+By default they give you a pretty nice looking model on the left side
+there so that you can experiment with it.
+And then they apparently give you an AI one
+as well so you can test AI in your scene with it,
+but I haven't experimented too much with that to vouch for how well it works.
+So an important aspect of today's example
+is that we've gone from having just one scene to having two scenes.
+So I want to illustrate how we sort of move between the scenes a little bit.
+And also, I realized we didn't really cover the dungeon generator
+in code detail.
+But notice that I have exposed a lot of things here.
+A floor prefab, wall prefab, ceiling prefab.
+These are just the cubes that are textured
+to be our floor, walls, and ceiling.
+We can just click and drag them from the inspector into our scene,
+onto the components there.
+We have a character controller reference here,
+so that we can place the character controller in our scene
+when we've generated the first block.
+We can basically take the transform and set its position to whatever
+that x z is.
+And then a floor parent and a walls parent.
+So the reason that we have parent objects, actually,
+which we didn't look at before--
+whoops, I've lost track of where my--
+there it is.
+The reason that we have parent objects here
+is because when we instantiate all of the cubes in our scene,
+just sort of just instantiate them without really thinking about it,
+it ends up--
+basically, I'll show you here.
+
+Well, first of all, I don't know what this is.
+I think it's-- that's interesting.
+Oh, because I clicked on the floor parent.
+Right, OK.
+So you click on the walls parent, actually.
+I didn't do that yet, but it will actually
+show you where all of the objects that are parented-- or that
+are dependent on that parent.
+So the floor parent here--
+see how many floor blocks there are?
+It's quite a lot.
+
+There's a lot of floor blocks here, and in the walls parent there is even more.
+There's a lot of walls and ceiling blocks,
+and if we just generate those without assigning them a parent,
+it'll just fill up our hierarchy there very messily.
+And it makes navigating our scene during debugging very difficult.
+We don't need to see that we have a million clones of the floor
+or the ceiling blocks or the wall blocks.
+And so what we do is we just take all of the cloned blocks and we just parent
+them to an object.
+And when you parent something to an object, you get that little drop-down.
+Like, for example, this first-person character.
+This FPS controller is the parent of this first-person character.
+And so those are two separate objects that both comprise the FPS controller,
+effectively.
+A parent is top-level, and its children are therefore within this little arrow
+here, and it's collapsible.
+All of the things within the play scene, for example--
+the play scene is the parent to all of these.
+It's sort of like a folder hierarchy type of thing.
+And so if you want to clean up your scene,
+if you're instantiating a ton of things, just effectively
+containerize them by putting them into a parent object.
+And so we do that in our game with a function called create child prefab.
+And so what create child prefab does is, it does an instantiation as normal.
+Creates a prefab, instantiates it, gives it a position xyz.
+Quaternion dot identity because we don't want to apply any rotation to it.
+But my prefab dot transform dot parent equals parent dot transform.
+Effectively linking our-- we're assigning
+the parent field of that prefab's transform to the parent's transform.
+And that has the effect of basically linking them together
+in a parent-child relationship.
+And that will allow us to collapse and expand a list when
+one parent has a bunch of children.
+We can expand and contract in the hierarchy view and save us a lot of--
+save us a bit of a headache in terms of navigating our scene
+or we instantiate a lot of things, which is fairly normal.
+
+So the actual may--
+I'll go over this fairly quickly.
+It's a fairly simple algorithm.
+And we talked about it on the screen, and we don't have a ton of time.
+But basically we go z to x.
+The reason that we go z to x is because in Unity, z and x are
+sort of like the ground axes, and a y is sort of like that up and down axis.
+And so we don't want to instantiate-- we're not
+really worried about navigating the y-axis during our maze generator.
+Because all we're going to do is instantiate four blocks
+on the y-axis during that phase.
+So we're basically taking our 2D array, and we're iterating over it xy,
+and then we're mapping that to Unity's xz, If that makes sense.
+Because notice the-- this is our ground, right?
+So where this transform is, you can see the ground, how this is x.
+The blue is z.
+And y is this axis here.
+We're generating-- we're effectively only concerned about generating
+on the ground, and then when we generate a wall we just
+generate it four blocks high on the y.
+We don't think about the y.
+So that's why x and y for our 2D array, but x
+and z for applying that array to Unity's 3D coordinate system.
+Does that make sense?
+OK.
+So we're iterating over z and x.
+And then we're indexing into our map data, z and x, which
+is exactly the same thing as y and x.
+And then we are creating a child prefab.
+If map data z x.
+So recall that our map data is a 2D array of Booleans.
+And so if we have map data z x equal to true, that means there's a wall there.
+It means that there's a true in our array,
+so we should instantiate a wall at that location.
+So we create three wall prefabs, assign them to the walls parent
+so that they get containerized within there
+so they don't clog up our hierarchy view.
+
+And then-- let me see here.
+
+And so if we don't--
+So if we've gone to our maze, if we're generating our maze,
+and we get to our first tile that's actually not a wall,
+so it's an empty space--
+So basically, the else here.
+So if mapped data zx is not true, it's going to be false.
+So if that's the case, and if not character placed--
+so character placed is just a Boolean.
+It's a private Boolean.
+We don't want this to be visible in our inspector.
+There's no purpose for it to be visible in our inspector.
+This is just a Boolean for us to use in our script.
+So we set that to false by default because we
+haven't placed our character yet.
+But when we generate our maze, we have to make
+sure we put our character in a spot that there isn't a wall.
+Because we obviously don't want him trapped in a wall
+or clipping through the maze, right?
+So if not character placed, we're going to set the character controller's
+transform.
+We're going to sense position and rotation, which is a function.
+We're going to set it to x and then y 1, and then z.
+And then no rotation, so quaternion dot identity.
+And then set that to true.
+So therefore, this will never be called again.
+So this only gets called on that very first empty space
+that we go through our maze.
+And that's it for that.
+When we-- no matter what we do, whether there's a wall in our maze or not,
+we're going to want to generate a floor and a ceiling at that space.
+So-- that's, of course, assuming that generate roof
+is true which, recall, we made a public Boolean in our inspector
+so that I could debug and show you guys what the maze looks like from up above.
+So if generate roof--
+create a child prefab for ceiling prefab of x 4 z, so a bit higher up.
+And then no matter what, always want a floor.
+So create a floor prefab at x 0 z.
+So down below.
+And our character controller gets placed at, recall, x 1 z,
+so just above the floor.
+The assignment is actually-- part of the assignment
+is generate a hole in the floor.
+And if there's a hole in the floor and the character falls through the hole,
+should get a game over, right?
+So you're going to need to create a game over scene
+or we need to transition to that scene.
+And then we're going to need to check to see whether the character's transform
+has gone below a certain amount.
+It's all fairly easy stuff to do.
+But you'll look to do some of that in here.
+And then the actual maze data function is here.
+I won't go over it in detail, but it's the algorithm
+that we talked about before, where we choose direction to move randomly,
+and we choose a random number of steps to move,
+clamp that value within the constraints of the maze,
+and then set every tile that we explore to false.
+And that has the effect of creating the maze.
+And then we just return that data back to our function as just a 2D array.
+Notice that in C Sharp, to create a 2D array,
+it's a little bit different than in a lot of other languages.
+It has its own set of syntax for that.
+You have the array syntax that you're probably familiar with,
+but then you also have this comma.
+And that comma is to designate that there are two arguments to that index
+syntax here.
+Just means an x should go here and a y should go there, basically.
+Or y, x.
+And that's 2D array.
+And you can make it as many degrees as you want to.
+Just add more commas to it.
+And notice that to actually allocate the memory that we want for that 2D array--
+new bool, maze size, maze size.
+So our maze is always square shaped.
+Same-- and you could easily make this maze
+x, maze y if you wanted to, to make it rectangular.
+So you need to have two public variables instead of one.
+And all of this is fairly visible to the inspector, too.
+In our dungeon generator you can see I made a tiles to remove, 350.
+So that means that our maze is going to cut out 350 tiles,
+and as soon as it cuts out 350 tiles, it's done.
+And then our maze size is 30 by 30.
+So that means there's going to be 900 tiles in our maze.
+So you can tailor this to whatever you want in order
+to produce sparse or denser mazes to your liking.
+So any questions as to how the code for that works?
+More or less.
+So now we'll actually get to the scenes part of it.
+And so transitioning betw--
+oh, yeah.
+AUDIENCE: I'm thinking, like, for a smaller
+game like that, that works great.
+But for a larger game, wouldn't you want to model the walls
+as 2D kind of objects, and the ceiling, instead of a whole cube?
+COLTON OGDEN: Oh, yeah.
+So for a small game, is it ideal--
+more ideal for the walls to be rendered as one discrete object as opposed
+to several cubes?
+Yeah, absolutely.
+That's 100% true.
+And actually, Minecraft is an example of this sort of idea
+that you think would work, but they actually
+consolidate all their geometry after they've generated it in this way
+and produce, like, models that are more optimized.
+You think that you're interacting with this world that's
+a bunch of these little blocks, all separate.
+But it's actually one big piece of geometry,
+and then it dynamically figures out where you're hitting and removes
+and adds blocks as needed.
+And there's some cool videos on YouTube as to how to do this in Unity,
+too, which I looked at a long time ago.
+And it kind of shows you--
+you can actually dynamically create meshes and vertices and stuff in Unity,
+and then create objects that way, which is really cool.
+But that's a little bit more on the advanced side.
+But yeah, absolutely.
+For an actual implementation of this, a simple but more efficient way
+to do it would just be to have one solid, large, wall object.
+That's as tall as you need it to be, and maybe as
+wide as you need it to be for one character, and have that work.
+But for simplicity's sake and to illustrate the algorithm,
+we were just using the cubes.
+Yeah, exactly.
+But yeah, good point.
+That's 100% true.
+All right, multiple scenes.
+So the way that we do this--
+so I'm going to go into my text editor.
+Whoops So the-- grab pick-ups script.
+So grab pick-ups is a component that's attached to the character controller,
+because he's going to be picking up pick-ups.
+And what the grab pick-up script effectively does is,
+the character controller built-in collide
+has this function that you can define for it called on-controller collider
+hits, where anything that collides with the controller's collider
+will trigger this callback function.
+And you can grab the information about the object that you collided with
+and then perform some sort of logic on that.
+And so it's actually calling this function every single time
+we collide with any of the tiles or the blocks in our scene as well.
+There's just no logic to account for them,
+so it's just effectively an empty function call.
+But if it's the case that the game object has a tag of pick-up--
+which we've set in our Unity editor, and I'll show you how to do that--
+then we should play a sound from our pick-up sound source.
+And then we should--
+using-- you actually used this in the last lecture,
+but only within the same scene.
+We're going to call scene manager dot load scene, play.
+And you need Unity engine dot scene management.
+Using unity engine dot scene management at the top of your script
+in order to use this.
+And load scene effectively just will literally just
+load a scene by its name.
+And we're doing that in a couple of places.
+So we're actually doing it there.
+But remember, we had the title scene, which had the same sort of thing.
+You press Enter, and you load the play scene, right?
+So this load scene on input component that I created
+is attached to a text field in the title scene.
+And all we're doing here is in the update,
+we're just saying hey, if input dot get access submit is equal to 1,
+then scene manager dot load scene play.
+Almost the same-- kind of almost the same code, only in this case
+we're querying Unity's input.
+It has a global input manager, get axis.
+So it has several axes, is how it defines it.
+Different methods of input.
+And then it defines them by keywords, so in this case submit is a keyword.
+And you define-- you map those keys--
+or you map those keywords to specific keys and input sources
+on whatever platform you're targeting.
+In this case, submit is synonymous with either Enter or Return,
+depending on which platform we're using.
+And it could have other meanings if we're exporting this to Xbox
+or if we're exporting it to the web, or if we're
+exporting it to a mobile phone.
+There's a lot of different ways it changes.
+And so the way that it checks is it will be 0 or 1,
+specifically, so we can say if input dot get access submit
+equals 1, scene manager load scene play.
+And it won't let you do if input dot get access submit, because it's explicitly
+expecting integer and it will throw an error if you're
+trying to use it like a Boolean.
+So we need to use this equals, equals one to test for equivalence.
+And that's all we're effectively doing there.
+
+Now, the interesting thing is, when we reload the scene for the pick-up
+for the maze, there's a soundtrack playing in the background.
+And we want the soundtrack to constantly be playing the same thing
+and to loop, right?
+The sound effect-- we don't want it to start up immediately again
+and start up from the very beginning again.
+We kind of want this seamless sort of feel to it.
+And so how do we think we can solve this problem?
+
+AUDIENCE: So it doesn't play again when?
+When you reload the scene?
+COLTON OGDEN: Sorry?
+AUDIENCE: You don't want it to start over when you reload the scene?
+COLTON OGDEN: Correct.
+
+So any ideas as to how we would do this?
+AUDIENCE: Put level one only in the beginning or something?
+[INAUDIBLE]
+COLTON OGDEN: Well, so whenever we collide with the pickup,
+we reload the scene completely from scratch.
+And so when you reload a scene, it destroys every game object
+in the scene, including all the objects that
+have audio sources attached to them.
+And so when it reloads the scene, it reinstantiates
+all of the game objects in the scene, including those with audio sources,
+and retriggers their playing.
+So what we want to do is prevent this from happening.
+AUDIENCE: Just have a counter and when you get the first pickup then
+it goes to 1.
+And then you say if less than 1, play the sound.
+
+COLTON OGDEN: That will have the effect of-- so you're saying have a counter,
+and when--
+AUDIENCE: Or, yeah.
+True-false would do.
+Boolean would be better at this.
+COLTON OGDEN: So have a counter or true-false when you load the scene,
+it starts the music.
+But what happens when we reload the scene from scratch
+and the audio that was playing gets deleted?
+AUDIENCE: Can you transport certain objects between scenes?
+COLTON OGDEN: Can you transport certain objects between scenes?
+Effectively, you can.
+There is a function called don't destroy on load, actually.
+So what that d-- it's a Unity function, which
+allows you to preserve an object as it is between scenes.
+So if you don't want your object with the music to destroy itself and then
+reinstantiate on load--
+well, technically, just don't destroy itself.
+Just do don't destroy on load at the game object.
+And so this don't destroy, we apply this to our audio source--
+our whisper source, it's called--
+in the scene.
+The only problem with this is if we reinstantiate--
+or if we don't destroy on load this object, it's going to persevere.
+But when we reload the scene, it's going instantiate a new one.
+So what's the effect of this going to be?
+We're going to have two audio sources playing at the same time.
+What happens when we do another one?
+You're going to have three audio sources playing at the same time.
+So for every time you go to a next level,
+you're going to add the same audio track to the scene.
+It's going to be very annoying very quickly.
+The way that we avoid this happening is by making what's called a singleton.
+So what a singleton is is a class that can only effectively
+be instantiated one time.
+
+And we do this by creating a static variable here called don't destroy.
+
+No, we call it instance, which is of type don't destroy.
+So it's this component here, right?
+And so the don't destroy class as a whole has
+this static variable called instance.
+And we set it to null by default. And we haven't instantiated
+a don't destroy component yet.
+And what this ensures, in our scene, by the logic
+we have in the awake function, awake is almost the same thing as start.
+It just means whenever-- you can pause an object
+and it will awake from its pause state.
+But awake also gets called when an object gets instantiated.
+So if the instance is set to null on awake, instance equals this,
+so this don't destroy.
+So whatever this is being called from, this
+don't destroy will be the instance.
+Whenever the first don't destroy component is in our scene.
+The very first maze that we generate.
+The sound source instance will be this.
+And then we set don't destroy on load for the game object that
+is holding that don't destroy or don't destroy component, that audio source.
+But if the instance is not equal to this, so if we've awoken
+and this is level 2, for example, instance
+is going to be set to the don't destroy component on the don't destroy on load
+object that we created in the first maze.
+Because we did this logic here.
+And so it's going to try and instantiate a second don't destroy component.
+It's going to destroy another sound source.
+But instance is not going to be null.
+Instance is going to be equal to that first object.
+So we say, if instance is not equal to this, destroy game object.
+So this is going to be from the standpoint of the second don't
+destroy that got created.
+AUDIENCE: So a singleton basically persists.
+COLTON OGDEN: The singleton will persist indefinitely
+upon its first instantiation.
+And there will only ever be one singleton.
+This is a very basic, very common pattern
+in software engineering for ensuring they only
+have one object of a given type present throughout your entire project.
+
+But this is how we prevent multiple sound sources from being instantiated.
+We always ensure that only one object with that component
+gets instantiated at once, and any future instantiations of that object
+get destroyed immediately, assuming that they aren't that first object.
+If they are that first object, instance will not--
+instance will equal this, and so it will still skip this part,
+and so it will stay alive.
+So any questions as to how the persevering through multiple scenes
+works for a sound source?
+
+OK.
+That's how we get multiple scenes.
+So fog.
+We looked at fog already, but I have a few screenshots here
+to kind of help illustrate what fog has looked like over the years.
+So fog looks pretty unconvincing in this screenshot.
+This is Turok for the N64.
+It's just-- kind of looks as if, you know, sort of at a certain distance,
+a very dense sheet of fog has appeared.
+And you can actually make this happen in Unity by setting the--
+there's a curve, a fog curve that I believe you
+can manipulate that will effectively--
+the algorithm that determines how the color gets summed to things
+far away is very fast as opposed to gradual or linear.
+So you can make it just exponential, effectively,
+and make it look as if the fog is incredibly dense
+and starts almost at a very fixed spot and have
+the rest of this area in front of you look normal.
+Here is another example--
+Star Wars Shadows of the Empire, one of my favorite N64 games
+which has the same look.
+And so in this era, you can see fog is very distinguishable.
+Very artificial looking, because it's very tinted.
+In this case it looks very blue.
+In this case it looks very pale blue.
+This is Silent Hill.
+And Silent Hill looks realer, more realistic,
+but kind of the same thing at play here.
+You have a very pale gray metallic blue color, and the density in this case
+is very high.
+The density is much higher.
+Well, maybe close to as high as it is in our game that we're showing today.
+But it's effectively the same thing, just with a different color.
+And they use it to great effect in here, not only for sort of this aesthetic
+to make you look as if you're in some sort of desolate town.
+But also to dynamically load objects or to prevent rendering objects
+that are a certain distance away.
+And to optimize performance on hardware that was severely
+limited at the time, which was Playstation 1, which
+is a fairly weak console.
+And then here is Shadow of the Colossus for PS4, which just came out
+not too long ago, and we can see fog is still being
+used but it looks photo-realistic.
+And there's probably a lot more that they're
+doing they probably have several layers of fog,
+they probably have textures and transparent objects
+that are simulating fog, and a lot of more complicated things like that.
+Fog that only hangs at a certain distance
+so it looks like fog going over the lake.
+There's a lot of things here, but it's the same idea.
+And they probably have the same sort of foundational base
+fog present throughout the scene.
+And then here's our game, just to show how it looks.
+You can barely even see it.
+But it does give you this sort of, like, lost
+in a really dangerous maze feeling, which-- and it's super easy to do.
+And it can save you performance and it can add a lot of aesthetic
+to your game.
+And so the last big thing we'll talk about today is Unity 2D, actually.
+So I'm going to go back into--
+oh, questions about fog.
+I know that was a pretty high-level overview.
+Over looked at we looked at how it applies
+in the settings and questions as to how it works or how to get work in Unity?
+OK.
+So we're going to go ahead and look at our title scene.
+And so we looked at this earlier, briefly,
+but I want to go ahead and show you the components.
+So I'm going to take a look at our canvas.
+If you double-click on something you'll zoom out.
+And so it will automatically detect sort of what your resolution is
+and scale the canvas accordingly in your scene view.
+There's a 2D button here.
+I'm going to go ahead and go to my default layout.
+I'm going to click on the canvas.
+Notice that it shifted things a little bit because now I have a larger
+window that's going to be rendered to.
+I'm going to click on the canvas, and then I'm going to go to 2D mode.
+And then notice when you click on 2D and 3D mode,
+you go instantly into seeing it as if you're manipulating it
+in a 2D engine versus a 3D engine.
+And then going back to 3D, now it's a three-dimensional plane
+that you're actually looking at.
+So in 2D mode, you can easily sort of navigate it, right click and drag it
+around.
+I'm going to go here, like this.
+And these are very simple components that you can just
+interact with as a GUI.
+Now, the main thing that you need to get any of this to work
+is the canvas, which is here.
+So if you right click and then go to UI, you can go to canvas, if you want to,
+or you can just add any of these things that you want,
+and it will automatically add a canvas for you.
+Because a canvas is necessary for all of the Unity UI rendering stuff.
+So if I were to just add a text on an empty scene,
+it'll just create a new brand new canvas and an event system.
+The event system is just how Unity talks to the canvas and all the UI
+elements of your canvas, given mouse and keyboard input and stuff like that.
+It's nothing that you necessarily have to worry about or use.
+But the canvas is the sort of overall container for all GUI stuff
+that you do.
+Now if I click on the tile text or the enter text,
+notice that they are children of the canvas.
+So they are within the canvas.
+The canvas is their parent.
+The title text, I can move it around.
+Notice that it snaps.
+it's got my snapping functionality.
+I can set it up there, it will snap to the top.
+It'll-- yeah.
+It's pretty handy.
+You can scale the bounding box.
+It doesn't scale the actual text, but the--
+notice that I do have right justification,
+centering, left justification.
+Those sorts of helping--
+those sort of features.
+I can increase the font size via slider, so I can immediately
+see without having to edit some code and then
+reload the project what changing some of these values will look like.
+I can easily change the color in real time,
+so I can get a sense of how that looks.
+If you wanted some sort of slimy, Dread50 look, I guess.
+And you can also assign materials to as well, which is kind of cool.
+Which I haven't explored too much in detail, but you have that option.
+If you want to give it a material instead of a color, materialed font.
+Because ultimately, all this stuff is still 3D,
+but Unity presents it in a way that makes it look
+as if you're interacting with it in 2D.
+It's pretty nice.
+AUDIENCE: When you put it in 2D form, when you hit play,
+it's going to open up to that?
+COLTON OGDEN: Yep.
+AUDIENCE: And then how do you transition to the rest of the game?
+COLTON OGDEN: So the transition to the rest of the game
+is in the load scene on input here.
+So the script that we looked at earlier.
+So this is assigned to one of those text labels.
+So I just gave it to the--
+I forget.
+I think it's the Enter text.
+So I gave it this load scene on input, just because it's the Enter text,
+it seemed appropriate.
+Could put it on anything in the scene.
+It doesn't matter.
+As long as it has this update function, which
+then has this if input dot get access submit equals 1, and then recall--
+
+go into the Project Settings, input.
+All these axes here are defined for you automatically.
+And then you can choose what they map to, but submit, as you can see,
+positive button is return.
+So if submit is equal to 1, when you press Return it will be equal to 1,
+effectively.
+And it gets mapped to other buttons, depending on what
+input sources you have on your device.
+But you can check what it is on your computer
+just by going to Axes in your Input Manager.
+So it's, once again, Edit, Project Settings, Input.
+And then you can see all the axes here.
+AUDIENCE: So that, the 2D scene, that's just a scene in itself.
+COLTON OGDEN: That's a scene in itself, completely.
+It has a camera, so we are--
+the camera renders-- the thing about canvas
+is it's kind of separate from the camera,
+so it gets rendered onto whatever the camera's rendering separately.
+But the camera in this case, what I've done,
+because if by default we just render the camera and the UI,
+it's going to look just like this.
+It's going to look like the sky with Dread50 and Press Enter.
+That's not the aesthetic that we want, so I take the camera,
+and then you can give it a background.
+So by default, the background is that sky, is the skybox.
+And so I set clear flags.
+Clear flags are same thing as background.
+So whatever, there's no geometry or anything.
+Clear-- this clear color, clear flag, this
+gets drawn to before any geometry in the scene, basically.
+
+So clear flags, solid color in this case,
+and then just black, using a color picker.
+So super easy, super nice.
+And then this UI, this canvas, will get drawn on top of this camera.
+So that's what produces the sort of combined effect of having the UI
+text and then the black background.
+And then that Enter Text, having that component,
+that checks for the submit input because that's what Enter and Return map to.
+That is what lets us transition from the current scene to the play scene.
+And so there are a lot of other cool features
+that these labels and such have.
+For example, being able to set its anchor position.
+So depending on what device you're shipping to, you might want--
+you know you're going to have multiple screen sizes and screen resolutions.
+So you can say, I want this label to always
+be at the very top middle of my scene, and I can do this
+by clicking this little box here, which is the anchor point selector,
+and then just clicking that.
+And so that will always anchor Dread50's text to that top middle,
+no matter what our resolution is.
+It will always be there.
+And there's a lot that you can do on top of that.
+And you can do that with any UI component, just relative positioning
+depending on the resolution.
+And the nice thing about Unity, too, if you go to Game,
+you can actually choose-- sorry, in the second menu--
+you can choose a lot of aspect ratios.
+So 5:04 doesn't look that great.
+4:03 doesn't look that great.
+16:10, 16:9, and then standalone.
+So standalone is the default export size of your platform.
+But you can choo-- you can have it--
+you can test different resolutions, and you can also add more, too.
+You can add a fixed resolution if you want, or aspect ratio.
+And do a lot of cool things that way.
+So you don't have to necessarily test it physically on different devices.
+Although it's very good to so you can make sure
+that you're not blowing up your hardware.
+But you have that option.
+So any questions as to how Unity 2D works and how the canvas works
+or how we've gotten the simple UI to work?
+Part of the assignment will be-- and we'll take a look at that now,
+actually.
+So assignment 9, we talked about this already, about the gaps in the floor.
+But this will be part of the maze generator, right?
+Because it's where we generate, ultimately.
+Or, the generates-- the maze instantiator.
+The actual part of the maze generator that creates the physical maze.
+But create gaps in the floor.
+And then when the player falls through, approximately two blocks below, which
+you can set--
+check the transform is-- the y position is less than a certain amount.
+It should be less than 0.
+I think it's based on the top part of it.
+Then you should transition to a new screen that says Game Over.
+So create a new scene, very similar to the first scene
+that we looked at, which was just the title screen,
+and you can probably copy most of that.
+But that scene should say Game Over, and then pressing
+Enter there should load the tile scene.
+And then, lastly, add a text object to the play
+scene that just keeps track of how many levels you've navigated through.
+And you can probably do this with some kind of static variable.
+But any solution that accomplishes it is welcome.
+But altogether, all pretty easy pieces to put together.
+That was this week, which was Dread Halls and our first foray
+into first-person games.
+Next week we'll look at Portal.
+It won't look necessarily this good, but it will look similar to this.
+This is a screenshot from Portal itself.
+But we'll look at how we can render to textures,
+how we can cast rays from our character, our first person controller,
+how we can actually make it look as if we have a weapon or a gun
+or a portal gun, which is not too difficult.
+You just have two parent, basically, a model to your first-person controller.
+And then, when we walk through a portal, how do we transition from one portal
+to the other portal?
+So just a-- you know teleport, your transform to another position.
+But that was that.
+Next week is Portal, and I will see you all next time.

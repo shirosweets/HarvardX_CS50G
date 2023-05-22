@@ -1,0 +1,1806 @@
+[MUSIC PLAYING]
+
+COLTON OGDEN: All right.
+Welcome to GD50.
+This is lecture 10.
+Today we'll be talking about "Portal."
+So "Portal" is a very iconic game, I think most of us
+have probably seen it before.
+The gist is you have a portal gun, a gun that shoots these elliptical portals.
+If you look through one, you can effectively
+see what is coming out the other one, which is pretty cool, and vise versa.
+And then, if you walk in between the portals,
+you'll actually be teleported to the other side.
+And so, they achieve a lot of really interesting effects
+with some pretty cool tricks and stuff.
+And actually Valve themselves will be coming
+to give a talk on a lot of the technology
+that they used on the second.
+So we can get a glimpse into their version of "Portal."
+My version of "Portal" is a bit simpler, but we'll
+look at a lot of the same sort of principles
+and see how I accomplished a lot of the same things.
+So this is also the last lecture of the semester,
+and we've covered a lot of ground.
+I have a few screenshots here to show some of the games
+that we've talked about.
+The very first game was "Pong," and we've come sort of a long way.
+We have gone through very simple arcadey Atari-like games like this,
+and have gone and created worlds effectively.
+And now we're in 3D, we're doing all kinds of awesome stuff.
+But this was where we started the course.
+And it's kind of fun to look back and see where we've come.
+So here, we talked about scoring and just effectively drawing shapes
+onto the screen, then we transition to "Flappy Bird" or "50 Bird,"
+and we had sprites and characters.
+And we talked about scrolling and infinite level procedural generation
+type algorithms, and that was fun.
+We took things a step higher than that with "Breakout"
+where we had the same sort of procedural ideas
+in the context of a very famous arcade game.
+We talked about particle systems and some arcade style
+physics and high scores.
+Then we went into puzzle games.
+We talked about Match Three" and how to actually calculate
+what goes on to determine whether we have gotten a match
+and how to clear blocks and how to tween things,
+do operations over time, sort of this A synchronicity.
+Then we went into probably what is my favorite lecture, which
+was "Super Mario Brothers," and we talked
+about how to create procedural worlds that all look very different
+with some very simple algorithms.
+And then we had triggers and events sort of happening.
+Then "Legend of Zelda" came, and we had this infinite dungeon algorithm.
+And we had enemies walking around that we
+could use a sword on, so it felt more like an actual action game, action RPG.
+Then took a brief look at physics in the context of Box 2D with "Angry Birds,"
+and I still remember the ball pit example was probably
+my favorite part of that.
+And then probably the most complicated example of the semester
+was "Pokemon," where we actually had a semi full turn based
+parallel system, and random encounters, and like a little world where there's
+actually two main stages to our world where there was the field
+and the battle scene, which is a very common thing to have in RPGs.
+Following "Pokemon," which was the most complicated codebase,
+we went into Unity, which was our first foray into 3D.
+And even though we were just exploring 2.5D,
+we still got a chance to look at how does the Unity engine work and how do
+we get actual 3D models onto the screen?
+And we put together a very simple "Flappy Bird" esque game so
+that we could sort of recycle prior ideas.
+Last week, we looked at "Dread 50," which was sort of a Dreadhall's horror
+inspired game where we got to look at lighting
+and how to actually transition between scenes and use some basic UI in Unity.
+And today, we'll be talking about how to create a game similar to this,
+although much simpler.
+Today is mostly just a tech demo more than anything else.
+But this is a screenshot of the actual game "Portal."
+And as you can see, they do a lot of really cool fancy things.
+They have a portal on sort of a slope, they
+have another portal coming out of the front wall over back there.
+There are different colors so you can differentiate between left and right,
+orange and blue.
+They have sort of this object here on the side,
+and I believe that's to shoot cubes out, which this here
+is a cube which you can then grab with your gun
+and then shoot it through portals and see it come in and out of portals,
+which is pretty cool.
+And we'll talk today about how to create a simple version of this, primarily
+just the aspect of how do I create a portal that looks out of another scene
+and see it updating in real time?
+And how do I teleport and get back and forth between the portals
+and carry a weapon and then shoot a ray that will actually place a portal where
+I want to in the game world?
+So today, some of the topics we'll talk about.
+So one, holding a weapon.
+So we've used a first person controller, and this
+is a very easy and simple thing to do.
+But it helps illustrate what parenting is.
+And so we'll talk about that.
+Ray casting is the actual shooting out of a ray from your object
+to Z direction forward.
+So you have an X and a Y, which are sort of the angle at which you're
+moving around.
+But then you have Z, which if you're using the forward vector
+from your character, it's going to be forward in the z-axis
+wherever you're looking effectively.
+And so that allows us to cast a ray, in that sense, which just means shoot
+a straight line, an invisible straight line from that point,
+and wherever that point intersects with an object,
+we can get some information about that and then do
+whatever work we need to do.
+In this case, take a portal prefab and just affix it to the wall, basically.
+Rotate it from its default position, and then just
+put it flat up against the wall.
+Texture masking is how we're going to achieve this portal effect, right?
+Because when we create what's called a render texture in Unity, which here's
+the third bullet, a render texture just means a texture
+that we're rendering to with a camera.
+So rather than have a texture be an asset in your game, in your hierarchy
+with something that you made in Photoshop,
+you can actually dynamically create it at runtime
+with what the camera is seeing.
+And Unity gives this to you for free very easily
+with what's called a render texture, which is just another asset type.
+And then texture masking is effectively the same thing
+as stenciling where we can choose certain pixels of an object to delete.
+In this case, we create a texture that's white in the center and then black
+around the edges in an elliptical shape.
+And what that allows us to do is tell it with a simple shader,
+don't render these pixels when you actually render the render texture,
+just render the ones in the middle.
+And so, that's how we achieve an ellipse, just by effectively
+discarding the pixels in the outer rim.
+Decals is an idea in 3D games where a decal is just something
+that you affix a texture or some object that you affixed to a surface.
+In this case, we'll be using decals to act as our portal.
+So our portals are actually just going to be decals.
+They're just meshes with a render texture affixed to them.
+And then all we need to do is just slap them onto a wall whenever we shoot it,
+and we get a ray that intersects with the wall.
+And that will have the effect of actually making
+it look like we're putting a portal on a wall, when in reality, we're
+just taking a mesh and we're kind of just like slapping it onto a wall.
+Some other examples of decals that you've probably seen in other games
+are, for example, bullet holes, which use the same principle.
+Teleporting is very easy, although the FPS controller sort
+of complicates things a little bit.
+So we'll talk about how and about sort of solving the problem of teleporting
+in a way that makes sense.
+It's usually just as simple as setting something's transforms position
+to another transforms position, setting the rotation
+to the transforms rotation.
+But the FPS controller cashes its rotation data,
+so in order to that teleport cleanly you sort of
+have to override some default behavior.
+And lastly, we'll take a look at some new tools
+that Unity has introduced with 2018 0.1 Pro Builder and Pro
+Grids, which allow you to actually model geometry in the scene.
+And this is what the assignment is going to be focused on.
+Because going forward, I foresee it being a major part of modern unity
+development and or prototyping.
+The ability to model your scene in Unity without needing a third party program
+heavily optimizes the actual creation process
+and allows you to do easy, what's called,
+"gray boxing," meaning create a level in your game engine and then prototype it,
+test it, make sure that it's actually game playable right off the bat.
+That's called "gray boxing."
+But first, let's get a demo.
+So does anybody want to come up here and play my implementation of "Portal?"
+
+So James is landlocked.
+All right James, you're not landlocked.
+Let's go.
+
+All right, so I'm going to go ahead and set that up.
+
+And so disclaimer, there's actually a bug in this
+as well, so I'm curious to see if you can spot what the bug is.
+Go ahead and hit play as soon as you're ready.
+And then the mouse on the right will be your angle your portal.
+So we see here I have a character with a portal gun created.
+So James, if you shoot a wall with the left mouse, that will create a portal.
+And then if use the right mouse--
+so that's one other bug.
+So let's go ahead and restart the program, actually.
+
+So that's one bug.
+And so, if we avoid stepping into a portal that's there--
+and this this could be fixed in a couple of ways.
+So now you have two portals basically created.
+Do you see what's wrong with the portal as it is here, both of these portals
+actually?
+
+Oh actually, no, I'm sorry, these portals are actually completely right.
+But walk through them.
+And I will show you--
+OK, so you can see it works pretty well, right?
+You can not only see your character rendering completely or moving
+in real time when the other texture, but you can jump through them
+or walk through them.
+You can jump with spacebar if you want, and that'll
+teleport you throughout the other end so you
+see from the perspective of the other portal.
+But if we try shooting one of the other walls
+for instance, like one of these white walls,
+you can see something weird happens with this particular wall.
+Anything strike you as odd about that portal?
+Anybody?
+It's upside down.
+And so if you walk through it though, it works perfectly fine.
+Now the reason that it's upside down, I spent probably like 10, 15 hours
+trying to figure out why this is, it's in a state
+of what's called "gimbal lock."
+So this prefab right here, there's three axis of rotation in 3D space.
+And if you perform a rotation in some odd way,
+there are these things called oiler angles,
+which are your angles of rotation about the x,y and z-axis.
+And you can sort of think of them as sort
+of being able to rotate interdependently.
+But there is a situation in which you can--
+for some reason, Unity's internal representation of a rotation
+can get messed up by manipulating these angles.
+And so, you can actually lock two axes together such
+that rotating-- like for example, in this case, it's Z and Y,
+they both rotate each other.
+And so you're unable to get, in this particular case, the portal to rotate
+about the axis that lets it look like its right side up based
+on the wall's surface normal.
+And so, had I maybe another week, I probably could have debugged it,
+but I had to leave it in.
+Unfortunately, I ran out of time.
+But the interesting thing is if you do shoot that same wall--
+so try and shoot that wall, the other wall with--
+like put both portal on the buggy wall, so the right wall.
+It's only that wall, by the way, for some reason.
+So notice that now its right side up.
+So if you shoot both portals on the same wall, that buggie wall,
+they do get right side up.
+And I for the life of me couldn't ascertain exactly as to why.
+I know it's gimbal lock.
+Unfortunately, I was unable to debug it quite in time.
+But every other wall, including the ceiling and the floor,
+will work if you shoot a portal up on them.
+So you can create one up there, and then you can jump through it.
+See how it's looking down, and then it'll put you at the top.
+And altogether, minus the weird single wall that gimbal locks the portal,
+we have a pretty functional implementation
+of a very basic portal game, right?
+We have this model here is parenting to the camera.
+So it's always going to look in the exact same direction as the camera.
+We shoot a ray from the tip of the gun, and then
+whenever that ray intersects with a plane, in this case any of these walls,
+we get the information about the intersection
+and we flip the portal decal so that it's
+the same angle as the wall rotation.
+And then what happens when we actually collide with one of the portals just
+in code if we were to think about how to implement
+the behavior that goes on here?
+It's transporting the player.
+And it's doing effectively setting the player's transformed position
+to the same transform position as the portal.
+Now, if we do the same thing on the rotation,
+the FPS controller's rotation gets a bit skewed
+if you mess with it's X and Z rotation, the default controller.
+So all we do for now is we just keep those values, the X and Y rotation,
+but we just change the Y rotation.
+Y rotation is its position in space like this effectively.
+So that allows us to get when we jump out of the wall,
+we notice that he's flat from it, but if we jump through any of the wall
+portals-- so if you create a portal on the wall here,
+and then jump through it, you'll notice that you're sort of angled
+at the right--
+and the reason that it's skewed is because this one is upside down.
+And so it's flipping the camera that's rendering the texture
+and it's looking a little bit weird.
+But when you jump through, it basically keeps your X and Z,
+but rotates your Y position so that you come out
+looking as if you went straight through the portal, rather than by default,
+it has you look back at the portal that you came out of, which is a bit weird.
+Or whatever direction you were walking through it
+when you went through the portal.
+AUDIENCE: How are you getting the mirror [INAUDIBLE] so you can see yourself?
+COLTON OGDEN: That's just default because it's a render texture.
+So there's a camera actually behind each of these portals.
+So the prefab is a mesh with a render texture.
+And then behind it, there's a camera.
+And so, the camera is rendering in real time what's in front of the portal,
+basically, from behind it.
+And so it's seeing your model from both of these portals,
+both cameras are seeing your model, and so it shows up
+in the render texture on the other portal.
+So it's effectively like looking at two video cameras instead of a portal.
+It's sort of a trick.
+And this is a very crude implementation of "Portal,"
+the actual game uses a much more sophisticated algorithm for--
+and it also tracks your position with the camera
+so that based on your angle of rotation, you'll
+actually see something different on the texture there.
+But it's a lot more complicated to put something like that together.
+I have some resources that I've included in the lecture in the assignment that
+will show you actually how to do that.
+But it would take many, many more hours than I had to put this demo together.
+AUDIENCE: Yeah, right now it's just fixed.
+COLTON OGDEN: Yeah it's fixed.
+If you actually look at it from the side,
+you'll notice that it's just a flat texture.
+There's no perspective.
+Ultimately, its perspective.
+And there's an awesome video that I'm going
+to show later in the slides by a YouTuber named Braxis where he actually
+implements a perspective correct shader that allows you to see,
+and with camera tracking of the player.
+Like both cameras will track the position of the player,
+as well as render a texture.
+And the result of that is because the cameras are changing their position,
+it's sort of like changing the angle at which the scene is
+being rendered onto the portal mesh.
+But also the way that it's being drawn is a little bit different,
+and so he has a really cool shader that does that.
+And then Vavle, when they present, they'll
+actually show how they went about doing it, which is even more complex,
+but it looks really good and is a lot more technically interesting.
+But yeah, that's my sort bare bones implementation
+of what makes "Portal" work.
+And it's somewhat fun to walk through these portals
+and just sort of play around with it.
+Now the reason that if you just walk into a blue portal it doesn't work
+is because the portals are actually stored off screen until you use them.
+
+I'll open up the scene here.
+Oh, by the way, thanks James for coming up to demo.
+I appreciate it.
+So the portals are over here, right?
+Both of them are right here.
+And so what that does is when you only shoot one of them,
+the other one is still out here, so when you walk through it
+you end up just teleporting outside the level.
+And in order to not have that happen, what you really need to do
+is have a flag on both of them that just says
+don't teleport unless you've been shot once, right?
+And that will prevent that sort of behavior from happening.
+Simple fix, but an entertaining one to take a look at.
+And that is my crude implementation of "Portal."
+It's far from being anywhere near as polished as the actual game.
+And there is the slight weird wall that gimbal
+locks the portal, which I would like to figure out why exactly that is.
+But everything else is sort of in here.
+Now, it doesn't include something like shooting blocks through it,
+but the same sort of principles would apply
+because all we're effectively doing on the portal is saying--
+it's basically a trigger, right?
+It's got a box collider on it, and it says if I collide with something,
+and in this case the player, I want to teleport that collider
+to the other portal, which means that the portals sort of have
+to link to each other, right?
+One portal has to have a reference to the other portal
+so that it can say, "Teleport to the linked portal."
+And vise versa, the link portal should have a reference
+to the other portals that can say, "Teleport
+back if you collide with this."
+And so, if we have another object-- like say, we shoot a cube into the portal,
+it would also get teleported to the other portal, right?
+And the other consideration for that is like if its a rigid body
+and it has physics applied to it, for example,
+let's say its going like 10 on the X and it teleports
+to a portal that's perpendicular to it and it's still going 10 to the X,
+then as soon as it shoots out the portal,
+it's going to go straight left, which isn't the behavior we want.
+We want it to go forward.
+So linear velocity needs to be calibrated
+to go in a different direction.
+Didn't have enough time to put a full demo of that together,
+but if you were curious, in a nutshell, that's
+sort of like what you would need to do in order to implement
+some basic physics with "Portal."
+So holding a weapon.
+Based on this screen shot, can anybody tell me
+how they think I went from just a plain FBS controller,
+to an FBS controller holding a gun.
+AUDIENCE: Can you stick a gun, like one--
+do they call it colored pixels-- one unit in front of the camera?
+COLTON OGDEN: Yeah.
+There's not really a notion necessarily of pixels in 3D space
+because that changes depending on your resolution.
+But yes, Unity units--
+it's effectively equivalent to a meter, and you can change
+what it represents in Unity settings.
+But yeah.
+I mean, it doesn't necessarily have to be one unit.
+It can be an arbitrary amount.
+And what it really was me going into here with this model.
+By the way, I got this model on the Assess Store for free.
+So the Assess Store is an awesome place if you're looking
+to just quickly prototype your game.
+They didn't have any obvious portal gun lookalikes that looked really good.
+So I was like, "Oh, this guns got like the same kind of color.
+I'll just choose this.
+It's like a sci-fi kind of gun."
+But as you can see, there's a hierarchy here.
+Now, how are we keeping the gun affixed to where the camera is looking,
+do we know?
+AUDIENCE: You do the same thing as you do with the first person shooter
+code is you have the camera follow the gun or vice versa.
+COLTON OGDEN: You have the camera follow the gun.
+Do you have any guesses to how we're doing?
+It's actually a really, really simple thing.
+
+AUDIENCE: I know i'm doing it, but [INAUDIBLE]
+COLTON OGDEN: So all we're doing--
+Oh, Steven.
+AUDIENCE: I was going to say do you set the cameras to transform
+as [INAUDIBLE].
+
+Do the guns transform with an offset, like in the same direction
+but with a position offset?
+COLTON OGDEN: Yeah.
+Kind of.
+Except the guns transform to the cameras transform, but just with an offset.
+And that is effectively what we're doing.
+And in order to accomplish that, it's really
+as simple as just making it a child of that thing.
+So this is the first person character controller.
+It's got a camera attached to it.
+Anything that you make a child of something else,
+it's going to have the same transform changes applied to it,
+including rotation.
+So by making the gun just a child of the first person character, which
+is where the camera is here--
+first person character, by the way, is just
+a subcomponent of the FPS controller, which I renamed
+to portal gun FPS controller here.
+The portal gun, anytime this first person character
+is rotated, which is the camera, so anytime the camera is rotated,
+it applies that rotation to the portal gun here, this gun mesh.
+And so, that gives you the effect.
+So what you do is you start it off in 3D space like this.
+You're looking at your game scene, and you have your character.
+And then you move your gun object around.
+In this case, let's go to layouts two by three.
+So you can see it in real time.
+This is the game view, this is what it's going to look like on Startup.
+I'm going to go over to my editor view here.
+And I'm just going to grab the actual gun component here,
+the gun object I should say.
+Go and position it, and I can just move it, right?
+And so this is how you can change where your gun is relative to the camera.
+And this is going to affect sort of how it feels, right?
+Like I could put it here and it's kind of a little lower, I could put it here,
+it feels a little weird obviously because it doesn't have a hand on it.
+So it almost looks like a VR game.
+And that's kind of what VR games do is they take your hand positions
+and then the gun transform is locked to basically where your hand
+controllers are.
+In this case, all I did was I just positioned it.
+I said, "I like how it looks right here, so I'm just going to do that."
+And as soon as I make it a child of the first person character, which
+is the camera, it's just going to get all the rotations applied to it.
+So anytime we make any rotations to the camera, which I'm doing here,
+it stays exactly aligned with the camera.
+This applies to any operation that you do in Unity
+when you make any sort of transform position scale changes.
+They all get propagated down the chain.
+All the objects that are children of an object that
+get transform operations applied to them will have the same transform operations
+applied to them.
+Sort of like this recursive kind of effect.
+Yeah?
+AUDIENCE: So if you import the first person controller,
+[INAUDIBLE] has jump and moves left and right.
+And then you just move your asset, your gun, to be underneath that controller,
+it would just follow?
+COLTON OGDEN: Correct.
+So if you just import the vanilla FPS controller, and then just make the gun.
+Specifically, the gun needs to be a child of this, the first person
+character bit because that has the camera.
+And recall, the camera is what's driving our rotation, right?
+Because we're moving the camera's rotation with our mouse.
+That is ultimately going to determine how
+the transform gets applied to the gun.
+But yes.
+And so whenever we're doing anything in Unity-- and you'll do a lot of things
+where one things movement or scale or rotation should apply to another thing,
+just remember that's usually just as easy as making
+it a child of something else.
+So any other questions as to how we've gone about implementing the weapon?
+All right.
+So ray casting.
+So ray casting is a nice feature that Unity gives you for free.
+It's part of the physics sort of name space in Unity.
+Part of the scripting API.
+And what it allows you to do is effectively
+look at from whatever transform you're operating at,
+or whatever transform you give it as the source,
+so whatever point you give it as the source, you can tell a direction,
+give it a vector as a direction.
+In this case, what we're doing is we're saying transform.forward.
+And transform.forward just means basically
+wherever we're looking X and Y, and then straight in the Z direction.
+So if you're doing it on a camera, it's always
+going to be exactly what you're looking at.
+It's always going to be exactly forward on the--
+transform.foward on a camera is always going to be like center of the screen
+wherever you're looking at.
+And so if we cast a ray from the point of our character--
+or actually we're doing it from the point of our gun,
+to the transform.forward-- like a line going from our player to transform
+the forward vector of its character, the forward vector of our camera,
+it's going to have the effect of--
+we can shoot something, right?
+We can create a ray cast and then affix something wherever that ray intersects.
+And it'll be at the exact center of our camera view.
+Does that make sense?
+So you shoot a line from your z-axis, which is your forward vector.
+And then based on how you've rotated the camera,
+X and Y are the X and Y part of that, and Z is always forward,
+that'll let you shoot things or cast rays directly in front of you.
+And you can cast rays between any object and from any source point
+with any sort of direction you want.
+But it's particularly pertinent in the context
+of how we've shot it from our gun.
+And so here is a screenshot actually of what that looks like.
+And so the nice thing about Unity actually
+is it has a function called or debug.drawray,
+which I'll show you here.
+I implemented it in a component called debug ray,
+so that you can actually see where a ray is being cast in your scene
+and eliminate any ambiguity there.
+So you can see draw ray, transform.position, and then
+we just say transform.transfromdirection,
+vector3.forward, and then times 1,000 just means 1,000 units from that point.
+And then color.red.
+And so what that will do is-- only in the editor view,
+so this doesn't apply in the actual game.
+This is just a debug call, debug.drawray.
+And so it'll render in this scene up here, just not done here.
+So if we hit play, I actually have all the portals
+rendering a debug ray from their forward transform and from my gun.
+So you can see it there, I'm just doing a debug.drawray
+with just transform.foward and using my transform.position as the source point.
+And notice that Z arrow.
+It's always following the same direction, right?
+X and Y are sort of changing the backplanes
+sort are like how that's rotated, but Z is always forward, right?
+And so that's the ray coming from our gun.
+And if we shoot a portal there and there, I have those also set to--
+let me pause so I can rotate the view a little bit.
+I have those also set to draw a ray from their forward position.
+So those are also drawing a ray from what's their transform.foward,
+their directional vector.
+But yeah, ray casting.
+It's pretty easy just to get some pretty simple collision tests this way
+with guns, with a lot of different things.
+But primarily, you'll see this used for like calculating whether something
+is blocking something else.
+Like if a car is moving and maybe it detects another car, like in "Grand
+Theft Auto," for example.
+And your car is driving down the center of the road or something
+and it wants to know whether there's a car two units in front of it
+or something.
+You just cast a ray and see if there's any geometry
+there from its forward vector, right?
+Transform.position, car.position, and then
+get its forward vector, which will be its Z direction.
+And then it depends on whether or maybe your game is top down,
+maybe it's not your forward vector, maybe it's your Y vector in that case.
+But that will effectively give you-- not only that you've got a collision,
+but also tell you where the collision is too, which is nice.
+And we do that in the portal gun script where we call physics@raycast.
+So this is the function, by the way, to actually do the ray cast.
+The interesting thing about ray casting in Unity
+is that it returns a struct object.
+And so, you need to declare this hit object, which
+will tell you all the information about the hit, like where
+it was, whether it was a hit to begin with,
+and what the normal was on the surface that it collided with, so the angle
+at which that sort of plane was projecting out.
+And then, you call physics@raycast with the position and a transform direction.
+And then, you pass in out hit.
+So out is interesting because it is sort of C Sharp's way of allowing you
+to return multiple values to something.
+So out is going to be an object, in this case,
+it's going to be our ray cast hit that we declared up here, right?
+Which is a struct, which recall is just a collection of variables like in C
+or C++.
+And out hit just means that normally we pass in these values to the function,
+they don't get manipulated, right?
+But we pass in this variable as out, which
+will allow this function to actually change
+the data inside this hit variable.
+And so the result of that is hit from this point
+forward contains all of the information about the ray
+cast that we just triggered.
+And when we call mathf.inifity, that just
+means ray cast to infinity, which is until forever and ever.
+And Unity obviously doesn't check infinitely
+whether something is colliding with something, it optimizes the right way.
+But you can use that just if you don't want to necessarily specify I
+want to check two units or five units or a thousand units front of me.
+I want to just check forever and see if it collides
+with something in your scene, right?
+
+And then as you can see here once we have detected a collision,
+we play a portal sound, we get the right portal,
+and then we set the portal's transform and rotation
+based upon the hits point and rotation.
+And that's pretty much all that's involved in shooting the gun.
+And you can take a look through here if you
+want to get a sense of how it works, and maybe explore also
+the physics.raycast section of the API just
+to understand what exactly it returns and what you can do with it.
+But in this case, this is how we're using
+it to detect whether we've intersected with the wall.
+So it'll intersect with any sort of mesh.
+And then when it does, it will tell you exactly how it did.
+So that is what ray casting is.
+Ray casting has another name for like old school games like "Wolfenstein."
+The method of rendering was called ray casting
+where you would generate a ray from every pixel of the screen
+effectively, although it was mostly just every line of the screen.
+And you would just look up and down for everywhere it intersected in the scene,
+and then just draw a texture there.
+And so that would generate a world that looked 3D,
+but you couldn't move up and down because it was always generating
+all the rays completely forward.
+And so you were locked onto two axis.
+But ray casting is different in Unity.
+Ray casting is just literally casting a ray
+in 3D space versus the sort of 2D space that it was
+casting in games like "Wolfenstein."
+Here's another screenshot of normals from our portals casting out rays.
+And I want to look up and see if I can find a picture of what "Wolfenstein"
+looked like.
+
+I'm pretty sure most folks are probably familiar with not the new one.
+Yeah, "Wolfenstein 3D."
+So this was "Wolfenstein."
+So old school, but this sort of ray casting was different.
+It would basically shoot rays from every single line of the screen up and down.
+And it would detect, based on the level geometry-- which
+was very simple level geometry.
+It was just basically whether there was a wall there or not, true or false,
+kind of like a 2D image.
+And it would draw, based on how far away it
+was, that particular point of the geometry,
+it would just draw pixels from a specific texture at a specific point.
+And they had to interpolate where in the texture.
+It was a little more complicated.
+But in case you see ray casting used in those two different senses--
+in the case of old school game engines, in the case
+of modern Unity sort of ray casting, that is what is involved in that.
+So any questions as to how in a nutshell the ray casting
+works in the context of our game here?
+AUDIENCE: Are we going to be using the [INAUDIBLE]??
+COLTON OGDEN: So unfortunately, no.
+The Oculus does not work on Mac.
+They do not have Mac support.
+And so we were unable to get a version of it working.
+We don't have the means to necessarily transport given how much time we had.
+Now getting VR working in Unity is actually very easy.
+If I recall correctly, I have to just remember the exact menu.
+I had sort of anticipated talking about this before.
+I think it's player XR settings.
+Yeah, that's it is.
+So it's incredibly easy.
+If you want to do a game in VR in Unity, and you have a PC, out of the box
+is very easy just to get it working.
+All you need to do is go to Edit Project Settings, and then go to Player.
+And then in the XR settings-- so Unity has deamed all of its VR AR stuff
+as XR.
+And you click Virtual Reality Supported Here.
+And you have your Oculus Rift or Vibe or whatever plugged in,
+it'll just work with the camera right out of the gate.
+So it's pretty easy.
+You may have to install drivers on your computer such
+that your computer knows that you have an Oculus plugged in,
+but assuming that's all set up, your project
+is as easy as just clicking this checkbox.
+AUDIENCE: Which headsets does this support?
+COLTON OGDEN: HoloLens, Oculus Rift, and I'm pretty sure the Vive.
+90% sure the Vive.
+I'm not 100%, we can Google it though.
+Let's see.
+Unity 5.
+AUDIENCE: Is there a special developer version of those headsets,
+or is it [INAUDIBLE]?
+
+COLTON OGDEN: It looks like it does.
+It looks like it definitely does, yeah.
+And of course, VR Windows PC is very--
+I apologize.
+I totally thought going into the course that Oculus worked on a Mac.
+But as of even October, they were like it's not going
+to work on any MacBook ever released.
+So only on a PC, unfortunately.
+That said, if you do have a PC, super easy to get working.
+And it looks like this is actually a pretty cool tutorial.
+I haven't looked at this, but I tend to like Ray--
+I don't know if his name is Wenderlich or Wenderlich,
+but he makes really good game programming tutorials in general.
+So because we're co-incidentally here, if you guys are curious,
+I really like this website for basic tutorial stuff.
+AUDIENCE: Are there other [INAUDIBLE] coming back?
+You have Vive.
+COLTON OGDEN: We have Vive.
+Well, the thing about Vive is you need to install ceiling mounted cameras
+in order for it to work.
+So that's kind of out of the equation.
+We have the Gear VR, but we would need to export it to mobile and test it.
+I didn't anticipate it not working for Mac,
+and so it kind of came up a bit late.
+And so, it's on me.
+I apologize.
+But if you are doing a PC game in Oculus and you want some assistance,
+I'm happy to help out.
+It looks like it's very easy just to get working with the default FPS controller
+camera.
+So definitely reach out if you're developing Oculus
+and need some assistance.
+
+Maybe for the our next Unity course, we can have a big sort of VR day
+where we bring in all the guns.
+
+But, yeah.
+Back to ray casting and what we were just talking about.
+Shooting a ray on your z-axis based on your rotation, get information from it,
+and then sort of what we do is we flip the portal
+based on the hit.rotation of the surface that we collided with.
+And that's effectively all the ray casting that we
+need to worry about for "Portal."
+But the actual making of "Portal" is probably the most interesting part
+of this whole project.
+And so let's go ahead and go back into present mode.
+So a rendered texture is the fundamental way at which we go about doing it.
+And there are various ways to accomplish doing
+it, some that are more technically challenging
+and look a lot nicer than others.
+I did a sort of simple version of it just
+to get to a proof of concept out of the gate.
+But Unity makes it really easy just to get a simple render texture up
+and running.
+So a rendered texture is, recall, just a texture in Unity.
+So it's an asset, it's an Unity asset that you can create.
+The difference between a rendered texture
+and a texture that you might have imported from like Photoshop or Gimp,
+is that a rendered texture can be rendered to.
+And typically, this is used for things like cameras being rendered to it.
+Although, from what I understand, you can render anything to it.
+So you can create procedural textures this way as well.
+But in this example here, we're essentially
+creating a screen into which we're looking
+at the viewpoint of our other portal, right?
+From its forward direction.
+So we can see what it will look like once we walk out of the portal
+and go into the next area.
+So I have some in the slides, if you want to download the slides.
+They're here.
+You can see exactly how to create a render texture,
+so literally just create and then render texture that creates a render texture.
+These are the settings that I used for the actual render texture.
+So what would happen, do we think, if we use like a low res render
+texture, just logically?
+
+Or let's say my rendered texture was like 200 pixels by 200 pixels?
+And the resolution of our game is like 10 EDP?
+AUDIENCE: Will that just be blown up?
+COLTON OGDEN: It won't be blown up because what
+we're doing is we're taking a mesh, and we're affixing the texture to it.
+So it'll just scale to fill the mesh.
+But what will it look like when it's rendered?
+Because it's rendering a 200 pixel texture.
+
+It'll apixelate it, it'll look really nasty.
+And so in order to fix that problem, typically what you'll
+do-- a smart way to do it, would be to dynamically figure out at runtime
+what's the resolution of your game, right?
+If it's going to be rendered in various resolutions up to 4K,
+maybe down to 720p.
+And then create a render texture that is the size of your game.
+And then by doing that, it will ensure that no matter what your resolution is,
+it will always be 1:1 pixel ratio, even if you're right up close to it, right?
+It will fill up your whole screen.
+In this case, we went for a simpler method
+so we didn't have to do any dynamic instantiation of the rendered texture,
+which you can absolutely do.
+And it is the more robust way to do it.
+But in this case, I just chose 1024x1024,
+figuring that that was going to be good enough for demonstration purposes.
+And most of these other settings--
+I believe actually all these other settings are completely
+default render texture settings.
+The only ones that changed were this is 256x256 by default,
+and it just looks really pixelated and nasty, especially when
+you're right up close to it.
+
+And then all we need to do--
+so once we've created a rendered texture in our scene, in our assets--
+so here, I'm going to go to textures.
+This is where I'm showing all my textures, whether they're
+rendered textures or not.
+I have these two render textures here.
+And so, these are by default, they're not
+going to be mapped to anything because they're just empty rendered textures.
+We've effectively allocated them and said
+something will be rendering to these later, but for now they're just empty,
+there's placeholders, right?
+They're like blank screens, but the TV hasn't been turned on yet.
+In order to actually render to them, we go into whatever camera
+we want to render it to, render to the render texture.
+Because we're effectively taking these render textures,
+and we're rendering a camera view onto them, right?
+Each of the portals has a camera behind it looking out from it.
+And so we want to take that camera's view,
+and we want to render that onto the other portal's face.
+The other portal's render texture, the texture
+that we're going to put onto it.
+And so, all we need to do is say, "Here's my orange portal.
+I have my camera here.
+Every camera has a target texture just right out the gate."
+So you can just say, "OK, I'm going to take my orange portal texture,
+my render texture that has been instantiated
+so it knows that it's going to be able to receive an input source.
+And I'm going to just click and drag it there."
+And it's that simple.
+Now whenever you run the game, you'll notice that your render texture
+updates.
+I'm not sure if it updates in real time in the inspector,
+but it renders if you're showing it on to a--
+yeah, it doesn't render in the inspector,
+but it will update if you affix it to any other surface.
+And so, what we're doing is we're affixing it
+to the meshes that are associated with each portal.
+James, did you have a question?
+AUDIENCE: Yeah.
+How did you make the texture?
+COLTON OGDEN: Oh sure, the render texture?
+So I just right click, and then I go to create,
+and then to render texture right here.
+And that will give you most of the settings that you need to get up
+and running with it, and you can assign it to a camera.
+But the important thing is do consider your resolution
+for your render texture.
+Make sure that it's high enough so that your game won't look pixelated when
+you're looking at it pretty close up.
+AUDIENCE: So it's as easy as that?
+You just make the texture and then drag the camera?
+COLTON OGDEN: Yup.
+Yup.
+And what that will do is create a link between the two
+so that anything the camera sees, it's no longer
+going to be rendering to the scene or anything
+like, it's just going to render to the texture.
+And actually, I think you can run it to the scene and the texture,
+but these aren't rendering to the scene at all.
+The only one rendering to the scene is the first person character
+because it's the default camera, main camera.
+AUDIENCE: What happens if you set the resolution to [INAUDIBLE]
+COLTON OGDEN: If it's too high of a resolution,
+it's just going to compress to fit the mesh, whatever it's affixed to.
+And you'll probably run into performance problems.
+But it's not going to break.
+Yeah.
+Because your resolution doesn't really have an effect necessarily on whatever
+is in your game world, and that doesn't cause any issues.
+It gets interpolated.
+Unity will just calculate how to render it to the screen, right?
+
+Game textures, generally, are very high resolution,
+like 4K textures are often used, even if you're running your game in 1080p.
+And a game engine will probably optimize it
+and down sampled the texture so that it is like actually a 1080p texture.
+And you're not trying to calculate more, draw more than you need to.
+But Unity will figure that out for you.
+You don't have to worry about that.
+
+But yeah, that's what a render texture is.
+And that's how we are creating this illusion.
+Remember, everything in the game is an illusion.
+In this case, because the textures are flat
+and there's no perspective correction, you
+can see that it's a texture, even if it is slightly convincing from far away.
+Like from far away it actually kind of looks--
+I mean, I don't know if it necessarily looks real.
+I mean, it kind of does, right?
+From here, it's hard to tell.
+And from here it kind of looks like we're going into another room, right?
+I go like that-- well, that's the broken wall.
+When I go like that, right?
+There's a portal there, and it kind of looks like it's
+a real room that we're walking through.
+It's just a resolution.
+But all we're doing is we're just drawing a camera's view
+onto that texture in real time.
+And if you notice, when we move, we can see the gun.
+So we can see that it's rendering it in real time.
+And that's the power of a render texture.
+And this will allow you to do all kinds of things.
+You can have like TV screens in your game
+that are rendering another part of your scene.
+Obviously an example like this where you have
+a portal looking into another area.
+Now if you apply a perspective correction
+to this whereby your camera actually tracks where your player's position is
+relative to the portal, you can accomplish a much more believable look.
+And you can actually make it seem as if you're looking into another area
+because the camera is literally moving with your player.
+So the cameras-- like the stuff that it's capturing
+is going to be changing in real time, not only just your character's model,
+right?
+The actual angle is going to change and therefore, be perspective correct.
+And there's an awesome tutorial that I'm going
+to link to in the slides that'll show you how to go about doing that.
+And it's really awesome.
+And so this is what it ends up looking like.
+This is actually before I changed--
+one of the portals had a slightly offset camera angle.
+So you can see here this is like a little bit
+higher than this one is, even though they should be exactly the same.
+But it's fixed now.
+So texture masking-- oh, any questions about any of that
+process before we talk about texture masking?
+
+OK, so texture masking is basically the process.
+So if we just take a plane and we put a render texture onto it,
+that's what it looks like.
+It just looks like it's just a square.
+And this could work fine if you want sort of a square portal look,
+you don't have to do any extra work.
+But if you want a circle, you can't really
+create like a circle shaped plain object, that doesn't really exist.
+And even if it did, it wouldn't be efficient,
+especially if you want a very smooth plane because everything
+is triangles and polygons, right?
+So if you have a circle, it's going to be
+a bunch of these fanned out polygons, especially very high res
+circle like one of these.
+That's a very high res circle.
+Making a polygon that looks like that is not an optimal way
+to go about solving that problem, right?
+The much more optimal way to go about solving
+that problem would be to designate certain pixels of some texture
+as being pixels that we want to read, and then certain other pixels
+being not pixels that we want to read.
+And therefore, produce the final image that gets put onto a geometry, right?
+And so, what we end up doing is creating an image first.
+So it's this image, which is kind of hard to see,
+but it's just a simple sort of--
+can you see from there?
+Yeah, you can.
+So it's just a simple oval, right?
+It's the exact shape that we want our portal to look like.
+And the pixels that are white are the pixels that we're going to render,
+and the pixels that are black are the pixels that we don't want to render.
+We want to consider those as pure zero alpha effectively.
+And using a awesome shader that you can get
+for free just easily on the Unity web page-- this is just a masking shader.
+And I'm not great at writing shaders, but what this does
+is turns lighting off.
+First of all, what happens if we have lighting applied to our portals?
+
+It's going to look a little weird, right?
+You're going to get shadows cast on your portals
+and that doesn't make sense because we're effectively
+supposed to be looking into another place, another area.
+So we have shadows that are being cast onto our thing,
+we're effectively like almost seeing like a glass door on our portal, right?
+It sort of breaks the illusion.
+So lighting should be off.
+A lot of these things I'm not 100% on because I'm not
+great at writing shaders, but it's a very simple, easy shader
+that you can grab off of the Unity web page.
+I think I clipped the url here at the very bottom.
+But I grabbed it off of the Unity web page.
+And all it does is it adds onto your material this second image here,
+and it gets blown up a little bit because Unity makes any texture
+that you apply to basically any texture you
+put into like an image selector will get made into a square shape.
+And our image is not square shaped.
+But what this does is when you pass in this image, which
+is called a coaling mask, it will basically combine the two images
+and then cancel out any of the pixels that are black on this.
+It'll effectively add the black and white to the alpha of the texture
+pixels, right?
+So you can actually make some of these gray
+and then they'll have the effect of sort of making it half transparent.
+But in this case, I only went with full transparent and full hard 255 alpha.
+So we get sort of a crisp outline for our portals.
+And that's how you end up putting together a basic sort of oval shape
+on something that is just a flat mesh.
+And you can do this with anything.
+Anytime you need to take away a detail that
+would make making a mesh extremely difficult or doing really cool effects,
+it's often just a lot easier to create a mask for it
+and then use the right shader that's meant to have that mask.
+And then just manipulate that however you need to.
+And again, the link here for the shader is here.
+And then you can use this for pretty much anything you want.
+End result of that is we go from having a square portal
+to an elliptical portal.
+So pretty nice.
+
+I didn't have to use a plane, but it doesn't really
+make sense to use anything else because using a cube would create depth.
+We don't want the portal to have any depth, really.
+It's just should be a flat surface.
+And then when we go through it, it should just
+teleport us to the other surface to make it look sort of seamless.
+I don't think there's any other choice of geometry that
+makes sense for this use case.
+AUDIENCE: You wouldn't just make a cylinder flat and have [INAUDIBLE]
+project on it?
+COLTON OGDEN: No, I probably wouldn't.
+To make a cylinder flat and project it and have no depth on it,
+you would be able to still see the rings on it.
+And also texturing that is a little bit more complicated
+because you'd have to UV map both your mask and your regular texture
+onto that because by default it's going to wrap it weird.
+This is just a plane, so whatever you texture map onto it
+is going to be completely flat.
+But a cylinder is going to wrap it around all sides,
+and it's going to look a little bit funky.
+I suppose in theory you could use a cylinder for it,
+but I think would be a tremendous amount of work.
+I don't think it would be anywhere near as easy as getting it to work
+with just a flat plane or a mesh.
+Interesting idea, though.
+I guess you could theoretically create a cylinder
+if you wanted to like a bridge between two worlds
+and have one end be one portal and one end be another portal
+and then be able to walk between them.
+That's a cool idea, maybe you can make that work.
+But I think for this, the plane is the right way to go.
+Any more questions as to how that works?
+
+All right.
+So we'll talk about teleporting now.
+So teleporting is pretty easy.
+All we really need to do is just create a mesh collider
+on the portal mesh, the orange portal and the blue portal.
+And then that mesh collider is a trigger and it
+detects a collision with something else, we can just define on trigger, enter.
+And then with that, we can teleport the collider
+other to the other portals location.
+So every portal, this is the portal component,
+it has a linked portal because we need to know where to teleport
+the player to the other portal.
+So we need to have a reference to its transform.
+Whether it's active because if we allow ourselves
+to teleport to another portal and another portal back and forth
+without any restraints, what do you think is going to happen?
+
+Infinite loop.
+We just get an infinite sort of weird flickering effect.
+So you need to effectively have a toggle switch on both portals
+and say as soon as I enter a portal, I should not
+be able to teleport back into it.
+And as soon as I teleport to another portal,
+I should not be able to teleport into it either.
+But once you exit the portal, you should be able to teleport back into it.
+And so, what that effectively does is we enter a portal,
+it gets flagged as not teleportable.
+We get teleported to the other portal.
+As soon as that happens, this portal can now be teleported into,
+this portal that we're standing in is now flagged as not teleportable.
+And then we walk out of it and we're allowed to teleport back
+into that one and the other one.
+So there's effectively an on off operation
+that you have to balance appropriately.
+The actual "Portal" game is a little more complicated
+because they allow you to walk in between portals.
+This does not go into that level of detail,
+and it's a more complicated problem to solve.
+This example just assumes that you walk into a portal,
+you can teleport it out the other end, and there's no in-between state.
+And actually, if you're in-between two portals,
+there's a replication of geometry, which Valve will talk about in their talk
+as well, which I think will be very interesting.
+Because if you look into another portal while you're in the middle of a portal,
+you want to be able to see yourself in that portal,
+halfway in and out of that portal.
+So there is a lot of interesting considerations
+for getting very believable portal systems,
+but ours is a very simple illustration.
+And so, this toggle function is all that I
+have to toggle the function's on and off capability.
+And all it is just portal active is not portal active,
+and that just flips that flag.
+It's super easy.
+On trigger enter, we effectively cash our position x on the x and z-axis,
+so we don't rotate it because when we rotate our x
+and z on the first person controller by default,
+it causes some really weird buggy behavior based on the way
+that the FPS controller works.
+So all I do is I just cast those positions,
+and then make a rotation on the y-axis.
+And that'll save us that weird going topsy turvy effect that you'll get.
+If you use the FPS controller by default and you do perform rotations on it,
+you'll notice this.
+So I haven't had the time to dig in depth as to how to fix it,
+but this is the way that I was able to fix it.
+For this example, at least, only allow yourself
+to rotate on the y direction, which is where you're looking relative
+to the ground plane.
+And that will allow us to rotate based on where
+we're exiting the portal, at least on the walls that are going up and down
+and then have that sort of believable effect.
+It doesn't allow us to jump down into a portal from up above
+and see us coming down from the other portal, which
+is a cool effect unfortunately, but it does allow us of to get most of the way
+there.
+
+And so, we set our position to the other portal's position
+and our rotation, but only the y.
+We get the y, and then we said it here using euler angles on our players
+transform.
+And then there's a function that I created
+called mouse reset, which effectively just calls init again
+on the FPS controller's rotation on the camera and the player.
+And then, that's sort of like the hack that you need in order to--
+the reason that a lot of the weirdness exists
+is because the player controller cashes its rotation information.
+And so if you perform a rotation on your FPS controller
+by hand as opposed to allowing it to happen with the mouse,
+it will immediately reset it back to its prior position and rotation.
+Which has the effect of when we teleport from one portal to another--
+even though we set our direction of rotation
+to be outside going in the direction of where the portal is facing,
+we end up having the same rotation that we did entering the portal.
+So we end up coming out of portals often just backwards.
+And so, that's just a limitation of the first person controller,
+but you can fix that by calling mouse reset, which is a function that
+essentially just calls init again.
+Which init is part of the FPS controller's mouse look object.
+I won't go too much into detail about it just because it's
+a little bit arcane and the source codes in there if you want to take a look
+and dabble with it.
+But effectively, preventing it from caching its rotation information
+and just hard setting it, and then recalling the mouse
+look init function, which does the actual setting of the rotation
+on the camera and the player.
+A little bit weird, but that's Unity's FPS controller,
+and that's how other people are saying to fix it.
+So you could roll your own, you can create your own FPS controller
+and probably prevent this from happening.
+But if you want to use the regular FPS controller,
+that's the limitation there.
+But it's mostly working and it looks pretty good.
+Some more time on it, and we could probably make it look even better.
+But for now, I think it's good.
+So that's teleporting.
+Set your position, and then set your y rotation,
+override the FPS controller's default rotation caching,
+and we can walk in this portal and then instantly walk out this portal.
+And that's what we see.
+So any questions as to how sort of this works in a nutshell?
+Or maybe any of the code here in our portal?
+
+All right.
+So a much better version of the portal, at least from the rendering side,
+is this video here.
+So it's Braxis.
+So good he explains things very well.
+He's got a very high quality to his videos.
+He creates a bunch of Unity tutorials.
+And in this case, he created a portal that
+used an interesting shader that will only
+render everything but geometry and also onto a plane, in which case this plane.
+And does the camera interpolation of the player that I alluded to before,
+which allows us to actually have--
+so these are two separate worlds in tandem right now.
+So there's this red world here, and then this camera
+is looking at a completely different green world that's
+completely set off in the distance.
+That's the exact same geometry, but completely colored green
+as opposed to red.
+And if you look through here, it's just completely seamless
+and the walk through is completely seamless.
+And he goes into detail as to how he accomplished all of this,
+if you're curious.
+And he provides you the shader that you can use for free.
+So definitely check that out if that's of interest.
+There's a link there in the video.
+And here's a link to his YouTube series.
+I put some of these in the slack because somebody requested some AI videos.
+And he has a bunch of different AI videos
+and a bunch of other really cool series.
+So you can take a look at that, if curious.
+And the best version of "Portal" obviously is the portal itself.
+And Dave Kircher and Tejeev Kohli are employees involved at Valve
+who worked on "Portal," and they'll be here on May 2
+to give a talk as to all of the technical sort of things that
+went behind the scenes and related to rendering and physics
+and just getting a believable and good feeling
+experience with "Portal" for the actual polished final game
+that we're talking about.
+So definitely come to that talk if you're curious.
+We're going to take a break, and then as soon as we come back,
+we're going to talk a little bit about some new tools
+that Unity has released called ProBuilder and ProGrids.
+And we'll talk about the assignment.
+And that will be it for GD 50.
+All right, welcome back.
+This is Lecture 10.
+So we talked about "Portal" before the break, we talked about ray casting.
+We talked about render textures, what those are,
+how easy it is to make those in Unity.
+We talked about how to give our first person controller a gun
+so that we could actually look around and look as if we're holding a weapon.
+We talked about the portals themselves, how we're masking out the render
+texture as applied to a plane, and how each of those has a camera behind it
+so that it can render what is going out from the portal in the direction
+that it's facing.
+We're going to deviate from "Portal" now, and talk
+about ProBuilder and ProGrids, which are two tools that
+are part of the new Unity 2018.1 which will allow us to actually model
+geometry per the screenshot.
+This is actually a level that I created and that is in the Distro.
+It will allow us to create geometry in the actual scene view
+without needing to go into a third party program like Blender or Maya,
+and have to sort of alternate between the two and import and export
+incessantly.
+Not only that, but as soon as you model something
+like this in Unity in the scene view, you
+can immediately test it for gameplay and make sure
+that it actually fits what you want.
+And you don't have to worry about scale issues when you are importing
+and sort of making it work, and figuring out ultimately that, "Oh,
+I don't like the way this mesh this level is.
+Let me go and tweak it and redo it."
+It just allows you a ton of ease and flexibility.
+And I previously mentioned Braxis before,
+but he's got a couple of awesome tutorials
+here on ProBuilder and ProGrids to supplement sort of what
+we'll talk about today in lecture.
+But if you want sort of more of a showcase of all the features of both,
+then you can look at these videos here and get a sense of how they work.
+So we're going to go ahead and just mess around with pro builder a little bit
+here in the scene view so that we can see what it looks like.
+I'm going to open up my other scene.
+So I have the "Portal" scene.
+If you are in the Distro, this is where all the
+stuff that we've been looking at exists, just the "Portal" game.
+There's a ProBuilder scene as well, which I'm going to not save that.
+And so this ProBuilder scene is the level geometry that I created earlier.
+Now it looks pretty horrendous because I didn't spend a terrible amount of time
+on it.
+And I'm not a particularly talented visual designer by any stretch.
+Let me go ahead and make it a little bit larger
+so that we can see it a little better.
+
+But it showcases some of the interesting features.
+So we have obviously polygonal square shaped rectangular geometry.
+We can see that some faces are textured and some aren't.
+So we can see this face here, for example,
+is just white material, the default material.
+We can see that all of these have this brick texture, which I got off
+a procedural generator website that allows
+you to choose a good template for your texture
+and then specify colors and stuff like that.
+I did the same thing for this texture.
+This is another procedural texture, which
+is kind of like a blue, marbley type texture.
+The cool thing about it is-- at least for texturing,
+you can just choose arbitrary faces that you want to texture,
+rather than have to texture the whole thing like you
+would do if you were to just give a mesh a default material,
+it'll apply to the whole mesh.
+In this case, it's just applying it to whatever faces we select in ProBuilder.
+Another interesting thing, which I really like,
+is ProBuilder gives you a lot of tools for creating special kinds of geometry
+very quickly and efficiently.
+In this case, this is a staircase, which all I had to do
+was with ProBuilder select build staircase,
+and then you can choose a lot of different parameters.
+We'll take a look at how to do that in a second.
+I did the same thing here.
+So notice this staircase has kind of a spiral to it.
+And then this staircase is really tall, but has no spiral.
+And then we have another staircase here, which
+is kind of shorter and doesn't have a spiral,
+and then it ends up coming up here to this point.
+And then if this were the assignment, maybe
+this spot here would be where you put your collider that
+says, "OH, this the level's conclusion.
+You've been in the level."
+So the assignment is with ProBuilder, make a level.
+It doesn't have to be anything terribly fancy.
+I'm not a great designer.
+But it should have at least one section where
+you're required to jump, so some sort of jump puzzle
+just so that you can think about the design of your level a little bit.
+And it should be meaningfully large, it doesn't have to be gargantuan.
+And it shouldn't be small, it shouldn't be 10 meters or--
+maybe not 10 meters, but it shouldn't be like five meters large.
+Obviously, that's very small.
+It should be something that you would consider a somewhat sizable level.
+Using something of this size is a fair metric.
+So ProBuilder-- so by default, ProBuilder
+is not installed in your project.
+You have to go to the Asset Store.
+I don't know, Asset Store has been a little bit slow last couple of days.
+Let's see if it works quickly.
+It looks like it is.
+So if we go to the Asset Store and open-- it's connecting again,
+it's being slow.
+So if you search for assets and just type ProBuilder, it will pop up here.
+And notice that it says Unity technologies.
+Anything basically that says Unity technologies
+will be a free sort of supplement to Unity
+that you can easily just import from the Asset Store.
+Now it's a little bit cramped the window here, because I'm in a 720p monitor.
+But you just have to click Download, and then Import in order
+to import it into your project.
+The Distro for "Portal" for assignment 10
+already has ProBuilder and ProGrids installed.
+ProGrids would be the exact same process, just ProGrids right here.
+And when you import both of those into your project,
+you'll immediately have the ability to go up to Tools.
+And you'll see ProBuilder and ProGrids here.
+And all you need to do is click on the ProBuilder and then ProBuilder window.
+And you can see here this nice little widget filled window pops up,
+and you can also dock it here if you want to.
+Actually, I did that on accident.
+But Unity makes it pretty nice so you can dock
+your stuff wherever you want it to.
+And there's a few different things.
+So you can do new shape and a new poly-shape.
+The new shape actually gives you shape templates.
+So here, I have chosen just cube by default,
+and it allows you to do stairs, prisms, cylinder.
+So I can just do a stair, for example, and then
+we immediately see this stair mesh here.
+I can generate the number of steps that I want just by changing the slider.
+I can change the curvature if I want, so that it's a rotating staircase.
+And then I can also change how wide and how tall the stairs are,
+and also this inner radius is like how deep the steps are,
+if that makes sense.
+And then all of these together, once you've finished,
+you just hit build stair, and it's done.
+Now you have a stair mesh that you can just put anywhere in your level,
+and it's that easy to make stairs.
+
+Before I get into more of what makes ProBuilder, work,
+I'm going to go ahead and enable ProGrids.
+So ProGrids is a cool feature.
+It's a cool add on, which will actually lock everything in your scene
+to a specific grid which you can designate based on how fine or coarse
+you want the grid to be.
+And what that will allow us to do is when I move,
+notice that it's moving on the grid.
+It's not moving in a continuous motion, it's actually discrete steps.
+And the advantage of doing things this way
+is that when you're modeling your level or whatnot--
+let's say you have maybe a diagram or a drawing that you've created.
+You slap it on a texture, a flat mesh in your scene,
+and then you just sort of draw your level on top of it,
+everything will map up nice and cleanly when you're creating all your geometry.
+And you can snap things together and it will align all on the same axis.
+And it makes creating levels like this just a lot easier.
+You don't have to worry about things being slightly off
+and then like missing vertices and everything
+be looking a little bit unclean.
+This ensures that everything is very clean.
+So again, just notice the discrete steps that it's moving.
+These are all locked to the grid here.
+And so you can change all the settings here as to how large it is.
+If I create a cube.
+So I'm going to go ahead and create a new cube and build it.
+Notice up here these four buttons are like the modes with which
+we can interact with our cube.
+And this is very similar to what you get in 3D software, like Blender,
+Maya, whatnot.
+You choose vertices with the left mouse, and then you
+can hit shift to select multiple, and then you can just move it.
+And since I'm using ProGrids, it's snapping it to the grid, right?
+So if I turn off ProGrids, it should just be continuous like that.
+And so, you can get whatever sort of angles
+you want depending on what your use case is.
+So I'm going to go ahead and hit Command Z.
+If I click on the face mode and I click this face and I shift click,
+it'll actually extrude it and make a new face.
+And I can keep doing this over and over again.
+Let me zoom out a little bit so I can see a little bit better.
+And I extrude that, and then I extrude that.
+Right?
+Starting to build something.
+It's not beautiful, but it's something.
+I can extrude that again.
+
+I believe I can scale as well.
+So you can build it out like that.
+And I haven't spent a ton of time mastering
+how to use that tool and all the ins and outs of it, but it is very,
+I think, useful if you're looking to get into level design
+and you want to avoid the overhead of dealing with third party
+software like Blender or Maya and having model files that you're
+importing and exporting.
+It can be kind of a pain.
+However, if you want to export models, you can definitely do that.
+There is a method here--
+I forget which one it is off hand.
+I think it's this one.
+No.
+One of these allows you to save the model.
+I don't remember exactly which one it is.
+Is it this one?
+
+The menu is a little bit cramped here, so I'm going to actually blow it up.
+
+Offhand, I can't recall which of these allows you to actually export.
+I don't have the icons memorized yet because it's a fairly new tool.
+But one of these will allow you to actually export
+the object as FBX or OBJ, whatever your software is
+that you end up wanting to--
+
+so you can just also go up to here to the export menu, which is
+a lot easier to see everything by name.
+And you can choose how you want it to export.
+You can also export assets too for your game
+so you can have objects in your scene that ProBuilder
+will generate for using, so you can create prefabs that way.
+But then here's OBJ so that you can export it
+to your 3D software of choice.
+This is relevant for situations where, for example, you
+want to like rig and model and animate a mesh.
+You can't do any sort of rigging in ProBuilder,
+but you can do that in other 3D software.
+So it makes sense to export it that way.
+You can also create the model here, export it, rig it, and then re-import
+it if you want to, and that's relevant.
+
+This is a usable scene as is right now.
+The lightning gets a little bit messed up.
+Notice here when you mess with stuff, but that gets fixed.
+There's of meter here where it does some calculating.
+And by default, it will actually bake lighting on all of your objects.
+But as is, this will perfectly collide with any characters that you have.
+So I have a FPS character.
+I'm going to bring this guy up, let's go ahead
+and set the transform up here, put him in the right position.
+And ProGrids is attaching that, making that grid visible next to where I am.
+And you can set the axis for that.
+Currently, I have it actually disabled.
+So if I enable it now, this will actually move in increments, see?
+And it'll snap it to the grid perfectly.
+But as I hit play, I should just be on this mesh up here.
+Yeah.
+And so this is just part of the scene now, like
+as if you had made it in Blender or Maya or whatever.
+If you jump down to my actual level and then explore it a little bit,
+this is all just haphazardly created.
+Stairs and other meshes and stuff.
+And so, make it all the way to the top.
+I fell down.
+I'm also horrible at playing games.
+But the beauty of it is you can just play it instantly, right?
+Right out the gate.
+Now another cool thing that I like to showcase
+is we talked about gray boxing earlier.
+For making interior levels, gray boxing is
+the purpose of making levels and testing them for playability.
+The cool thing about ProBuilder is that it
+has a invert normals feature, which I think is just
+generally accessible in 3D software.
+I don't know offhand which menu it's in.
+Actions, geometry, do I have the right things selected?
+All right, I'm going to open up ProBuilder window.
+And then one of these is invert selection.
+Sorry, wait.
+Flip normals, there we go.
+And so, what this does is now this is an interior level.
+So all we did before was we made a polygonal creation of arbitrary size
+and shape.
+If you invert the normal-- so recall every 3D polygon,
+3D surface as a normal and whatever direction
+that's facing, going the opposite way, going towards that normal
+is what gets rendered.
+But behind it, if you're going in the opposite direction of the surface
+normal, it's invisible.
+And so, the effect of that is if we flip all the normals of something that
+is convex, we get an interior scene.
+And if we're looking at it from the outside,
+it looks a little bit weird, right?
+Like we can see into it.
+And this is something that you might see like in "Minecraft," for example,
+when you're looking in part of the geometry
+that you shouldn't be able to see.
+You can click through the world and see all the other
+like interior parts of the world because you've basically
+gone beyond the surface normal of that polygon,
+and you're only seeing the from that perspective
+all the surface normals of polygons that are facing in your direction in that
+way.
+But often, it will allow you to look straight through all
+of the other sort of cubes that are along the way
+because you're looking at all the inverse of their surface normal,
+you're looking in that direction.
+And so, again, only one direction can a polygon be lit at once.
+And even if we look at it from the top, you can see that as well.
+We're looking at it from the top, flip the normals,
+it becomes a convex 3D object.
+Flip them, now it's an interior level, right?
+So I'm actually going to go into this.
+And I'm going to flip the normals again.
+I'm going to click on this.
+I have to click on a lot of these, actually, because it split up the mesh.
+But it's going to be easy enough.
+I'm clicking all the top services of this,
+making sure I didn't get any on the other side on accident.
+I did not.
+I'm going to extrude this, and then I'm going to flip all the normals,
+and then I'm going to take my FPS controller, which is here,
+and actually I think it's already inside, which it is.
+I'm going to hit play.
+The lighting, I'm not sure if it will be messed up.
+It is messed up because it is in the middle of calculating a bunch of stuff,
+but now I've created an interior level with the weird mesh that I had before.
+And so, if you make the building of your level this concave thing
+and then you flip all the normals, you can create an interior scene
+very easily with ceiling and everything else.
+Normally otherwise, it'd be kind of a pain in the butt.
+But it makes it super easy to do with ProBuilder.
+And there's a lot of other features, a material editor for one.
+So with the material editor, you can actually designate specific materials.
+In this case, I've created a couple of materials.
+A brick texture here, and a marble texture, which I took some textures,
+created material, made the albedo component of those materials
+that texture.
+And what that allows me to do is I can select an arbitrary face.
+So in this case, I'm going to choose these faces.
+And I can just click on this brick texture.
+And now, these are textured as that brick.
+It's not applying it to the entire mesh, it's
+just applying it to whatever specific face that we want to.
+And there's a UV editor, which will allow to actually take
+the mesh of your model.
+In this case, this is our entire mesh here.
+Just remember, as we talked about it last week,
+everything gets cut out and made flat.
+So you can sort of see--
+if you remember the shape of what we're dealing with,
+all the polygons that comprised weird, large object.
+They're all now splayed out for us, so we can just very easily take a texture
+and put it wherever we want on here.
+Now I don't have a ton of experience using this,
+so I'm not 100% confident in my ability to UV map something right now in front
+of you.
+But the documentation on the ProBuilder web site
+goes in the detail as to how to use this.
+So if you wanted say a specific texture to be in part of the mesh,
+and then maybe another texture to be another part of it
+in a specific welded way that's not splat onto it,
+the UV editor would help you with that.
+For example, a face on a character model or something else.
+
+Or maybe like a sign on a door somewhere, or something like that.
+You can do that all here, just click and drag all the faces.
+The faces are actually entered dependent from one another
+so that you can lay them out in a way that fits the texture that you
+are trying to map everything to.
+That is ProBuilder in a nutshell.
+There's a lot of features.
+We don't have time to cover all of them.
+And I mean, frankly, I just don't know of all
+of them super well yet just because the technology is so new.
+But I think this is going to be a huge part of Unity's future
+and making it accessible for people that would otherwise have maybe
+been turned off by the idea of modeling their level geometry or their object
+geometry.
+I mean, certainly for me, now this makes me want to make a game in Unity
+right now because I know I can instantly start creating my levels.
+It's just nice and easy and convenient.
+And ProGrids, you should definitely use ProGrids in tandem
+with ProBuilder so that you can optimally rearrange things in a way
+so that they're all evenly lined up with each other.
+Otherwise, you're going to end up with issues
+in manipulating their position in a very specific way
+and coming up here and setting their values manually.
+And that's just kind of a pain, so much easier
+just to snap everything to the grid, the ProGrids, and deal with it that way.
+And so, the assignment is largely just going
+to be take ProBuilder and ProGrids and just make a level with it.
+And then just take the principles that we've learned, create a controller,
+create a collider, and just make a very simple scene.
+And otherwise, probably spend your time focused on your final project.
+So any questions as to ProBuilder, how it works, how to get it set up?
+Yeah?
+AUDIENCE: So what would it look like-- can a character actually stand on top
+of an object that had it's [INAUDIBLE]
+COLTON OGDEN: No.
+It should flip through it.
+Let me go ahead and put this up here.
+And actually I think it does still trigger collision,
+but you'll be able to see through the--
+AUDIENCE: It's just visual?
+COLTON OGDEN: Yeah, it's just a visual.
+It's just a visual bug, it's a lightning bug.
+The physics should still apply.
+I'm going to go ahead and set the model up here.
+
+OK.
+Hit play.
+
+No, actually it looked like it went through it.
+So it also inverts the collision box.
+I've seen some games where you can clip through something
+and still collide with it.
+So I think it depends on, ultimately, the engine or the implementation
+that you're using.
+But in this case, when you flip the surface normals here of this mesh,
+it also flips the mesh collider's normals.
+Yeah?
+AUDIENCE: The obvious thing to do would be copy it,
+size it up a liitle bit, and then not [INAUDIBLE] it.
+And then you would have kind of an inner and outer layer [INAUDIBLE]..
+COLTON OGDEN: Precisely, yeah.
+If you wanted, you could make a copy of the interior.
+You'd make it the same size, I suppose.
+And then not flip it's normals such that you have a shell and an interior.
+Yeah, absolutely.
+Yeah, it depends.
+A lot of interior levels, you will never ever be outside of their boundaries.
+And so you don't often see that happening,
+but it's very much the case that you could have that happening.
+And if you have like a house model, for example, then yeah.
+You'll actually see hosue models are modeled with walls that are two planes,
+so there's a bit of thickness.
+It's actually a rectangular shape, so it allows
+you to have a collision on one side and another side
+because there's two planes of the collider,
+rather than just the single plane, which is the direction of the surface normal.
+Any further questions on ProBuilder?
+Yeah?
+AUDIENCE: So how come you can [INAUDIBLE] through the ceiling
+but not through the door.
+Is there [INAUDIBLE] in the top?
+COLTON OGDEN: Because the bottom's surface normal is pointed upward.
+So this right here is pointed upwards.
+But notice that here, the surface normal is actually pointed down.
+So you can only collide with the direction of the surface normal
+that's facing you, if that makes sense.
+You can walk towards the direction of the surface normal,
+but not against the surface normal, if that makes sense.
+That's the way that Unity calculates its mesh renderer component.
+AUDIENCE: Well, there's also left and the right.
+So the left is-- can you go through on the left to the right?
+COLTON OGDEN: You could go through from this direction,
+but you could not go through this direction.
+Because this direction, the surface normal is pointed this way,
+so if we try to walk against it, we'll be walking against the normal.
+And so, we will trigger a collision.
+But if you're walking through it in such that you're
+going the same direction as the surface normal,
+so if you're coming from this direction then it won't detect a collision.
+Does that make sense?
+Yeah.
+What Tany suggested, which was to make a shell around it,
+would solve that problem.
+So if we created this exact mesh, duplicated it, and then inverted it,
+then we would have two of the same object,
+but with normals going one direction and normals going
+the other direction such that the mesh renderers
+account for both potential movement directions.
+Cool.
+All right.
+Any further questions on ProBuilder?
+Again, not meant to be a comprehensive tutorial.
+There's videos and documentation that I've linked to in the slides,
+but more just to illustrate how awesome this tool is really
+and that this is probably going to save some people doing
+Unity projects in time if you're doing any asset modeling or level modeling.
+Another thing that--
+I didn't make a slide for it, but which I talked about in class
+was Shader Graph.
+And so, a Shader Graph is another 2018.1 feature,
+which allows rather than having to write shaders
+in Shader Lab, which is Unity's shader language, which can be quite
+an experience, quite intimidating.
+You can actually create them now with this node based programming language--
+not really programming language, but this node based
+programming environment, I should say.
+Which will allow you to choose all these preset nodes that
+influence the shader's behavior.
+And there's a lot of different kinds.
+And have the result of that be you can see your shader every step of the way,
+so the shader is just a series of transformations going
+from left to right in one direction.
+All of these transformations, you can see
+how they end up accumulating to produce this final effect.
+In which case here--
+if it maybe kind of hard to dicern, is a marine guy with these blue holes
+that are actually masking his mesh.
+And we talked about masking earlier.
+This shader itself looks like it's applying a mask with this noise that
+is generating.
+And it comes with noise generation functions, generation nodes,
+which will allow you to feed those into the mass component of your shader
+and then produce some very interesting cool effects.
+Otherwise, this would be kind of--
+unless you're a shader expert, which I am not, it would be pretty complicated
+and non-trivial to implement something like this with just code.
+But this generates code for you, such that you don't
+have to actually write any code at all.
+But you can still see the produced shader that
+gets created for you from shader graph.
+I believe that it's just a asset now, I'm not 100% sure.
+I didn't test this going in.
+
+Hopefully, I'm not just missing it.
+Supposedly, you should be able to just import it.
+I'm not 100%.
+Let's see how you actually-- it said this article maybe uses it.
+Via the Package Manger.
+
+I think this is a new Window Package Manager.
+So we to Window and then Package Manager.
+
+And then all.
+
+And then Shader Graph.
+Yeah.
+So right here.
+So Window, and then Package Manager, and then Shader Graph
+and that will allow you to import the means
+by which I create these graph layouts if you're using
+2018.1, which the course is using.
+But if you're at home and you're using 2017.4, then update to 2018.1,
+and you should see this in your package manager.
+And then once you do that, you can actually
+create a new Shader Graph object.
+And then you'll see it as a new window that pops up in your scene,
+and then you can start adding nodes.
+I don't have any material prepared for it,
+and I didn't anticipate talking about it necessarily,
+but it's something that seems to be very game changing.
+And it's something that Unreal has had for a long time that
+sort of differentiated it from Unity, in my opinion.
+And I think a very valuable thing that they've
+added that shows a lot of awesome progress for 2018.
+So, again, a link to Braxis if you want details
+on how to use-- not only ProBuilder ProGrid,
+but a lot of other awesome features of Unity and to do a lot of cool stuff.
+He makes some really cool videos.
+Assignment 10, so assignment 10 is going to be creating a level with ProBuilder
+just to get your hands wet with it.
+The level should be pretty complex.
+So like I said earlier, not like a finished game level.
+I'm not expecting you to do awesome, amazing, incredible things.
+But a level that has maybe a few pieces of interesting geometry,
+maybe generate some stairs, has some pipes you can generate,
+and some other things.
+Have a jumping puzzle in there.
+So this says there should be one jumping puzzle for the player,
+the assignment doesn't officially say it yet,
+but I'm going to make a change to make it say
+that there should be a jumping puzzle.
+You can interpret this however you want, just a couple of platforms is fine.
+But honestly, whatever you would like.
+And have two different textures or materials.
+So you can just import whatever texture you want,
+or you can go to a website that allows you to procedure the create a texture.
+And you can assign it to a material, put it
+in the material editor of ProBuilder, and then use
+that to assign it to a face or to the whole object, if you want to.
+But there should be at least two, not the default,
+so to make it a little interesting.
+You can use many more if you want to, but only two are required.
+So this should be kind of like a complete scene.
+So make a new scene separate from the ProBuilder scene,
+separate from the "Portal" scene, include an FPS controller
+so that we can move around the scene immediately after creating the mesh,
+right?
+But that said, you can use the default controller.
+You don't need to do anything fancy.
+And then at the very end, you should have a trigger on a collider
+somewhere, which can be invisible.
+It doesn't have to be invisible, you can make this whatever you want.
+You can make like an arch or--
+I don't know.
+You're free to use your imagination as much as you want,
+but there needs to be some collider, whether it's invisible or not
+at the very end.
+And there needs to be a trigger, and then when you collide with it,
+it should say, "Level Complete" on the screen.
+So just take a text object from Unity 2D, part of the canvas.
+If you just add a UI text in the scene, it
+will automatically add a canvas and an event system for you.
+Create the label, and then just set it on or off,
+depending on whether or not you've collided with the trigger.
+There is code for this in the helicopter game in the "Game Over" text script.
+You can see exactly how this is done.
+All it effectively is setting the color of the text to 0000 vs 0001,
+or whatever color you want to effectively just to change on the alpha
+component of the text color.
+And then once that's done, then you have a complete assignment.
+And then you can spend more energy.
+Hopefully, this should only take maybe an hour, maybe less.
+You can spend more energy on your final project, which will be due on the 11th.
+But altogether, it's been an awesome pleasure teaching this course.
+And I hope that a lot of you were able to learn a lot of interesting things
+and hopefully were inspired to create some of your own projects
+and will continue to create some of your own products in the future.
+I certainly enjoyed making a lot of the stuff, especially "Super Mario
+Brothers."
+I think that was my favorite.
+But this was GD50.
+So thank you so much.

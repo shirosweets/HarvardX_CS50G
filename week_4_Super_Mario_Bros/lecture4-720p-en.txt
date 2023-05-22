@@ -1,0 +1,2191 @@
+[MUSIC PLAYING]
+
+COLTON OGDEN: Hey, good evening.
+Welcome to GD50 lecture four.
+This is Super Mario Bros.
+As seen on the slides here, though, we're
+not using the actual Super Mario Bros. sprite sheet.
+This is sort of like a rip off.
+But I found a really awesome sprite sheet
+that has all the basic tiles that we need to get this thing working.
+There's a link in the distro as to where you can find it online.
+I had a lot of fun playing with it.
+So hopefully, maybe if you're curious, you
+can use some of the sprites in there to go off and do your own thing.
+But Super Mario Bros.-- the actual game which this lecture and assignment are
+based off of-- is the game shown here.
+I think everybody knows what it is.
+It's probably the most famous game of all time.
+But this game came out in 1985--
+sort of revolutionized the gaming industry.
+It was the game that brought the gaming industry from a crash
+in the '70s thanks to a lot of poor game making policies
+and companies and low QA standards.
+It basically took the gaming crash of the late '70s, early '80s
+and brought games really back to the forefront of people's consciousness.
+This and games like Legend of Zelda and a lot of other NES titles
+made Nintendo basically the dominator of the video games
+industry in the '80s and '90s.
+And even today, with games like Breath of the Wild,
+they're still doing their thing.
+This is Super Mario Bros.
+It's a 2D platformer.
+And what this basically means is you control Mario, who's a plumber.
+He goes around, walks sort of looking at him from the side.
+He walks left to right.
+He can jump up and down.
+He's affected by gravity.
+He can hit blocks.
+He can jump on enemies.
+He can go down pipes, and there's a bunch of levels.
+It was, for its time, quite a complicated game,
+and it spawned numerous offshoots and rip offs and other good quality
+platformers.
+While we talk about Super Mario Bros. today,
+some of the topics we'll actually be talking about are tile maps--
+so how we can take basically a series of numbers--
+tile IDs-- and turn that into a game world.
+As you can see here, the game is broken up into blocks of 16 by 16 tiles.
+You can see the bricks and the question mark blocks,
+and the pipes are even all composed of simple tiles.
+And they map to IDs.
+And when you take a 2D table or array and you just iterate over all of it
+and render the appropriate tile at the appropriate x, y,
+you get the appearance of existing in some game world,
+even though it's just composed of a bunch of tiny little blocks.
+2D animation is something we'll talk about.
+So far, we haven't really done any animation
+at all in terms of at least characters.
+We'll do that with Mario.
+He'll have-- our version of Mario, an alien--
+when he's moving, he'll have two frames of animation.
+The frames of animation-- that's sort of like a flip book
+if you've ever used one, where you can see individual pictures.
+And when you display them rapidly back to back,
+you get the appearance of animation.
+We'll be talking about that.
+Procedural level generation-- we'll be making all of our levels
+generate randomly.
+So every time we play the game from the beginning,
+everything will be completely different.
+We don't have to hard code a finite set of levels.
+Everything will be dynamic and also interesting, in my opinion.
+We'll talk about the basics of platformer physics
+and how we can apply that to our game world
+here, because we are just using a table of tiles,
+each with an x, y that's hard coded in the game world space.
+All we have to really do is take an x, y of Mario, for example,
+and then just divide that by the tile size.
+And then we get basically what tile that is
+in our array at that point in the world.
+And so it's really easy to do arbitrary collision detection based
+on what direction you're going and not have to iterate over
+every single tile in your world.
+Because it's just a simple mathematical operation to get the exact tile
+given two coordinates, since the world is in a fixed space.
+We'll have a little snail in our game that
+walks around and does a couple of random animations
+and will go after the player, sort of like a little basic intro to AI.
+And then lastly, we'll touch on things like power ups and game objects
+and how we might be able to influence Mario and pick those up
+and that sort of thing.
+So first though, a demo.
+So if anybody is willing to come up on stage
+to test out my implementation of Mario, that would be awesome.
+James?
+I'm going to go ahead into here, so we should be all ready to go.
+So as soon as you're ready, go ahead and hit Return there,
+and you should be up and running.
+So as a part of having random levels--
+so currently, we have a green alien.
+The blocks have a random chance in this case to spawn a gem.
+And so once they do, you can pick the gem up.
+Either they have a gem or they don't.
+You can pick it up, and you get 100 points.
+As we can see, the world is sort of shifting
+based on where James's avatar is, so it tracks the character.
+We have some notion of a camera.
+You're getting unlucky with the blocks so far.
+So you can fall down through the spaces, so you probably want to avoid that.
+But if you want to demonstrate doing it--
+so in that case, we collided with the two blocks below it.
+The one on the right had the gem.
+So go ahead and just fall down so we can demonstrate.
+So when we fall down, we detect whether the player
+has gone below the world limit, and then we start him back
+at the beginning of the game.
+You can press Enter, it should regenerate a brand new world.
+Notice how we have random holes in the ground.
+We have random tiles.
+We have random toppers for them.
+All the blocks are random.
+We have snails now.
+They're sort of chasing after James.
+He can jump on top of them.
+There's a lot of little moving pieces here, but a lot of them
+are actually pretty simple.
+And I'll show you very shortly.
+JAMES: Should I stop?
+COLTON OGDEN: Yeah, sure.
+That would be a great point.
+So thanks, James.
+Appreciate it.
+Currently, there is no notion of a level ending.
+That's part of the piece that actually will
+spawn an object that the player can interact with to just sort of retrigger
+a new level, basically.
+But the whole engine behind this basic platformer is there, and it all works.
+And so our goal is seen here.
+Our goal in this lecture is to demonstrate
+how we can get things like a character that moves around on a screen,
+and a camera that tracks their position, and tiles that are randomized.
+And maybe there are pillars in the ground, holes in the ground.
+All of this, again--
+at least the tiles-- are stored as just numbers.
+So all we really need to do is perform a transformation on a series of numbers.
+Maybe 1 is equal to a tile being there, 0 is equal to empty space.
+And so just by looking at it, we'll see we go column by column.
+We can say, oh, maybe there's a chance to not spawn any tiles along the y
+column on this x of the world map.
+Or on this particular y, maybe instead of spawning the ground level,
+we spawn a couple above it and down so that we get a pillar
+and so on and so forth.
+And it's just this summation of these randomizations
+equals a nice little variety of game levels.
+So the first thing we should talk about really is what a tile map is.
+And what I've alluded to so far is you can really think of a tile map
+as being effectively a 2D array or a table of numbers.
+And it's a little more complicated than that depending on how complex
+your platformer is, because some numbers are equal to tiles that are solid
+or not.
+So you should be able to check whether a tile is collidable,
+meaning that the player or whatever entity you want to check for
+can actually collide with it or
+Not.
+So obviously, we don't want to trigger a collision on empty tiles.
+We want the player to move freely through those.
+But if they run up against a wall or if gravity is affecting them,
+and they hit tiles below them or above them, we want to detect a collision
+and then stop them based on which direction they're moving.
+And depending on how complicated you get with your platformer, maybe
+you have animated tiles, for instance.
+So if a tile's animated, it will display a different frame of animation
+based on what timer you're on.
+Really, the sky's the limit.
+In this case, we'll be fairly simple.
+Our tiles will mostly just be numbers with a couple of other traits, which
+we'll see later on.
+And this is just an example here of a very simple map-- just a colored
+background.
+We have our character, and then we can sort of visualize all of those tiles
+as being just for the sake of theory 0s or 1s.
+So tiles0-- so I'll actually get into a little bit of implementation
+here as to how we can get drawing some very simple tiles.
+So if you're looking at the distro, in tiles0
+is going to be where we start off here.
+And I'm going to go ahead and run tiles0 so we can see what that looks like.
+So this is just tiles0.
+It's a much simpler program than what we just saw, but all we're doing here
+is just a color in the background and then tiles.
+
+Off the gate, anybody have any ideas as to what the first step would
+be if we wanted to implement this?
+
+AUDIENCE: Just put the tiles in a loop, draw them, and then have a background?
+COLTON OGDEN: So put the tiles in a loop, draw them,
+and then have a background.
+Yes.
+So basically, if this is main.lua in our tiles0,
+first thing we're going to need is a tiles table to store our--
+we're not going to be storing just flat numbers.
+We'll be storing little mini tables that have a number in them and ID,
+so we can say tile.ID if we have a 2D table.
+Here, we have an empty table.
+We're going to populate that.
+
+If we're going to draw our tiles, we are going to need a sprite of some kind.
+And what I did was I just chopped out a little segment here.
+So this is tiles.png.
+It's just literally one tile from the main sprite
+sheet that comes with the distro.
+And then on the right side is just transparent so that we can offset--
+maybe tile ID 1 is equal to solid block, and then tile ID 2 is equal to empty.
+And so if we recall generate quads, we can split up a sprite sheet
+into however many quads we want to.
+Let's say this is 16 tiles tall--
+each tile-- and then the whole thing are two tiles wide.
+So it needs to be split into two separate tiles.
+We'll just generate quads, and then we'll have, recall, a table.
+Each of the indexes of that table will be
+a quad that maps to one of these tiles.
+So number 1 will be this tile here, number 2
+will be the transparent bit over here, and then
+that's how effectively our IDs are going to map
+into what gets drawn onto the screen.
+The ID is the index into our quad table.
+So going back into tiles0, we have here just a map width and height.
+We're just going to say generate a map 20 by 20.
+RBG-- we're just going to make it random,
+so we're going to clear the screen with a random color.
+And then this is the quads = GenerateQuads.
+And notice that we're passing in tile size here.
+It's good practice just to make your tile size a constant.
+So our tile size in this entire lecture--
+they're all going to be 16 by 16.
+And so since they're symmetrical, we just pass in tile size TILE_SIZE.
+And then here is where we actually end up spawning the map--
+so nested for loop.
+y gets 1 to map height, x gets 1 to map width.
+Remember, we have to insert a blank table into the base table that's
+going to act as our current row.
+And then in that row, we're going to add a small at tiles y,
+because y is going to be up here-- our current row and ID.
+And so what we're doing here is if y is less than 5--
+meaning we'll just set an arbitrary point for the ground, basically.
+If it's less than 5 tiles from the top, then just make it the sky.
+And so sky-- up here on line 24, 25-- we just
+set two tile IDs, as I said before.
+Sky is 2, so it's going to be on the right side of the sheet.
+And then ground is one.
+It's going to be the very first quad generated in the sheet.
+So if y is less than 5, that ID should be equal to sky else
+it should be equal to ground.
+And so down here is where that comes into play.
+We're going to clear the screen with our random color.
+We're going to iterate over the loop, as James said.
+We're going to get the tile at tiles y x,
+and then we're just going to draw the sheet and the quads at that tiles ID.
+And then recall, since tables are 1 indexed but coordinates are 0 indexed,
+we take the x and the y, subtract 1 from them,
+and then we just multiply them by tile size.
+And that has the effect of drawing each of those tiles
+at their respective point in the world and making
+it seem as if we have this world-- this bunch of bricks
+with a random background every time.
+Which isn't all that interesting, but just a little bit more variety.
+And so that's the very basic gist behind it.
+I mean, it's essentially almost the same thing as what we did in match three,
+where we just mapped the individual tiles that
+were in the grid to indexes in the tile sheet based on the color and variety.
+Only this time, they're always going to be in the exact same place,
+so we don't have to worry about whether their x and y are
+different from their grid y and grid x.
+We're not maintaining a reference to those.
+And so that's static tiles.
+Does anybody have any questions about how we just
+draw static tiles to the screen?
+Pretty basic stuff.
+
+The whole name behind side scrolling game
+is that the tiles scroll based on what we're doing in the game.
+It can be an auto scroller, in which case
+maybe you're an airplane that's sort of going
+through a level that's scrolling automatically,
+and you're shooting things.
+And you're not really in control of where you go.
+Or it can be like Mario, where you control an avatar.
+And you can walk around and jump and stuff,
+and the camera will always be fixed on you.
+And so the scrolling is just relative to where your character's x and y are.
+So I'm going to show you guys an example of how we can
+get scrolling implemented in our game.
+And to do that, the function that we're really going to be looking--
+at a new function--
+is love.graphics.translate(x, y).
+And so what that does is effectively just translates
+Love2D's coordinate system so that whenever we draw something,
+it gets automatically shifted by x, y.
+And so that has the effect of the everything being sort of skewed
+based on the x, y that we pass it.
+And so if we maintain a reference to where the character is,
+we can just shift where everything gets drawn on the screen.
+And that will have the effect of it being a camera, but it's not.
+All we're doing is just shifting the coordinate system
+based on some offset--
+x being in this case where the players is effectively.
+AUDIENCE: So it changes the whole coordinate system?
+COLTON OGDEN: It does.
+It shifts everything in the coordinate system that you draw by the x and y.
+And so that will basically affect what's getting rendered
+into the active window at that time.
+
+So I'm going to go ahead and pull up tiles1 here
+so we can see how this works.
+Let me go ahead and first run the program.
+So if we're going into tiles1 in the distro,
+currently it looks almost identical.
+But I can move it if I just press left or right.
+And so we can see here, this is where the 2D array of tiles
+gets cut off here.
+And then it also cuts off, because we're only generating a 20 by 20 level.
+It also gets cut off at the very right side as well.
+And these are details you would normally hide from the user
+by just clamping the x between 0 and the right side
+of the map minus VIRTUAL_WIDTH.
+And that will have the effect of whenever you get to this point,
+it won't let you go right anymore, and same thing for the left side.
+Well, all we're doing right now-- we're not
+doing it based on the character at all.
+We're just using keyboard input.
+So let's go ahead into tiles1.
+
+And so the important thing that we're going to look at is--
+as I just alluded to, we're calling love.graphics.translate
+on some value called cameraScroll.
+
+It has to be a negative value, because if we're moving to the right
+up here or to the left--
+if we're moving to the left, camera scroll basically is going to decrement,
+so it's going to get less.
+So we can say the camera scroll when we're
+going left is going to be 0 or less if we're starting at 0,
+or it's going to decrement.
+If we press right, camera roll should increase.
+If we want the appearance of moving to the right or moving to the left,
+you actually have to translate by the opposite direction.
+Because if we look at this, and if we call love.graphics.translate positive,
+all of this is going to get moved to the right.
+So it's going to have the appearance of us moving left.
+And if we translate it to the left by a negative amount,
+it's going to have the appearance of us moving right.
+So if our scroll is positive and we want to move to the right,
+we actually have to translate by a negative amount.
+And so that's why I'm calling negative math.floor(cameraScroll).
+Does anybody know why we're calling math.floor on cameraScroll
+instead of just calling negative camera scroll?
+Does anybody remember what math.floor does?
+So math.floor will return the--
+it'll basically truncate the number down to the lowest integer.
+It will basically take off the floating point value.
+Because we're rendering to a virtual resolution
+with push, if we basically offset the translation by a fractional amount,
+you'll get artifacting.
+Because it's taking your window and just condensing
+your image onto a virtual canvas, you'll get weird blur and stuff like that.
+So whenever you draw something and you have a fractional number for something,
+and you're drawing it to a virtual canvas that's been magnified
+or it's being condensed, just make sure to math.floor it
+so you don't get any weird blur artifacting.
+If you take this out and experiment around, or even if in the distro
+you take it out of the player's position, you'll see the player
+will get weird blurry artifacting and stuff like that.
+So that's why that's there, in case you're curious.
+And so all we're doing here-- we're just saying
+if it's equal to left, scroll the camera left, scroll it right,
+or basically decrement our camera scroll and then increment or camera scroll.
+And then just use the negative version of that here.
+You could also just assign camera scroll equal to positive
+when you move left and negative when you move right,
+and then you could give it the regular camera scroll here.
+But it's sort of mentally flipped in terms of this part.
+So I just made the decision to decrement it here when we're pressing left,
+because we're going less on the x and then more on the x when we press right.
+Does this make sense?
+Anybody have question?
+AUDIENCE: I have a question.
+Is there a corresponding function in JavaScript
+and in other languages like this where you can shift a whole coordinate?
+COLTON OGDEN: Is there an equivalent function in JavaScript
+where you can shift the whole coordinate system?
+Not in base JavaScript, probably.
+I'm not too familiar with CSS.
+There might be a CSS function that does it.
+In a lot of 2D game engines, yes, I would say.
+And a lot of actual 2D game engines will have a camera object, which
+sort of encapsulates this behavior.
+Love2D doesn't have a camera, so this is sort
+of why we're doing this-- is because it's kind of a lower level game
+framework, Love2D.
+It doesn't really give you as many things
+right out the gate, which makes it great for teaching these concepts.
+But a more robust solution like Unity or Phaser
+or a lot of other game frameworks is that they'll just have a camera object.
+And you just basically give that your x, and then you just move that.
+You basically tell that to track the player--
+like camera.trackPlayer or trackEntityPlayer--
+and that'll have the same effect.
+It's a little bit more abstract.
+It's a higher level than what we're doing,
+but it's the same exact principle underlying.
+So any other questions as to how this works?
+
+All right, cool.
+So that's all we're effectively doing.
+We're just getting a camera scroll, decrementing it and incrementing it.
+And then just every frame, we're translating everything
+before we draw everything.
+You have to do the translation before you draw, because everything that you
+draw after the translation gets affected by the new coordinate system change.
+So that's scrolling.
+Let's get to actually talking about drawing a person-- an avatar--
+more than just a set of tiles, since that's what the game revolves around.
+If we look at character0, this would be our first example here.
+This is just going to be a very simple example--
+charactr0.
+
+You guys probably know how this works already.
+All we're doing is just drawing a sprite to the screen--
+so just love.graphics.draw.
+We're getting quads from a tile sheet.
+I believe it's in the slides.
+The actual sheet is here.
+So we have this little guy--
+several frames of animation.
+It's 16 wide, 20 tall, and we just take a quad.
+We split it up into quads first.
+So we know that it's 16 wide by 20 tall, so we just generate quads
+on this image by 16 and 20.
+And then in this example, all we're doing
+is taking the first frame, which is quads1, and just drawing that.
+As you can see here, we have a bunch of different things.
+We have like a crouching state, and we'll
+get to more about animations in a little bit.
+But here, we have him climbing up a ladder.
+But you can see all these different frames.
+We'll end up showing how you can play them back to back
+and get different animations.
+But for the sake of this basic example, all we're doing
+is just rendering the very first frame.
+And we can see that--
+let me make sure I'm in the right file, which I am--
+we are getting the character sheet here on line 43 and 44.
+And then we have to give him an x, So characterX, characterY.
+In this case, we're just setting him above tile 7,
+so we do 7 minus 1 times TILE_SIZE because tiles are 1 indexed
+but coordinates are 0 indexed.
+And then we just subtract the height so that he's
+right above the tile instead of right at the tile.
+And then down here, we do a love.graphics.draw
+on, as I said before, just characterQuads 1.
+Just a very basic hard coded example.
+Any questions at all as to how this works?
+
+So now let's say we want him to move.
+What do we need?
+What's the next step if we just wanted him to move?
+
+AUDIENCE: Give him an x and y?
+COLTON OGDEN: Yes, give him an x and y.
+So yes, so he does have an x and y already.
+So if you look at-- am I in the right one?
+So if you go to character0, this is character0 still.
+We have given him an x and y already, but there needs to be another step.
+What's the other step involved?
+
+So if we wanted to move, we need to check for keyboard input.
+And then we need to take his x--
+we're just going to move him on the x-axis for now.
+We basically need to take his characterX variable up here,
+and we need to modify that.
+We can basically do the same thing that we did down here in love.update.
+Previously, it was on the coordinate system--
+love.graphics.translate.
+We modified the camera scroll.
+We set that equal to scroll speed times delta time.
+We subtracted or added it.
+In this case, what we're doing is we have a new constant called
+CHARACTER_MOVE_SPEED, and we're just doing that exact same operation
+but on characterX instead of cameraScroll.
+So the end result of that is that we have the character here.
+And then we can move him left or right, and he go off screen.
+Now, there's a couple of things wrong.
+What's wrong?
+What are some of the things that are wrong with the scene right now?
+AUDIENCE: The camera should move with him.
+COLTON OGDEN: Camera should move with them.
+AUDIENCE: No animation.
+COLTON OGDEN: Does not have animation.
+Those are probably the two real things that are wrong.
+So camera does not track him, which is an important thing.
+Obviously, we want to be able to maintain a reference to our character,
+unless we're at the left edge of the screen.
+If we're at the left edge of the screen, this is actually OK.
+And that's part of the distro-- is we clamp the x so
+that it doesn't go past the left edge.
+But if we're beyond the middle and not to the right edge of the screen,
+it should be moving along with him and vice versa.
+And then he needs to animate, so his sprite
+needs to change every certain number of seconds whether he's moving.
+And it has to be only when he's moving, right?
+If he's standing still, you can have an idle animation.
+Some characters will tap their foot and do stuff like that.
+But let's say for the sake of this example we want him just
+to stand still when he's idle.
+And we want him to have an actual animation when he's moving.
+We need to take care of these two pieces--
+three pieces if you count the idle animation part.
+So let's go into character2 and take care of the first part, which
+is tracking him.
+So let me go into character2.
+Let's run it first so we can see what it looks like.
+
+So now the camera is basically affixed to the player.
+In this example, we don't take care of the left edge issue.
+In the distro, that's fixed.
+But we have the basic side scrolling mechanic-- take a character,
+follow him.
+How do you think that we're accomplishing this?
+
+Yes.
+AUDIENCE: Translate the drawing against the characterX?
+COLTON OGDEN: Yes, exactly.
+And it can't be exactly the characterX though,
+because if it is, then the character is going to be on the left edge, right?
+So we need to offset our x that we translate by.
+We need to basically translate by his x minus half the screen space
+plus half the character width.
+And that will have the effect of translating it but always keeping
+that offset half a screen width away from the player, if that makes sense.
+And so what we're doing is in character-- this is character2, right--
+character2, we're still doing the same thing we did.
+Actually, that's the wrong file.
+We are modifying characterX here.
+So same thing we did before--
+multiply the move speed by delta time and either add or subtract it
+if we're pressing left or right.
+But also, here-- reintroducing camera scroll.
+And we're setting it to, like I said, characterX minus VIRTUAL_WIDTH divided
+by 2, half the screen, and then positive offset
+of his width divided by 2 so that he's perfectly right in the center.
+Because remember, characters' coordinates
+are set by their left, not their center.
+And then we just do what we did before.
+We translate the scene based on cameraScroll,
+and we render him at characterX characterY using math.floor
+to prevent him from being at a fractional point in our world space
+and then it being blurry and artifacted.
+And that's sort of it in terms of how we can get tracking over character.
+And if you wanted to track along the y-axis,
+you could do the exact same thing.
+Maintain a cameraScroll x and a cameraScroll y--
+so keep them separated.
+And then you would just translate here.
+So we're passing in 0, because we don't want
+to track along the y-axis necessarily.
+But all you would need to do is pass in your y cameraScroll.
+And then you could do it based on characterY
+and whether or not they're above the ground
+or past a certain point in the sky.
+So any questions at all as to how the camera tracking is working here?
+
+All right.
+So we took care of one issue, which was the lack of tracking.
+But there was one other issue, which was he's not animated.
+All he's doing is just moving sort of like M.C. Hammer--
+or is it M.C. Usher?
+M.C. Hammer?
+I forget.
+He's doing that.
+He's not doing anything.
+We need to actually animate him so that he looks like he has some life to him
+and that you can also differentiate importantly
+between two separate states.
+He can be idle, he's not moving, and he can be moving.
+So we should have some sort of visual feedback
+as to what's currently going on.
+So anybody know how we can go about implementing
+an animation for our character?
+What are the pieces that we'll need?
+AUDIENCE: I guess if he's moving right, then
+call a function and a render that looks through some images?
+COLTON OGDEN: Yes.
+So if he's moving right, then have a function
+that sort of loops through some images.
+That is effectively what we will be doing.
+We have a class called Animation, which I've introduced here.
+And all it basically does is keep track of-- you
+pass it in a table, which has the frames of the sheet
+that you want to animate over.
+So we can just pass in--
+let's go ahead and take a look here.
+
+And I referenced the slide earlier, but all of these
+are 1, 2, 3, 4, 5, 6, 7, 8, 9, 10-- however many there are,
+you just pass into the animation.
+Let's say he's on a ladder.
+So let's say this is 1, 2, 3, 4, 5, 6, and 7.
+You say, the frames are going to be 6 and 7,
+so those will just loop left to right, starting back
+at the beginning when it's finished And then you give it an interval.
+So say I want the animation to happen this fast in terms of seconds,
+so I want it that maybe happened every 0.2 seconds.
+And so that will have the effect of every 0.2 seconds,
+it'll keep track of a timer.
+So have we gone over 0.2 seconds?
+Start at 0 and then add delta time to it every time.
+If we have, increment what our current frame of animation is.
+So our current frame is this one, and then 0.2 seconds elapses,
+it's going to be this one.
+And then 0.2 second elapses, and we need to loop back to the beginning.
+So we'll end up using modulus to take care of that
+as we can see in the Animation class.
+
+Basically, that's all done here.
+So if we have more than one frame of animation, recall it gets a def here.
+So we get frames, we get an interval, get a timer that's initialized to 0,
+and then get a current frame.
+We'll say the current frame is 1.
+And then as long as we have more than one frame,
+there's no point in looping over or trying to animate
+any animation that only has one frame.
+And we can, of course, have animations that only have one frame.
+Idle is only one frame of animation, as we saw here.
+That's only one frame.
+We don't need to do any sort of logic to say, oh,
+what's the next frame, because there's only one frame.
+But if we were to look at character3, we can see two frames there.
+And then that's just one, frame he's idle.
+And when we move left, he moves in that direction.
+Anybody recall how we can get him-- because obviously,
+we saw the spreadsheet just a second ago,
+and there was only one direction that the sprites were facing--
+how we can get him to look that way, even though there's
+no sprites for him to look that way?
+AUDIENCE: Flip it on the axis.
+COLTON OGDEN: Flip it, so love.graphics.draw.
+Recall you can pass in a negative scale factor on whatever axis you want,
+and that'll have the result of flipping it along that axis.
+That's all we're doing.
+So this is the default frame, so we're just drawing it.
+And then we have to keep a reference to whatever direction he's facing.
+And if his direction is equal to right, we'll
+just draw that frame and then loop and process the animation.
+If he's facing left, draw it, but also perform a negative 1 transformation
+on the x-axis.
+And just like that, we have that working.
+So all we're doing--
+just keep a timer.
+And then when the timer goes over our interval, just increment the frame.
+And then use modulus to loop back over it--
+back to starting at 1.
+And that's all done here on this line 28.
+And so you can look in there a little more
+if you want to get a handle on how the math works,
+but it is just a simple sequence of iterating over a collection of frames
+based on a timer.
+And that has the effect-- just like a flip book, as I said earlier--
+of our character having an animation and having some life.
+So any questions as to how this animation class works?
+AUDIENCE: The render is in the Animate class?
+COLTON OGDEN: So no.
+The render is not in the animate class.
+So the render is--
+I realize I didn't show any actual main here.
+We have two animations here, which was just the idle one,
+so we're just passing in one frame.
+We're going to give it an interval of 1.
+It's not going to really matter, but just for the sake of consistency,
+we're giving it an interval of 1-- arbitrary.
+And maybe we want to change his animation later.
+So by having an interval here, we won't forget to add one later.
+Moving animation-- recall 10 and 11.
+So it's toward the end of the sheet--
+the two walking frames.
+Interval here is 0.2 seconds.
+We need a current animation to render him,
+and then we keep a reference to whatever direction he's looking at.
+So if he's looking to the right, we're going
+to reference this in the love.graphics.draw at the bottom.
+And that's what we're going to use to perform the sprite flipping
+along the x-axis.
+Maintain a reference to that.
+And then down here, the part that we actually reference the animation
+is on line 150 if you're looking at character1.
+Or is it character2?
+Sorry, character3.
+If you're looking at line 150 in character3,
+we're using currentAnimation:getCurrentFrame().
+So the class will actually just tell you whatever the current frame of animation
+is, because it keeps a reference to what frame it is based on the timer
+and how much has elapsed.
+AUDIENCE: So the class is generating a different frame real time
+and plugging it in there.
+COLTON OGDEN: Yeah.
+It's maintaining a reference to whatever the current frame is,
+and it's in the table of frames that it got when you gave it
+the definition up at the top here--
+lines 51 to 58 where we create the two animations.
+Basically, it maintains a reference to which index in this frame table
+we're at.
+So if 0.2 seconds has elapsed, we start at 1, and then we go to 2.
+And then we'll go back to 1.
+And so it'll just basically return frames, index.
+And frames index 1 is 10, frames index 2 is 11.
+And so the function is getCurrentFrame.
+So characterQuads, currentAnimation, getCurrentFrame.
+And then here, because we're performing an origin transformation--
+so that's another thing to consider when you're flipping sprites.
+When you flip a sprite, it actually flips along
+whatever its default origin is.
+And the default origin of any sprite is its top left corner here.
+So if you flip something along its x-axis,
+it'll appear here instead of just flipping in place.
+So you actually have to set the origin to its center
+when you do any sort of in place flipping of a sprite.
+So you'll notice in the code when you're looking
+at it that we have plus CHARACTER_WIDTH divided by 2 and plus CHARACTER_HEIGHT
+divided by 2 on these two here.
+So we shift where it gets drawn, and then we shift its origin
+offsets which are here on line 160.
+So if you look at love.graphics.draw, you'll
+see it has a lot of optional arguments.
+And these two at the bottom are the origin offset arguments.
+And so these only really come into play when
+you do some kind of flipping of a sprite on an axis
+and you want graphical consistency not to have it flip one way or the other.
+Sometimes that's the effect you're looking for, but in this case,
+it's not.
+We want him to literally stay in the exact same place.
+So to flip a sprite in the exact same place,
+you need a set its origin to its center, not its top left.
+Does that makes sense?
+OK.
+And also here, 0 is the rotation here.
+So it's sort of required if you're going to add
+this many arguments to the function.
+But we're testing if direction is equal to left, we want to flip by negative 1
+on the x, else just give it 1.
+So 1 just means default transformation, so no flipping.
+And then we don't flip on the y at all, so that will always be 1.
+And so that's in a nutshell how you can get your character to animate and also
+stay in place when you animate it.
+So any questions as to how animations or the origin offsets or any of that work?
+
+OK.
+So we did talk about animations.
+The last thing we'll talk about for the character is jumping.
+So if you recall from Flappy Bird, how can we get our character to jump?
+What are some of the pieces we need?
+AUDIENCE: Key press, and then the y goes up.
+And then we have to have gravity.
+COLTON OGDEN: Yep.
+So key press is one thing we need, so check for space
+is going to be the default key.
+y goes up, and then check for gravity.
+So not only do we need y, but we also need delta y.
+We need velocity, because gravity is a transformation on velocity, not
+strictly on position.
+So if we go back to character4, this is sort
+of a hackish way of implementing gravity,
+because we haven't actually incorporated tile collisions.
+And I'll defer most of the implementation for that
+as to the distro, and I'll go over with you guys.
+But right now, we have the exact same thing we had before,
+where we have tile scrolling.
+But if I press space bar, I go up, and then he comes down.
+And notice that he has an animation as well.
+He has a different frame.
+So if he's jumping, he's got a little jump frame.
+So that means now we have three animations.
+We have an idle animation, we have a moving animation,
+and then we have a jump animation.
+So effectively, we have three states as well--
+idle state, moving state, and jumping state.
+Four states, actually.
+And also, I noticed a slight bug here where if you're still in the air,
+his frame doesn't change.
+So it actually probably should stay to that frame,
+even if he's standing still.
+But I guess it doesn't matter too much.
+We also interpret it as a feature.
+But he's got a couple of states when he's in the air.
+There should be two states here.
+One is jumping state, and one is falling state.
+And do we know why the two being different is an important thing?
+
+So if we think about Super Mario Bros.
+and we think about the differences between jumping and falling,
+what are some of the things that change based on whether Mario is jumping
+or whether he's falling?
+How does he interact differently with the environment, I should say?
+
+So if unfamiliar, Mario-- when he jumps, he can actually hit blocks.
+So if he's below a block and he hits a block that
+has some sort of behavior in it, it will trigger whatever is in that block,
+whether it's a coin or whether it's to destroy the block.
+And if he's falling, recall if he lands on top of an enemy like a goomba,
+he'll destroy the enemy.
+And so we need to distinguish between these two states.
+Because when he's jumping, he's not able to--
+when he's actually going up, he can't attack the enemy.
+And likewise, when he's falling down, he can't destroy the block.
+So even though he's jumping up in the air
+and the gravity is applying a transformation
+and it all looks like one state, there's actually two important changes
+in his state that are relevant.
+And that's something that we'll need to pay attention to,
+and it's in the distro.
+He has a falling state and a jumping state.
+Even though they share the same animation,
+they have different behavior.
+So let's go ahead and look at the character4 distro here.
+So what I've done here is I've added a delta y for the character.
+So just like in Flappy Bird when we press space
+and we made our delta y go up to negative 50--
+so instantly shot up pretty high, because that was getting
+applied every frame.
+Same thing here.
+Once we press space, we're going to change delta y to negative 50
+if we go down to right here.
+So if the key is equal to space, I have it in the love.keyPressed function.
+Since we're doing all this in main.lua just for illustration,
+things are a little simple.
+If key is equal to space and his delta y is
+equal to 0, what would happen if we didn't
+check to see if delta y was equal to 0?
+AUDIENCE: We double jump in the air.
+COLTON OGDEN: Yep.
+We'd be able to jump infinitely, so we have to do a check for that.
+We set his dy to JUMP_VELOCITY.
+JUMP_VELOCITY is a constant up top on line 29, which is negative 200.
+And then gravity is equal to 7.
+And so what we do is we set it to negative 200-- his delta y--
+as soon as he jumps.
+And then every frame down in update, we basically
+increment his delta y by gravity.
+And then we increment his y by delta y times delta time.
+And so it'll have the effect of when he's in the air
+and he's got a negative velocity, it'll actually
+start becoming positive and positive until it is positive,
+and then he falls back to the ground.
+And then the hack that I was referring to earlier--
+since we don't have collision detection implemented in this example yet--
+is we're just basically checking to see whether he has
+gone below what we set the map's floor.
+And if he has, then set his position, first of all, to be above that tile
+here on line 133.
+And then set his delta y equal to 0.
+And that will allow us then to hit space again,
+because his delta y will be equal to 0.
+AUDIENCE: So I didn't see [INAUDIBLE] on it.
+Looks like there's always gravity, then.
+COLTON OGDEN: There is always gravity, something
+I realized shortly before lecture.
+But all you would really have to do is, I think, if character dy--
+Yeah.
+You could easily take that out of there-- just an if statement around it.
+AUDIENCE: It's just a waste of resources, right?
+COLTON OGDEN: It is.
+I mean, it's not expensive, because all you're doing
+is incrementing a variable by a certain amount.
+If anything, if you're introducing an if condition every frame,
+which is probably the same if not actually more.
+I think a branch is more CPU than just an assignment.
+I'm not entirely sure about that.
+AUDIENCE: Interesting.
+COLTON OGDEN: Yeah.
+In this case, it doesn't really have any side effects.
+But it's a good thing to notice.
+But now notice that we can just sort of walk along the floor here,
+because there's no collision detection.
+We'll talk about how we implement a collision detection soon.
+So one thing that we'll start talking on-- and we'll take a break fairly
+soon--
+is procedural level generation.
+So I am a big fan of procedural level generation,
+and platformer levels are actually fairly easy--
+at least in a simple sense--
+to procedurally generate.
+And so like with match three, all we basically
+did was just loop through our grid and just
+say, oh, get a random color and a random variety.
+And then with the assignment, it was a little bit more complicated,
+where you actually had to check to see whether you were on level one.
+And then if you weren't, then your variety
+should be maybe a certain amount depending on how far along you've
+progressed in the game.
+
+With a platformer level, we have to think
+about how we can take that grid of tile IDs and think about it mathematically.
+How can we get the results of a level, but make it different every time--
+introduce some variation, right?
+And so the solution that I found that makes the most sense
+is going column by column.
+So here, we just have a bunch of-- this is just
+a very simple perfect screenshot to illustrate a very simple way
+of generating the level.
+But recall, if we just think about these tiles here-- these empty spaces--
+being a 0 and these being a 1, it's sort of almost like binary in this case.
+We could just fill the entire thing with 0 first, just assume empty space.
+And then we could just column by column go down and just have a chance
+every column.
+OK, do I want to generate a ground here?
+If I do, start at the ground level and then just
+generate earth tiles all the way down.
+And then go to the next x position, do the same thing, do the same thing.
+And then maybe every column of the world that you're generating,
+you also have a chance to generate a pillar like this.
+So if generate pillar is true, then I want to spawn--
+instead of starting the ground here, I want to start it here.
+And then maybe you have a flag that says,
+OK, not only do I want to generate pillars,
+I also want to generate chasms--
+just empty space, obstacles for the player.
+Because if he falls down-- it goes below the world space--
+it should be game over.
+So in that case, you just say if generate chasm--
+make math.random 10 or whatever it is--
+then just go to the next x.
+Don't even do anything.
+And that will have the result of generating a chasm.
+And so little piece by piece--
+doing small things like that has the net effect
+of generating a lot of visually interesting, dynamic,
+and random levels.
+You never know what to expect.
+And this is a very basic example.
+You could go infinitely far with it.
+However many ideas you have in terms of how
+to create obstacles and interesting levels and scenery for the player--
+you could absolutely implement that.
+AUDIENCE: How do you handle if there's a platform to jump on?
+You have to have that consistency.
+COLTON OGDEN: Yeah.
+So if it's a platform, it depends on how you want to implement platforms.
+
+And actually, I did a seminar on Super Mario Bros.,
+and we did platforms as tiles.
+In this case, we'll have blocks that are actually
+what we've denoted as game objects-- which
+are a little bit different than tiles.
+Because they can have arbitrary sizes, and they don't necessarily
+have to be affixed to the world grid.
+But if you were to treat a platform that was, let's say,
+two tiles wide as tiles, all you would do
+is just basically have a flag up here that's like, generate platform
+equals true or whatever--
+AUDIENCE: And then turn it off after--
+COLTON OGDEN: Turn it off after however many iterations.
+You also need the size of it.
+You'll need a flag that's like platform width equals however many,
+and so you'll just keep a counter.
+It's like current platform tile equals 1, 2, 3.
+And if it's equal to width, then you don't generate it any more.
+And that has the effect of potentially colliding with pillars
+if you don't account for that.
+So you can also in your logic say, if I'm generating a platform right now,
+don't generate a pillar.
+But you could generate a chasm, because the chasm
+doesn't interfere with your platform.
+
+If you don't have platforms as tiles-- if they're different objects--
+then you don't have to do it during the actual world generation phase.
+You can just test.
+You can just create a game object that's a platform.
+Depending on how complicated your algorithm is,
+maybe make sure that it's not next to a pillar when you generate it.
+And you could just do that by getting the tile here and then looking
+at the next four tiles--
+something like that.
+We don't do platforms in this example, but it's something
+that you could pretty easily do with tiles.
+And slightly more difficult but also still fairly easy to
+do with game objects, which is included in the distro
+and which we'll touch on in a little bit.
+
+Let's see, we're at level--
+oh, another couple of things that I wanted to show before we
+actually start getting into the code for how to generate levels.
+This is the sprite sheet for this whole project, which is a really cool sprite
+sheet that I found online.
+It's in the spirit of platformers like Mario,
+and it's got a nice little mockup here on the right.
+So I encourage you to take a look at that
+and just maybe get some inspiration and see all the different cool stuff.
+Tinker around with it if you want to.
+But as you can see here, there's a couple of pretty prominent things.
+We have a ton of tiles.
+These are all tiles here--
+different tiles and variations.
+And then we have a ton of these toppers here.
+And so what really helps this whole demonstration
+of generating these levels is the fact that we have
+so much visual content to work with.
+And so here, again, are the tiles.
+Here are the toppers.
+And then when you take the two together and then you also
+have these random backgrounds--
+these are toppers here, the top of the tiles here.
+It's incredibly easy to just have a sheer abundance of visual variety
+and interesting things in your game levels without even--
+and the algorithms here are very simple.
+All we're doing is just checking to generate pillars and columns.
+I know.
+I thought it was really cool and helps illustrate the importance and power
+of this whole procedural approach to creating the levels for this.
+And there's actually not that many games that take advantage, I think,
+of procedural level generation in the platformer genre.
+Plenty of games like Minecraft and Terraria--
+Terraria is a great platformer that is an example of that.
+But I don't think I've seen a really good Super Mario Bros.
+game that does something like that.
+
+Let's see.
+What time is it?
+6:23.
+Let's take a five minute.
+And then as soon as we get back from that,
+we'll start going into how we actually can implement the procedural level
+generation in more detail.
+All right, welcome back.
+This is lecture four.
+And before we took a break, we were talking
+about procedural level generation in the context of platformer levels.
+So recall, here are just a few examples that I took pretty quickly of my code.
+And you can see they have different backgrounds, different tiles.
+Sometimes we have chasms, sometimes we have pillars.
+We'll be talking about a few ways to do the tile version of that,
+because there's two levels here.
+In the distro, we'll see there are also things like bushes, for example.
+We can see in the top middle there the purple--
+well, I guess those little purple cacti.
+And the one right below that, there is a pillar with a yellow fern on it.
+Those are separate objects from the tiles--
+game objects.
+But the actual tiles themselves we'll dig in here a little bit as to how
+to get those generated.
+So the first thing we want to look at, level0, is just some flat levels-- so
+just basically what we've already done.
+So I'm going to go ahead and go into level0.
+
+And then if we see here, we have a simple flat level,
+just like we did before.
+Now the tiles are different.
+And if I press R, they're randomly generating every time.
+So you can get a sense of just how visually diverse this generation looks.
+Oh, I think that might have been a bug earlier.
+I'm not sure.
+Haven't seen that yet.
+But we can see here, I'm pressing R.
+All I'm doing is taking the array of tiles that we have,
+and I'm assigning it a tile set and a topper set
+in the case of the scope of this generation.
+So recall that the topper is just the top layer sprite,
+and the tile set is the tiles underneath.
+Anybody want to just suggest how I'm rendering the topper versus the tiles
+and what's going on there?
+AUDIENCE: You're just pulling it from part of the sheet, right?
+COLTON OGDEN: Yes.
+Yeah, in a nutshell, I'm just pulling the toppers
+from a different part of the sheet.
+Any idea how I'm storing information-- what's being stored here
+to get it to render like this?
+AUDIENCE: Maybe you just need to store the position of the topper
+and know that everything else is below that.
+COLTON OGDEN: Yes.
+So you could store the position of the topper
+and know that everything else is below that.
+That would work for a flat level.
+I don't think that would be reliable for a level that has pillars on it,
+because the pillars are a higher elevation than the ground.
+And then there's also chasms and stuff like that.
+
+So what's going on here actually is we're
+storing a flag in the tile that says whether or not it has a topper on it.
+And if it has a topper, then we render not only the tile,
+but as soon as we render the tile, we also render the topper.
+And I won't go too deep into the code here.
+But what we're doing to get all these different tile sets and topper sets
+too is we have to take all of these tile sets-- these collections of tiles--
+and divide them up, right?
+We have to know that if we want to render the entire level in tile
+set one, then we should basically take this into its own sheet--
+its own table-- this into its own table, this into its own table, going
+left to right actually.
+And we have basically four way nested loop.
+So we go every set on the x by every set on the y.
+And then within each of those, we want to look for every tile along the x
+and every tile along the y therein and split up
+the tile sets so that we can index into the individual quads.
+So in the actual code, I won't go too deeply into it here.
+But I'll show you where it is if you're curious to look into how we do that.
+It's in Mario in Source, util.lua, which is recall where we before
+stored our generateQuads function, which does a simple split on a tile
+sheet along its x and y based on whatever width and height you pass in.
+We have in here also a generateTileSets function, which takes in the quads
+from a generateQuads table.
+So we first generate quads on all of this or all of this.
+So we have every single frame of this divided by 16, which is--
+I don't know how many that is.
+6 by 5 times 10 by 5, 10 by 4--
+that many quads, so thousands of quads, I think, if not hundreds.
+This I'm pretty sure is thousands of quads.
+And then we take that and then divide it using
+the number of sets along the x-axis, sets on the y-axis,
+and then the size of each tile set along the x and size along the y.
+We basically divide it using a four way nested loop here.
+We basically just divide it up.
+And then instead of doing a generateQuads
+along the entirety of the picture, we just
+basically do a 2D slice of that quad table we get back
+from the first generateQuads call.
+So I encourage you to look in here and experiment with that.
+You don't need to necessarily know how it works for the assignment.
+But that's how we can basically take a giant sheet like this
+and easily integrate it into our code.
+We can just swap in and out whatever active tile
+sheet we want to work with, assuming that everything
+is cleanly laid out like this, which is on the part of you or your artist.
+You want to make sure that everything is conducive to programmatic organization.
+Had things been scattered around in a very awkward way--
+maybe things were zig zagged or there were weird spaces or something like
+that--
+we wouldn't be able to do something as clean as what we did here
+in util.lua with just 63 minus 20 lines of code
+by getting each individual tile set.
+So that's an important consideration if you're
+looking at creating assets for your project
+and you want to do some programmatic hot swapping of your tile sets.
+Let's make sure we're in the right--
+we're not in the right example here, so we're
+going to go into level0 into main.
+And we have constants now for all of our tile sets and what the height is
+and how many they are wide by tall.
+
+We do it here.
+We get our regular quads from our tiles and toppers,
+so these are just literally every single tile within that big tile
+sheet put in one table.
+And then we just divided up into tile sets
+and topper sets here with generateTileSets function.
+And then we get a random tile set and a random topper set here--
+math.random, number of tile sets, number of topper sets.
+And then at the very bottom also, we have a generateLevel function--
+223-- which is going to be built upon in the next two examples.
+Level0 is just a flat level, so it's actually
+exactly what we saw before, which was just if y is less than 7,
+ID should be equal to sky or ground.
+And then this part is actually what I was
+alluding to before with the topper, because recall
+we need to store a flag in a tile to render a topper or not.
+And it should be whatever the top tile is in the level on the ground.
+In this very simple flat thing, we can always
+assume it'll be the same y level.
+In this case, if it's equal to 7, then topper
+should be true, otherwise, false.
+So every tile along y 7 is going to have topper equals true.
+And this comes into play up here.
+If we do love.graphics.draw(tilesheet), we have not only just tile.ID as we did
+before, but we have tile sets indexed into tileset now.
+So remember, tileset got a random value between 1
+and however many tile sets we had that we spliced out of our massive tile
+sheet.
+Now, we just index into that, and then we index into tile.ID.
+And tile.ID will then be whatever our ID is but relative to that sheet, not
+the whole entire sprite at once.
+And the same thing for topper.
+We have a topper set, we index into topper
+sets here at the topper set that we got, and then that's
+where we'll have the collection of tiles that form that particular set.
+And so the two are completely separate.
+They can be one random color tile with one random topper, but it's consistent.
+It's global.
+We have one topper set and one tile set that are active at any one time.
+And if we press R, which I did up here, then we
+just reset them to random on line 139 and 140.
+Tile set gets a new random number, topper set gets a new random number.
+It has the effect of--
+we can just walk around and then generate random sets.
+
+So pretty simple.
+And recall again, topper is--
+because the tile that we're standing on is y seven, topper equals true.
+So in that case, that particular top layer is always going to have a topper.
+And it gives us a nice little bit of visual variety,
+because it actually makes quite a bit of a difference having
+a topper versus no topper.
+And you can also just not have a topper and consider
+that a permutation of the toppers times tiles, like procedural algorithm.
+That's flat levels.
+Does anybody have any questions as to how this works
+or anything that we're doing here?
+
+OK.
+So things are a little flat, a little boring.
+The next step will be actually introducing one of the things
+that we can see here in our little collection of sample levels,
+like this pillar right here in the very middle.
+Does anybody recall how we go about spawning a pillar as opposed
+to just flat land?
+AUDIENCE: For that column, just put some more dirt down or more tiles down.
+COLTON OGDEN: Yep.
+So for that column, just put more tiles down instead of just the ground level.
+That's exactly what we're going to do.
+So I'm going to go ahead and open up level1 and main,
+and I'll run the example here as well just so you can see it looks like.
+
+So here we have quite a few.
+And notice we haven't implement collision,
+so we're still walking through them.
+But they're just random.
+Their random amount is up to taste, really.
+Right here it's pretty common, so it might be worth
+lowering the amount a little bit.
+If you wanted to, you could also maybe have a flag that says, spawn pillar,
+and maybe you want a pillar width.
+You could have anywhere between one and three tiles.
+And if its width is greater than 1, then just loop over a few times
+and just draw that same height a few times as opposed to just one time,
+and then set the flag back to false.
+A lot of things you can do with it.
+And also, they're a little tall here.
+For the main distro, I ended up making them a little shorter.
+But we'll see how we do this in the code here.
+It's going to mostly be down in our generateLevel function.
+So what we're doing here-- go ahead and hide that--
+is we have basically this code here--
+line 227 to 236.
+So all we're doing here is just filling our entire thing with just sky.
+We're just setting the entire thing to empty.
+And now we have a fully populated 2D array.
+All we need to do in order to change a tile-- we
+don't have to worry about insertions or adding too many tiles to our array.
+All we can do now is just directly change whatever tile exists there.
+So all we need to do is starting on line 239,
+we're going to start doing the column by column iteration over our entire level
+and deciding whether we should generate pillars or not.
+And we're always going to generate ground.
+So here's the flag spawnPillar.
+And if it's equal to 1, this is going to basically be assigned to spawnPillar.
+So math.random(5)==1.
+We have a 1 in 5 chance of spawning a pillar.
+If we just want a pillar, then pillar gets equal to 4 from 4 to 6--
+so y gets 4 to 6 effectively--
+tiles at pillar x, ID ground.
+And then here's where we set the topper, recall,
+because now pillars can be the top most tile on the surface.
+But they're above the ground level.
+So we just basically say, when we're generating a pillar,
+if pillar is equal to 4-- which is the very first tile that we start at--
+then set topper equal to true here.
+Otherwise, set it to false.
+So that's how we can get pillars to also have toppers and then in this case,
+we're not generating any chasms yet.
+So all we're going to do--
+
+once we've generated a pillar on that particular column,
+we'll just say ground gets 7 until the map height--
+so towards the very bottom of the screen.
+And then we'll just set it to ground.
+And then topper-- in this case, we're going to make sure
+that we're not spawning a pillar.
+Because if we don't check this, then it'll
+also spawn a topper where the pillar meets the ground,
+and it'll look a little bit silly.
+And then we also want to check that ground is equal to 7.
+And so all together, that has the effect of this behavior.
+And so if we didn't check for that spawnPillar,
+we'd have a topper right below our feet here too,
+which looks graphically strange.
+And also, you can see--
+emergently, we're getting double width pillars.
+And that's just kind of a natural byproduct
+of a lot of these randomizations.
+A lot of these procedural algorithms--
+they'll generate outcomes that you might not necessarily
+have anticipated, which is kind of a cool thing.
+You didn't necessarily program it to have pillars that were two tiles wide,
+but just the nature of randomization-- that's just what you get.
+And that's another exciting thing about procedural level generation
+is that it can surprise even the person that wrote the algorithm.
+It's really cool, and it saves you work having to create levels.
+So that was pillared levels.
+Chasm levels-- who can tell me how we can do chasm levels?
+AUDIENCE: You just skip a column.
+COLTON OGDEN: Yep.
+you skip a column.
+So at the very beginning, all we can just basically say
+is, do I want to generate a chasm here?
+If I do, just skip.
+Go to the next iteration of the loop.
+And so we'll take a look at that.
+As simple as it is, because Lua doesn't have the notion of continue--
+this will be a refresher, because I believe
+this was in one of the assignments--
+it has a goto statement.
+So basically, same code as before, starting column by column.
+x equals one until map width.
+We have a 1 in 7 chance--
+just arbitrary.
+And this should ideally--
+if you're engineering an entire large game or application,
+this would be called SPAWN_CHASM_CHANCE probably,
+and just set that to seven somewhere.
+But we're just setting it to 7 here--
+just a static magic number, but magic numbers are generally bad.
+Goto continue-- and so continue is here at the very bottom of the loop
+here, which is this for x = 1, mapWidth.
+So it will have the effect of skipping straight to x equals 2 if this at 1,
+for example.
+A lot of languages just simply have continue.
+Lua does not have continue, so this is a community established tradition
+for implementing continue-like behavior in Lua.
+You create a label via double colon with a name and then a double colon,
+and then you just goto it.
+And so that's as simple as it is for generating chasms.
+And so if we go to level2 and run that, we get chasms.
+And so now we've got a little bit of interesting visual variety.
+It's not spawning a ton of chasms in this example.
+It spawned one so far.
+There's another one.
+And then sometimes just emergently, you can get two.
+See, there we go.
+We get some interesting obstacles as a result.
+It almost looks as if someone intentionally did that--
+almost.
+I would probably, like I said, shrink the pillar size a little bit.
+It's a little tall.
+
+That's that.
+That's basic procedural-- in the context of platformers,
+that's the mental model for how we can start
+thinking about generating obstacles.
+And there's a lot of different directions you could go.
+Let's say maybe you wanted to generate pyramids.
+I mean, it's a common thing in Mario.
+There will be steps, [INAUDIBLE] set for it.
+The same implementation would basically happen here.
+It would be a little bit different, because you're
+doing it on a column by column basis.
+But you'd effectively just maintain a reference
+to something like step height, and then you
+would say generate stairs is true here.
+And then you would just set step height to 1.
+So then you add a tile here.
+You would go from ground level up until step height, generate a tile,
+go the next one, and then increment step height to 2.
+And then do from ground until step height--
+tiles go up.
+So 1 and then 2 and 3 until you've gone to stairs width, in which case
+you stop generating stairs.
+That's this principle behind how you could
+do something a little more complicated.
+Or pyramids-- same exact thing, pyramid width.
+And then you just go until pyramid width equals--
+or we're at pyramid width divided by 2, make it go up.
+And if we're higher than that, make it go down.
+And then you have the effect of the pyramid approach.
+Yeah.
+AUDIENCE: Where are you putting the column
+generation if it's a [INAUDIBLE].
+It's not in the play state.
+COLTON OGDEN: In this case, it's all in main.lua.
+But in the distro, it's going to be in levelmaker.lua.
+So we've broken out all of this functionality
+into just how we did Breakout.
+We had the same sort of thing-- level maker--
+and it just has levelMaker.generate.
+And then you give it a width and a height,
+and it will generate an entire level for you.
+AUDIENCE: An entire level, but it has to continuously--
+oh, you generate it all at once?
+It doesn't generate as you walk?
+COLTON OGDEN: The question is, does it generate continuously or all at once?
+It just generates all at once.
+So you could implement a--
+if you wanted to do an infinite runner, the way you would do that is you
+would break up your level into chunks.
+And with infinite runners, usually you can only move in one direction.
+So as you go right, your levels that you've generated before-- they get
+discarded, so you avoid memory overconsumption.
+What you would do is you would just generate a chunk--
+maybe a 100 by 20 level.
+And then you would go through that, through that.
+And then when you get to level end minus maybe like five tiles or 10 tiles,
+you would generate another one, append it, put it to the right,
+and then you would just go from the left to the right.
+And you probably would need some sort of semi-fancy code
+to splice them together once you've generated them.
+Alternatively, you could just always pad your--
+no, you probably wouldn't want to pad.
+I would probably just splice them end to end and then get rid of x equals 1 100
+or however many on the left once it's gone past the left edge of the screen.
+In this case, to summarize, it's all static.
+But you could very easily--
+not easily, but you could very well make it an infinite runner.
+Yeah.
+AUDIENCE: So we're rendering the entire level, but we just can't see it all?
+COLTON OGDEN: The question is, are we rendering the entire level,
+but we just can't see it all?
+The answer is yes.
+Currently, in this implementation, we're just rendering the entire level--
+so tile by tile is getting drawn to the screen.
+For small examples like this, it's not a concern.
+But for a large level-- like if we did a Terraria level, for example.
+Terraria's thousands and thousands of tiles wide by probably
+1,000 or more tiles tall--
+you want to render only a chunk, only what you can visibly see.
+And for that, you could use your camera offset and then just render
+from one tile to the left and above that to one tile below the bottom edge
+of the camera and to the right of it.
+Just render that subset of tiles.
+So you just need a for loop to iterate over a small section.
+AUDIENCE: So you can kind of make an array
+of what the map's going to look like and then
+just render only slices of the array that you can see.
+Is that right?
+If you put a multi-dimensional array and then you just go through it
+and render as you go-- is that the thought?
+COLTON OGDEN: Question was, you just have
+a multi-dimensional array of tiles for your level,
+and then you just render it as you go.
+The answer is yes.
+You would have your overall tiles--
+your big 2D array of 100 by 20 or however many thousands of tiles.
+And then based on wherever your camera is rendering,
+it's just a for loop within that just of a nested amount.
+So maybe your player is at x 30 plus 6 tiles.
+So you would just render from 30 tiles to maybe 45 tiles
+on x and maybe 10 to 20 on the y--
+just that chunk.
+And it's just relative to where your camera is.
+You're always rendering just a small little--
+basically, it is effectively a camera at that point.
+It's rendering a chunk of the tiles to the screen.
+AUDIENCE: But in this code, it's not.
+COLTON OGDEN: In this code, no.
+The levels here are--
+it's sufficiently complicated to introduce.
+I mean, it's not too complicated to introduce.
+It's pretty easy.
+But the consumption-- the processing here--
+is very light, because the levels are fairly small.
+And even if we did have really large levels,
+it's sufficiently small to not have to worry about it.
+But if we did get to a point where your levels were 1,000 tiles or more,
+and then maybe those tiles have additional,
+you just want to squeeze all the performance possible out
+of your application.
+You could look into just rendering a subset.
+It's fairly simple to introduce but just not something
+that we included in this assignment.
+Any other questions as to how this sort of thing works?
+
+OK.
+
+So far, we've talked about procedural level generation.
+We've talked about animation and rendering and all that stuff.
+We haven't really talked about how to do tile collision.
+And we won't go into a terrible amount of detail,
+because the code is a little lengthy.
+It'll be part of your assignment to read over it and understand it,
+but it's in the TileMap class that we have.
+Basically, the whole gist is that because we're
+on a 2D tile array that's fixed, it'll always be at 0, 0, at least
+in the model that we've currently implemented.
+We can just convert coordinates to tiles and then
+just check to see whether or not the tiles at whatever that is
+are solid or not.
+Let's say we wanted to look at the top of our character in this case.
+So if we have our character here.
+For the sake of illustration, I put him between two tiles above him
+just to show why we need to do this the way that we are doing it.
+But you take the point here--
+his very top left, so player.x and then player.y,
+which is effectively their version of 0, 0.
+And then player.x plus player.width minus--
+we do a minus one for a lot of collisions
+so that he can walk between blocks and stuff like that.
+Because if you don't basically give him slightly less than the amount--
+because he's 16 pixels wide, and the tiles are 16 pixels wide--
+if he's between two blocks and he wanted to fall down,
+he just won't fall down, because it's still detecting a collision.
+
+Because if he's on the hole here--
+let's say this is the hole, and these are the tiles here.
+The x plus the width--
+it'll trigger a collision on this tile and this tile still.
+So basically, you need to minimize his collision box by one pixel
+to fit through 16 pixel gaps essentially is what it boils down to.
+But the gist behind collision--
+in this case, this would only apply when he's
+jumping, because this is the only time at which he can really
+collide with tiles that are above him.
+You would test for whatever block falls on this pixel
+and whatever block falls on this pixel.
+And if either of them are solid, you trigger collision.
+And if not, then there's no collision at all.
+So if he's right here, for example--
+right directly beneath a tile-- it's only going to check one tile.
+This point and this point are both going to fall on this tile.
+But the reason that we want to check for both points here and here
+is in the event that he is beneath two separate tiles,
+because now this point's going to check this tile,
+and this one's going to check this tile.
+We can't just check this tile, because if we only check this tile
+and there was no tile here but there was a tile here,
+him jumping would still not trigger a collision.
+It would think that it was only looking here and not here.
+So for every collision on every side we do of him effectively,
+we need to check both corners of that edge effectively.
+So when he's jumping, we turn this point--
+this x, y-- into a tile by just dividing it by tile size.
+So we can say, player.x divided by tile size plus one.
+That's going to equal whatever tile this is on the x.
+And then same thing for the y--
+we just divide the y by tile size, and then we add 1 to it.
+And that will allow us to get the exact tile.
+If we use those x, y that we get from that operation,
+we get the exact tile at that y, x index in our tile's 2D array effectively.
+So we do that for jump.
+We check both corners of the top of his head.
+We do the same thing for the bottom, only at that time,
+we're checking x, and then y plus height,
+and then x plus width, y plus height.
+And then if we're doing the left edge, what are we checking?
+
+AUDIENCE: The bottom left and top left?
+COLTON OGDEN: We are.
+So that will be x0, y, and then x0, y plus height.
+And then if it's the right edge, same thing.
+We check x plus width y, and then we check x plus width y plus height.
+And so that's the gist behind collision detection in the distro here.
+And you can see it in Mario if we go to TileMap.
+
+Point to tile-- this is effectively where it happens.
+
+On line 32, we're basically returning--
+this bit of code here--
+28 to 30-- is a check.
+Because we can jump over the map edge, we
+won't be able to check at tile y divided by TILE_SIZE
+plus 1, x divided by TILE_SIZE plus one, because those will be nil.
+Those won't exist, because he'll literally
+be outside the map boundaries.
+Same thing if he goes below it or he goes beyond the left or right edge.
+So that's all this code is here.
+It just makes sure that if we do go beyond the map boundaries,
+we return nil.
+So that way, we can check nil rather than getting a tile index error.
+And then on line 32 is the operation that I just mentioned,
+which was we take the y--
+so this x and y that we pass in are going to be the player's actual x, y.
+When we pass those in, we're just going to get the tile at self.tiles,
+and then effectively y divided by TILE_SIZE taken down to an integer,
+and then add 1.
+Because recall, tables are 1 indexed, but the coordinates are 0 indexed.
+So this will result in a 0 indexed outcome, so we want to add 1 to it.
+Same thing for here-- math.floor(x) divided by TILE_SIZE plus 1.
+So effectively, points to tiles.
+And then we'll just get a tile from that.
+And the tile-- we can just check, hey, is that tile solid or not?
+If it is, trigger collision.
+So that's the gist behind being able to do it in a platformer
+where everything is fixed.
+That's sort of like a shortcut we can take.
+Because now, what's the nice thing about this?
+What jumps out as being a super nice thing about this algorithm,
+imagining that we have, let's say, 10,000 tiles in our game world.
+So if you look and see, all we're doing is
+we're just doing a simple mathematical operation
+on what his x and y is, right?
+What's the alternative to this?
+If we were doing this via AABB, for example,
+we'd have to iterate over every single tile, right?
+AUDIENCE: Can you summarize?
+To avoid iterating over everything on the screen,
+you just check the column that he's in and the column tile?
+COLTON OGDEN: Yep.
+So the gist is he's got an x and a y.
+The x and the y are going to be in world coordinates, so his x could be 67
+and his y could be 38 or something like that.
+They don't map evenly to tiles.
+But if we divide those by whatever the tile size is in our world--
+16-- that's going to be the exact tile.
+We also have to add 1 to it, because the tables in lua are 1 indexed.
+But we can index our self.tiles at the x, y
+that we get from that-- the dividing by 16.
+And that will be the exact tile that he's colliding with.
+
+We don't have to basically have a collection of tiles
+that we iterate over and check whether they
+collide with the player using AABB collision detection
+like we've done before.
+Because recall, in Breakout, we had the bricks, right?
+They all had their own x, y, but they weren't on a grid.
+They weren't fixed.
+So we had to actually take them and do an AABB.
+We had to iterate over them and perform AABB on them,
+because there's no deterministic way to just index at them really quickly.
+It's the same thing with arrays versus linked lists.
+Because arrays-- you can calculate how far some value is given an index.
+You have instant access to it.
+It's an order of one operation as opposed to a linked list.
+If you want to try and get to a particular value,
+you have to iterate through the entire thing until you find it.
+AUDIENCE: Can you just look for the column that you might be landing on?
+COLTON OGDEN: You're getting the exact tile at whatever your x divided by 16--
+or whatever your tile size is--
+and your y divided by 16 is.
+And you're doing it, recall, for two different points
+depending on what you're looking for.
+If you're looking for the tiles that are above your character,
+you're going to be doing it for this point.
+So whatever this value is-- his base x, y--
+whatever that is divided by 16 and then whatever that is divided by 16.
+And then that'll get you whatever tiles are directly above him.
+It will intersect with whatever tile intersects with this point
+and whatever tile intersects with this point.
+Same thing with here and here if we're looking on the left,
+here, here if we're looking on the bottom,
+and here and here if we're looking on the right side.
+And we check for collision after he's already
+moved so that these points will be intersected with potential blocks.
+And that's how we can check whether it's a collision or not.
+We do this when he moves and is in some sort of movement state.
+AUDIENCE: So you're still doing collision detection
+with his actual coordinates, but you're just
+narrowing what you're character width--
+COLTON OGDEN: Yep.
+we're turning it from iterating over every single tile
+to an instant operation, because we can just mathematically get
+the exact tiles that he's at without having
+to worry about where he is in the map.
+It's just instant access.
+And this only works because we know the tiles are always
+fixed in the exact same locations.
+They're always starting at 0, 0.
+They're always going to be TILE_SIZE.
+Things get a little more complicated when
+we introduce game objects, which have their own independent x, y.
+And for those, you do have to iterate over.
+You have basically a collection of game objects or a collection of entities.
+Let's say we have snails in the game world.
+The snails aren't going to be at some fixed location every time.
+They can move continuously.
+So for those, we have to actually keep them all in a container
+and then loop through them and say, has my player collided with any of these?
+If he has, then trigger a collision with that snail--
+kill it or kill the player if he's in a walking state or a jump state.
+And if he's in a falling state, then they
+should die, because he's colliding with them from the top.
+And you narrow down what collision you check for, as you can see at the bottom
+here.
+Tile collision-- when you're looking above your character,
+you're only testing that when you're in the jumping state,
+because it's the only time you need to.
+So that's the only point at which you'll collide with tiles that are above you.
+When you're in the falling state is when you'll check for tiles below you.
+And then you can interact with tiles to your side
+when you're in either the jumping, falling, or moving state,
+so you should check for left and right tiles in all three of those states.
+AUDIENCE: Shouldn't you always test for beneath you in case you get a chasm?
+COLTON OGDEN: In case what?
+AUDIENCE: In case you get a chasm.
+COLTON OGDEN: In case you get chasm, yes.
+
+You're correct.
+This should actually be tested only when in the player
+falling state and player walking state, yes.
+So the question was, shouldn't you be testing for tiles beneath you
+when you're walking?
+And yes-- not just falling, but walking as well.
+This one only jumping, this one falling and walking,
+and this one for jumping, falling, and moving.
+
+Does that make sense--
+how we can take the x, y and sort of turn that into a tile
+by just dividing it by 16?
+And do note the plus 1 as well, because our tiles in our self.tiles
+are 1 indexed.
+And so when we divide x, y by tile size, we're
+going to get a 0 indexed coordinate.
+If our x is at 14, we're within the first tile.
+But if we divide that by 16, we're going to get zero.
+So we need to add 1 to that so that we get the first tile in the array
+still, which will be whatever that tile is.
+So that's how the collision works.
+It's all implemented in TileMap here.
+And basically every state that the player is in, which is in StatesEntity,
+and then player falling, idle, jump, and walking--
+these are all states that perform this check.
+They basically do all the logic that's here
+at the bottom, which is testing in the player
+jumping state, falling state, and moving state for left or right collision.
+And then in the falling state, we check for collision below us.
+And then in jumping state, we check for collision above us.
+That's all done within the states themselves.
+But the actual transformation from pixels to tiles--
+that's just a function that we call from TileMap.
+It's just a utility function.
+AUDIENCE: What's the function called again?
+COLTON OGDEN: It's called pointToTile.
+So if you're in TileMap on line 27--
+pointToTile(x, y).
+And the first little bit here is just the bit
+that lets you basically go outside the map bounds
+without getting a tile index error.
+So if it's just outside the tile limits, less than 0, or greater than width,
+just return nil.
+And so you can do a check on nil to check
+to see whether TileMap pointToTile is equal to nil
+or not when you do the collision.
+And if it is, then just don't do anything probably.
+But assuming that you're within the tile boundaries, on line 32
+is where you do that transformation-- the math.floor, recall,
+because we want to get integer values for these.
+We don't want to get fractional numbers, because you
+can't index these tiles as fractional numbers, although I'm not sure.
+I think you might be able to in Lua generally-- index a tile
+by a fractional number.
+But in this case, we just want integers.
+So we call math.floor on y divided by TILE_SIZE plus 1,
+y divided by TILE_SIZE then add 1 to that,
+and then we do the same thing for the x.
+So that's the operation.
+And then wherever we want to check for whatever tiles we want to collide for,
+we just call pointToTile on those x and y coordinates.
+That's the backbone behind all the tile-based collision in the game
+effectively.
+
+Any questions as to how this works?
+Yes.
+AUDIENCE: So you're only detecting the collision of corners
+and not the edge itself?
+COLTON OGDEN: Correct, because you don't really need to check for the edge
+if you're taking into consideration the top and bottom corner,
+unless your entity is sufficiently tall that they need
+to check for more than three tiles.
+In this case, our entity is not more than two tiles tall,
+so we only need to check for his top left, bottom left.
+If we're doing a left collision, top right, bottom right.
+If we're doing a right collision, his top left, top right for top and bottom
+left, bottom right for bottom.
+If you had an entity that was eight tiles tall,
+you need to check every single tile along his right side, which
+just means you need to iterate over his entire height divided by tile size.
+And then just offset the y that you're checking for each of those tiles.
+Does that makes sense?
+OK, cool.
+All right.
+I alluded to this briefly by mentioning state.
+
+I don't know if I alluded so much to the fact that we're using entities.
+But in this distro, we're introduced to the concept of entities.
+An entity can be almost anything you want it to be.
+In this distro, we're considering entities
+to basically be anything that's living or sentient moving around--
+in this case, the player or snails.
+Those are entities, and then they just are subsets of entity.
+An entity is a very abstract thing.
+You'll see it in a lot of game engines and a lot of discussions
+about how to organize your game and how to engineer it.
+Unity is probably the most prominent adopter
+of what's called the entity component system, whereby
+you have everything in your game.
+Every single thing in your game is an entity,
+and then every entity is comprised of components.
+And these components ultimately drive your behavior.
+It's sort of like if you're familiar with composition over inheritance.
+If you've heard of this as a software engineering thing,
+that's effectively the same paradigm.
+Rather than inherit a bunch of different things to be your--
+let's say you have a base monster class.
+And then you have a goblin that's a subset of monster,
+so it inherits from monster.
+And then you have a goblin warlord who inherits from goblin,
+and then you have an ancient goblin warlord that inherits from that.
+Rather than have this nested tree of inheritance,
+you adopt composition, which means you take a base container,
+and then you fill it with different components that represent
+what the behavior of your object is.
+So if you have an entity--
+let's say you give it a monster component.
+And then maybe you also give it an ancient component,
+so it's an ancient monster.
+And maybe you give it a goblin component,
+so then it's an ancient monster goblin.
+And then you give it a warlord component,
+so it's an ancient goblin monster warlord.
+So it has all the pieces that make it what
+it is without you having to create this crazy chain of inheritance.
+That's effectively what the model of an entity component system
+is versus standard inheritance-- using that to drive
+the model of your problem.
+In this case, we're not going into crazy entity components.
+But I wanted to bring it up, because Unity,
+which we'll be covering in a few weeks, is entirely component-based.
+Everything you write in Unity is a component.
+And entities, whether they're in an entity component system or not,
+form the backbone of most large games.
+Most games that have some complexity to them
+model most of the pieces within them as entities that have behaviors
+and do things.
+And so in this case, entities are snails and our player.
+And then separate from the tiles--
+when we do collision for that--
+we want to also check collision on every entity with the player.
+So we make sure that the player's collided with the snail in this case,
+because that's the only other entities that they can be.
+But you can have an arbitrary number of enemies if you want to.
+If you collide with an entity-- so just a for loop.
+So for entity in pairs of entities, check collision.
+If you're in the jump state, then die.
+If you're in the fall state, kill it, et cetera.
+When you're doing most of your entity to entity interaction stuff,
+that's generally how you'll model it.
+You'll just iterate over everything and then just collide everything.
+Depending on what collides with what, you'll
+just collide everything with everything else and process interactions that way.
+That's effectively how we do it.
+We have in the--
+I believe it's in GameLevel.
+This maintains a reference to a table full of entities,
+a table full of objects.
+Objects can be-- we'll talk about that in a second--
+gems, and blocks, and bushes, and stuff like that, and then a tile map.
+
+For every entity, we just update it.
+And then for every object, we update it.
+And then for every object in objects, we render it as well.
+And then we render every entity.
+This is just sort of basic how you would take a game world,
+populate it, and then process and update it.
+Just containers, tables that maintain a bunch of references to everything,
+and then just update them.
+The actual interaction takes place in the--
+because they're dependent on what state we're in.
+If you look at all the different states for the player in the states slash
+entity folder, you'll see, for example, on line 62 of the player falling state,
+we're iterating over every object in the level.objects.
+And notice the player has a reference to its level
+so that it can access everything within it.
+And then within that level, all the objects are stored.
+So all it needs to do is just say, if the object collides
+the player and the object is solid, then set our dy to zero,
+et cetera, et cetera.
+All this code's actually pretty easy to read through,
+so I would encourage you to take a look at it
+and just understand how all the collision and stuff is
+working between the player, the objects, the blocks, and things like that--
+things like blocks are solid, things like bushes are not solid.
+But that's the gist.
+Have a collection of objects or entities.
+And then depending on what state you're in, collide with some.
+And then depending on the state, maybe that kills you,
+maybe that kills the enemy, maybe nothing happens,
+maybe you become invincible.
+Maybe you collide with a power-up game object,
+and that power-up triggers your self.player.invincible is true.
+And then if self.player.invincible is true,
+then maybe you render him with a rainbow animation.
+And then in any of the functions where he would collide and die with an enemy,
+he no longer dies, he just kills them.
+So that's sort of the gist behind how you would interact with objects
+and how to process it.
+Game objects are different.
+Like I said earlier, these are examples of some of the objects here we can see.
+The gems on the bottom left there are all in the distro.
+If you hit a block-- and if we have a few minutes,
+I'll show you really quickly how that works--
+if you hit a block, you'll have a chance to spawn a gem.
+If you collect the gen-- which means if you collide with that game object--
+increment your score 100.
+These are all other objects that I didn't have any time to implement.
+But just off the gate, just as a mental exercise,
+how do you think we could implement a ladder?
+
+Yeah.
+AUDIENCE: You would just have a climb state.
+And if the player is touching a ladder and presses a certain key,
+they would enter the climb state, and that would cause them to go up.
+COLTON OGDEN: Correct.
+So what Tony said was if they go onto a ladder,
+they should go into a climb state.
+And depending on whether they're in a climb state
+or not, if they press a button, they should go up or down.
+And then you would check.
+If they're at the top of the ladder, get off the climb state,
+go into a walk state.
+Or if they're at the bottom of the ladder, go into a walk state.
+And that's just another game object that you just collide with,
+and then it's a new state for you.
+Yes.
+AUDIENCE: You may actually want it in a fall state,
+because that way you could have a ladder that doesn't actually go anywhere,
+it just gives you height.
+But you could use that to jump over wide gaps.
+COLTON OGDEN: What Tony said was you could
+have the ability to jump off a ladder.
+Is that what you Said Yeah.
+The ability to jump off a ladder so that you can then use it as an obstacle.
+That's absolutely true.
+Actually, in the mock up that we saw up here, it's super hard to see.
+I'll see if I can maybe zoom in on it here.
+
+Mario, Mario, graphics, and then it's called full sheet.
+The whole entire sheet that I used for this lecture is called fullsheet.png.
+I don't know what that is.
+So if you zoom in really high here, we can see effectively
+what you were alluding to--
+right here, this little rope thing.
+I'm guessing for the sake of this mock up that's
+what they were trying to illustrate.
+But you have a game object that lets you go into a climb state.
+Whether it's a ladder or whether it's a rope,
+just add a new state for the player.
+If they're in that climb state, then we have this new animation
+which we saw in the sheet earlier, which was their back or their front.
+And then they just climb up it and just update it
+if they're moving up or down the ladder.
+And then just give them the ability to jump off.
+And then when you get to the top or bottom, just get off.
+
+And you could think a lot of the same thing with a lot of these obstacles,
+like the spikes here.
+If you're jumping and you hit it, you should probably die.
+And so you would check for if the object.ID maybe is equal to spikes
+or whether object.lethal equals true.
+Same thing with this one.
+And then some obstacles are completely cosmetic, like this mushroom here.
+In the case of the distro, bushes and mushrooms and cacti
+and all those sorts of things are just completely cosmetic,
+so you can walk through them.
+They don't trigger collision, but they're rendered as game objects.
+They're not part of the tile grid.
+
+They don't get processed in the same way as tiles.
+They're not stored in the y, x.
+
+So that's effectively how we can start thinking about objects
+and how to give them behavior.
+Part of the assignment is going to be adding a flag.
+So this flag is in the sprite sheet.
+So what you'll do--
+and I'll touch on this at the end of the lecture here.
+We're getting close to it.
+These keys here actually at the bottom right--
+so part of the assignment will be to--
+it's actually right here.
+So I'll go over it really quickly.
+Ensure the player always starts above solid land.
+So in this case, when James came up here and ran, you ran the first example.
+The very first time that we spawned the game,
+it generated a chasm right where the player spawned at x1.
+And so he just falls to his death if that happens.
+
+Just right off the gate, anybody have any ideas
+as to what we could do to check to see if we're at solid land,
+assuming that the player's default start is at x1?
+AUDIENCE: At that tile, check if it's solid.
+If not, then just move it there over x until it's true.
+COLTON OGDEN: Yeah.
+What we probably want to do is look all the way down the column,
+because we start towards the top.
+If we find that there's no tiles down there-- it's just pure chasm--
+we probably want to shift the player.
+And then random keys and locks--
+let me open up LevelMaker so we can see what you'll be interacting with,
+because most of what you'll be doing actually is in LevelMaker.
+
+It does a lot of what we did before with just math.random,
+and then it will insert into objects.
+So objects is a table here.
+It will insert a game object depending on some logic.
+So in this case, if we're generating a pillar,
+we have a chance to generate a bush on the pillar.
+So if math.random(8) is 1, in this case, we're already generating a pillar.
+So we have an additional chance that's on top of the chance
+to generated a pillar--
+so basically, I think it's a 1 in 64 chance on that particular iteration
+to generate a pillar with a bush.
+
+You just add a new game object to objects.
+In this case, this is the constructor for a game object.
+You give it an x, y, width, height, and then a frame.
+And then the frame is relative to whatever quad table matches the texture
+string here.
+So bushes is the texture, and so whatever quad in bushes
+you want to give it--
+in this case, we just gave it a random frame from that.
+And then a lot of the same logic applies to other parts.
+This is another part where we generate bushes just on flat land.
+We have a chance to generate a block--
+1 in 10 chance this is a jump block.
+So here we have texture, x, y, width, height, frame.
+Notice that we have collidable is true, and this
+is how we can test to see whether a tile is collidable or not.
+Hit is false, meaning that we haven't hit it yet.
+And if we have hit it, then we do this code basically-- onCollide gets called.
+
+You can see where this gets called in the collision code for--
+
+if we look in Player.
+
+Player has check left collisions, check right collisions,
+and check object collisions.
+It doesn't have check up and down collisions.
+There is a corner case for both of those such
+that the logic had to be duplicated.
+I forget exactly why.
+But you basically get a list of objects that you check for.
+
+Oh, the reason why is because when you get
+the collided objects when you're in the jump state,
+you trigger the onCollide function.
+So let's go to PlayerJumpState.
+If we're in the jump state, this is where we would basically
+check to see if we've gotten any objects that collide with the player.
+If it's solid, call its onCollide function, object.onCollide, and then
+we just pass in the object itself, basically.
+And so if you go back to LevelMaker, that's
+where we write the onCollide function.
+We write the onCollide function within the game object here.
+So we just give it an onCollide, remember,
+because functions are first class citizens.
+We can just say onCollide gets function obj,
+where obj is going to be this object.
+If it wasn't hit already, one in five chance to spawn a gem--
+so going to create a gem.
+It's got all the same stuff in it.
+In this case, it has its own function called onConsume.
+onConsume takes a player and an object.
+And then this is all arbitrary, by the way.
+You can create whatever functions you want.
+These are callback functions, effectively.
+We're just going to play the pickup sound and then add 100 to our score.
+And then here, in the event that we did get a gem,
+we tween it over the course of 0.1 seconds.
+We tween its y to be from below the block to up above,
+so it has an upwards animation, effectively.
+And then we have another sound that plays.
+But that's effectively how we're spawning game objects.
+Game objects have textures, x, y, width, height, and then
+you can give them callback functions that you then
+execute wherever it's relevant to you.
+In this case, you'll only really need to worry about onCollide,
+because the assignment is create random keys and locks.
+They have to be the same color, but you can choose them at random.
+If the player collides with the key, then he
+should probably get some flag that's like key obtained is true
+or something like that.
+And then you go to the block that spawns in the level,
+so you should spawn a block with that same color.
+And then on collide, you should unlock it, so get rid of the block
+and then spawn a new game object--
+the flag.
+And then that flag will have its own on collide.
+And when you collide with the flag, restart the level.
+And that's effectively the gist behind the problem set.
+So it probably shouldn't take--
+I would say probably maybe 40 or 50 lines of code probably should do it.
+AUDIENCE: That game object--
+was that a class?
+It's not a table.
+What is that?
+COLTON OGDEN: It is a class.
+There's a GameObject class.
+A game object is basically-- and I realize I didn't touch on it too much.
+In the context of this distro, you could almost think of it as an entity.
+In this case, what I've done is I've differentiated
+between living things and non-living things
+as being entities versus game objects, which is a semi-arbitrary distinction.
+But for a small project like this, it makes sense.
+For a large project, I would probably create everything as an entity
+and then give different kinds of entities
+their own behavior and their own components,
+sort of like how you do with an entity component system.
+AUDIENCE: Are there two ways to create a class in Lua,
+one with the curly brackets and one with regular parentheses?
+COLTON OGDEN: There is, actually.
+So the question was, is there more than one way to create a class in Lua
+whether it's parentheses or curly brackets?
+Yes.
+I don't think I've ever actually talked about this.
+
+Let's go back to LevelMaker.
+If you instantiate a class and that class
+takes in just a table as its only argument, you can just pass in this.
+This effectively is that argument table.
+You don't need parentheses.
+It's effectively doing this--
+same thing, only you don't need the parentheses.
+AUDIENCE: And then that's a table that's being passed in?
+COLTON OGDEN: Correct.
+It's just an alternative form of instantiation
+on things that only take a table as their argument for when
+they get instantiated.
+AUDIENCE: And you can only have one table in that case?
+COLTON OGDEN: Correct, yes.
+AUDIENCE: Wouldn't it be easier to create a new class which
+would have its own set of game objects so you
+would create a gem which would be helper dot gem, which
+would in turn create a game object?
+COLTON OGDEN: Can you say that one more time?
+AUDIENCE: It's kind of hard to explain.
+Wouldn't it be easier to create another class which
+would have your gem and everything, and your gem in that class
+would be a game object?
+But in this class, when you wanted a gem,
+you would say local gem equals helper class dot gem.
+COLTON OGDEN: The question was, wouldn't it
+be easier to create a helper class that would allow you to instantiate gems?
+Possibly.
+
+I think if you were going to design this a little bit more robustly,
+and if this were going to be a larger game,
+then you would just create a subclass for blocks, gems, et cetera.
+To shrink the number of files that we had in the distro and to sort
+of consolidate everything together and put all of the level code together
+in one spot, I decided to just create GameObject as an abstract class that
+you could then just create your own behavior for within the actual
+constructor-- which is this bit here, which is just the table--
+and then allow you to override the onCollide and onConsume functions.
+You can actually give it whatever functions you want.
+You could give this some arbitrary named function and then test for it later.
+This is almost like an obscure way of inheritance.
+But I think if I were to engineer this with the goal of making it a really
+large game, I would just subclass.
+I would just create a class for gem, a class for block, a class for bush,
+et cetera, et cetera.
+It wasn't strictly necessary for this example,
+so we ended up keeping everything a little bit
+more abstract in a sense-- a little bit more general purpose.
+But yeah, you could definitely create classes for those.
+And if you were in an entity component system,
+you could have a consumable component.
+And then that consumable component would then
+allow you to give it some sort of behavior that affects the player when
+the player consumes that object.
+In this case, a gem is a consumable, so you would just
+give it a consumable component with a texture of the gem
+and then give it a callback function that
+just increments the player's score.
+You could probably put that in 10 or 15 lines of code.
+It would be pretty easy.
+And then blocks would be a spawner component,
+so they have a chance to spawn.
+And then you would pass in that spawner component a gem maybe,
+so it would have a chance to spawn the gem that you passed into the spawner
+component-- and then also a solid component to say, oh, this is solid.
+So if I hit it, I should trigger a collision
+and not be able to walk through it.
+So you just layer on these components.
+I would encourage you to think about this way of composing
+your objects a little bit, particularly as we get towards Unity, which
+makes a lot of use of this concept.
+In short, yes.
+I think that's pretty much everything.
+Let me just go ahead.
+We're running out of time here, but like I said, one more time--
+make sure the player starts above solid land, random color key and lock,
+and then make sure that when you get the key, you can unlock the lock,
+and that spawns the goal.
+So this is all something you can just add to the LevelMaker class,
+and it will all work with your game level that way.
+And then you touch the goal flag, then respawn the level.
+So today, we talked about Super Mario Bros.
+The other big Nintendo game of that era--
+arguably one of the greatest of all time-- is Zelda.
+So we'll be talking about a very simple Legend of Zelda game,
+where we just have a random dungeon that we can go through,
+a top down perspective, fight simple monsters,
+open chests, blow up walls-- that sort of thing.
+We'll talk about triggers and events.
+And then we'll talk about hurt boxes, inventory,
+a very simple GUI for opening up a menu, and then world states
+so that we can see which doors have been blasted open so that they
+render appropriately and whatnot.
+And that's it for Mario.
+Thanks a lot for coming.
+I'll see you guys next time.

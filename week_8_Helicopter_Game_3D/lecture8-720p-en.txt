@@ -1,0 +1,2390 @@
+[MUSIC PLAYING]
+
+COLTON OGDEN: All right.
+Welcome back to GD50.
+This is Lecture 8.
+Today we're going to be diving into the world of Unity
+for the first time, which I'm excited about.
+Going to be a whirlwind tour, but I'll try to cover as much as possible.
+Transitioning away from 2D and away from Lua and LOVE 2D into 3D and C#
+in the context of Unity.
+Today we'll be talking about Helicopter Game 3D.
+So Helicopter Game is a 2D game that was really famous in the 2000s.
+It was a web game.
+I was sponsored on a bunch of websites.
+Addictinggames.com still has it on there,
+and a few other websites have it.
+It was a flash game.
+But I remember playing it a lot.
+It was the old precursor to Flappy Bird, which
+was mentioned on the Wikipedia page.
+There's a reference to it there.
+And this is what the game play looked like.
+It was very similar to Flappy Bird-- a little bit different
+in that, instead of trying to avoid pipes, you're in a cave,
+and you're trying to avoid the ceiling and the ground of the level.
+And there were these little obstacles that would spawn in the middle,
+as well.
+So you'd have to navigate that.
+But it was the same exact mechanic-- the sort of like, click to go up.
+And then, when you didn't click, your helicopter
+would just sink down via gravity.
+Today we'll be talking about a bunch of brand new topics, things like Unity,
+first and foremost-- the ecosystem with which we'll be doing
+a lot of the things we'll be doing.
+C# is the primary language we'll be using.
+So we're going to take a step away from dynamic languages and move towards
+statically-typed languages--
+languages like C#, and Java, and the like.
+Blender is a program we'll look at briefly today,
+just because, in the context of 3D development,
+you're going to want to have a tool that will let you create models.
+And so the 3D software that I like to advocate for the most, especially
+for folks that are just starting out, is Blender, because it's free,
+and open source, and it has much the same feature
+set as any commercial software, like 3D Studio Max, and Cinema 4D,
+and the like.
+We'll talk about what components are-- entities and components, how
+they relate in this model that Unity has adopted for all of its programming.
+Components are little pieces of behavior that you can then
+combine to form a whole, that will then drive the behavior of whatever object
+in your scene you want, rather than having
+to customize its behavior via a long chain of inheritance and instantiation.
+Colliders and triggers are important in 3D--
+and 2D.
+But today we'll be talking about colliders
+and triggers-- things like the helicopter
+colliding with coins, and buildings, and other planes that are flying.
+Each of those has to have a collider.
+And certain things have to be considered triggers in order to trigger
+certain behavior with other entities.
+Prefabs and spawning-- prefabs is a huge concept in Unity.
+So prefabs are basically prefabricated objects
+that you can customize as you want to-- lay them out in the editor,
+rather than having to necessarily code all the details.
+And then you can instantiate them in the actual scene,
+via code programmatically, in a way that fits the model you're striving for.
+Texture scrolling is something we'll look at briefly, because it's
+the way that we accomplish the infinite scrolling aesthetic or behavior.
+And we'll look at how we can do that in a different way
+than we've done before, using u-v coordinates,
+and specifically looking at materials, and modifying
+certain attributes of those materials.
+And lastly, to tie everything together as we've done before,
+we'll look at audio-- things like audio listeners and audio sources--
+what the difference is between them, and how
+to add them easily to our game project.
+But first, a demo-- if there would be anybody
+willing to come up and take a look and play the 3D helicopter game that I
+put together, that would be awesome.
+Anybody?
+Steven?
+Awesome.
+Thank you so much.
+Let me go ahead and actually get it--
+so I've pre-built it.
+So let me go ahead and.
+So the nice thing about Unity is, it exports to multiple platforms.
+And right out of the gate, you can get just a--
+I didn't put an icon for it.
+But you can create just a native application very easily.
+And so whenever you're ready, go ahead and hit Play,
+and Up and Down will move your helicopter.
+
+So this is the 3D helicopter game.
+And I don't think we have sound live, but there should be audio.
+Oh, I might have actually-- here we go.
+[MUSIC PLAYING]
+There we go.
+That was my bad.
+So there is music playing.
+There's sound effects.
+So notice that we have a 3D model.
+This is what's called a 2.5D game.
+So even though everything is in 3D--
+the models and so forth--
+the actual axes upon which we're bound are just two.
+We're just bound to, I believe, the x and the y.
+Could be the z and the x.
+I don't recall offhand.
+But we're bound to just simply two axes of movement.
+But all the models, as we can see by the camera,
+are in 3D, including our helicopter.
+So we have a few things going on.
+We have skyscrapers that are scrolling by.
+We have coins that are also going by at the same speed as the skyscrapers.
+We have a background that is infinitely scrolling.
+We have, of course, our helicopter which has a rotating set of blades.
+And when we collide with a coin, notice that we get a little--
+it might be hard to see in house, but we have a little particle
+effect that plays.
+There's airplanes that are flying up top,
+so we're instantiating those, as well, to fly past us
+to provide another layer of obstacle.
+And if we collide with an airplane, notice that we get de-spawned,
+and then we trigger another particle effect to imitate an explosion.
+And then, notice we also have a couple of other elements.
+We have a GUI.
+We have two GUI elements-- a coin total at the top right,
+and then a game over here in the middle of the screen, which
+only shows up once we have died.
+And the explosive behavior-- if you want to collide with a building,
+you'll see that.
+It also triggers when you collide with a building.
+So there's two things looking for these explosions-- the airplanes up top,
+and the buildings below.
+Those are our two obstacles.
+But when they collide with the coins, we should increment our coin total,
+and then display a different particle effect.
+And then this goes on ad infinitum.
+You can press Space to restart.
+So we have keyboard input that's based on what
+we press, different things happen.
+And so that's effectively the demo that I've put together today.
+So thanks, Steven.
+I appreciate you coming up to demo it.
+
+So that's the 3D helicopter game.
+It's got most of the same mechanics as the web version from before--
+I would say, maybe even more features just to illustrate a few new concepts.
+But that's effectively what we're going with today.
+We're just a pretty simple, Flappy Bird esque differently-themed game,
+based on the same principles.
+Fly forever, avoid obstacles.
+And in this case, even get little collectibles.
+And so notice that there are also effectively two states
+in our game, which are just the playing state, and then the game over state.
+The two are almost effectively the same.
+The only real difference is that one doesn't have the helicopter present,
+and displays a different GUI element in the middle of the screen.
+If you haven't downloaded Unity already, there's two links here.
+So the top link is just the catchall download link.
+And then the second link is the beta link.
+So we're actually using the beta in this course,
+because Unity has started transitioning away
+from a numerical system for their releases,
+and is now going yearly with their releases.
+So the last long-term release candidate was 2017's version.
+But now that we're almost halfway through 2018,
+the newest beta is the 2018 version.
+It has a bunch of new features.
+So go ahead and check that out.
+And everything's been well tested, and runs very well--
+very smoothly on Windows and Mac--
+with the new beta.
+So what is Unity?
+The difference between what we've done so far and what we're doing today is,
+now we're actually using a full-fledged game engine--
+this system.
+It's got a built in editor and all this awesome, cool
+functionality that we really didn't get with Love2D before.
+What we were doing before was using a framework,
+and just implementing everything purely in code.
+And as we'll see today, everything that you want to do that's customizable
+effectively is--
+or can be-- done via code.
+But there are a lot of more efficient and more user-friendly
+ways to accomplish the same thing, which we'll take a look at.
+So Unity has a tremendous market share right now.
+I forget.
+I think in 2016 it had like 43% of all games released were done in Unity.
+I don't know what the current numbers are.
+I couldn't find them.
+But there are other engines that are also very well used--
+Unreal being among them.
+And Unreal actually may have more market share now,
+because of games like Fortnite, and because it's
+been improved a lot over the last couple of years, and really marketed well.
+But Godot, CryEngine-- there are a lot of game engines
+that are similar to this that provide you
+this all-encompassing way of dealing with your game scene
+and with all your game data.
+But Unity is a very easy engine to start getting used to,
+and cranking things out, and being productive with,
+without the tremendous learning curve that some
+of the other engines like Unreal might have.
+Unreal does have a more user-friendly way of doing things.
+But if you want to get down into the nitty gritty with Unreal,
+you're coding in semi-arcane C++.
+So for folks who aren't used to it and aren't used to 3D game development,
+it can be kind of a large board to get onto.
+The nice thing about Unity, aside from the fact
+that it's fairly easy to get started with, is that it's free.
+And you can use it completely with all of its features
+until you start making over $100,000 in gross revenue releasing Unity products.
+And then there are other tiers.
+The next tier above that is if you start making $200,000,
+and you get new features with these other tiers.
+But if you want to just start up a new company,
+and use Unity, and take something to market--
+completely free to do so.
+And once you get over $100,000, that's a good problem to have.
+It's not necessarily too much to ask to start
+paying Unity to use it as a means of getting
+onto the market in the first place.
+And especially in mobile and VR, Unity's sort of like the forefront.
+It's got even higher percentage.
+It's like 60-something or 70% market share on mobile.
+And then VR-- from the beginning, it's marketed itself very strongly
+towards the use of VR.
+And we'll actually use VR in the next lecture.
+And the way in which we will accomplish all of the programmatic aspect
+of this-- getting things actually implemented in code--
+is via C#, which is very different than what we've used so far,
+which we've used Lua, which is a dynamic scripting language,
+very much like JavaScript.
+So C# is very similar to Java, in which things actually have types.
+And so here's a couple of screenshots of what the Unity editor looks like.
+So the nice thing about the Unity editor, actually--
+which we can see right off the gate here--
+is that it's very customizable.
+So on the top, that's the default view.
+You have a bottom panel that shows you all your resources,
+all your assets, things like scripts, and shaders, and models,
+and textures, and sounds.
+You have a nice file browser there on the left-hand side, which allows
+you to easily navigate your project.
+You don't have to go looking through your Windows or Mac computer, using
+your finder, or whatnot, or your File Explorer,
+and actually look through all your files.
+You get a nice view there, so that you stay integrated
+within the Unity ecosystem right there.
+On the right-hand side, you can see all the behavior for whatever objects
+you might have in your scene.
+You get a nice big scene view.
+So rather than having to run your game live, and look
+at the behavior that way, you can actually
+see in advance what your scene looks like, and analyze
+your game objects that way, and their appearances,
+and whatever you want to do with them.
+And lay them out perfectly, rather than have
+to programmatically figure things out.
+And on the left-hand side there, you can see
+a full list of all the game objects.
+And then on the bottom right screen shot,
+you can see that the editor is heavily customizable.
+So you can lay things out however you want
+to to fit your style of development.
+I often like to have a panel on top, which shows me my scene view,
+but then have a panel right below that, that shows me the game view.
+So if I'm actually running a game and seeing it happen live,
+I can also see it in the scene, and rotate around in this god mode
+that you can get in a lot of games.
+And actually analyze and see things that way,
+and analyze their behavior frame by frame,
+even if I want to, in a way that's not possible with however
+I might have coded the camera in the actual game itself.
+So C#.
+So has anybody in here used a static language,
+or is familiar with statically-typed languages
+versus dynamically-typed languages?
+[INAUDIBLE], Steven.
+So what languages have you guys used, just out of curiosity?
+Steven.
+STEVEN: Java, C, C++.
+COLTON OGDEN: Java, C, C++.
+Donny?
+DONNY: [INAUDIBLE]
+COLTON OGDEN: C and C++.
+OK.
+So to you guys, this will be pretty similar.
+So C# is very similar to Java.
+Almost looks identical at first glance.
+There are some features that are different.
+But it was Microsoft's initiative to compete with Java.
+It's a Microsoft language, first and foremost.
+But there are ways to run C# code on other platforms,
+primarily with the use of what's called Mono.
+So Mono is an open source implementation of what's called the CLR--
+the common language runtime--
+which is how Microsoft allows several of its languages, like F#, and C#,
+and Visual C++, Visual Basic.
+They all compile to this intermediary format,
+like how Java compiles to bytecode.
+And you can run any of those languages' code--
+their version of the bytecode-- with the CLR.
+Mono-- what Mono is, and what Unity relies on
+to allow its use across multiple operating systems,
+is a CLR that's not just Windows specific.
+It actually runs on Mac and on Linux machines, as well.
+And you'll actually see evidence of its existence via the nomenclature used
+for Mono behavior.
+So within Unity, there's this thing called a Mono
+behavior, which we'll take a look at.
+From the beginning, actually, Unity was developed for Mac platforms
+exclusively.
+But in 2012 or 2011 they ended up making it usable across all major desktop
+operating systems.
+But C#-- suffice to say, very similar Java.
+We'll look at its syntax.
+But it's different from Lua in that, with Lua, you could just say,
+oh, x equals 10, or object equals-- and then create
+a table with whatever you want.
+C# is a lot less flexible in this sense, in that you have to actually tell it
+in advance what each data type is that you're trying to make.
+So you can't just create a table or a integer.
+You actually have to say, int my_int, or x equals, and then 10,
+and then semi-colon.
+So there's also more syntax to be conscious of.
+And so really quickly, I can show you just what some C# looks like.
+We'll take a look at this again going forward.
+But as you can see here, we have public.
+So that's another thing about C#.
+In Java, if you're familiar with Java, they're
+object-oriented programming languages.
+And as such, there are objects that are public and private,
+and you have access specifiers for different variables and classes
+that will tell other variables and classes whether or not
+they can communicate effectively.
+So public class just means effectively anybody can see this class.
+Other classes can see this.
+But then you have--
+see if I have one of these that has a private variable.
+I know there's at least one.
+Here we go.
+So private, Text, text here, for example.
+So first of all, notice that these are variable declarations
+like we've seen before.
+We're saying, this is a variable that I'm going to use.
+In this case, public GameObject helicopter.
+So I'm just defining it.
+Or I'm declaring it.
+I'm not defining it.
+It doesn't equal anything yet.
+But I'm saying, this is going to exist, right?
+You can say equals something, and then define it on the same line.
+But in this case, we are just declaring in advance what different variables
+we're going to need later on.
+Like for example, here.
+We see, in our start method.
+And we'll go over what all these methods are and how they're relevant.
+But we can see here, text equals--
+and then we're calling some function called GetComponent.
+And then we have some funky syntax here--
+less than, Text, greater than--
+and then function call syntax--
+two parentheses.
+So we can see that there's a lot more syntax.
+But all of the same principles still hold true.
+It's still much the same way to think about programming.
+It's just, there's a little bit more to stay conscious of.
+And we trade off this dynamism for more performance.
+So that's ultimately what it comes down to-- static versus dynamic languages,
+you're trading flexibility for performance, in this case.
+Though C# obviously is a lot faster than Lua.
+We can do a lot more with it.
+And actually, Unity isn't itself programmed in C#.
+Unity itself is programmed in C++.
+But it allows us to program any behavior that we want to with C#.
+All right.
+So that's a look at C# so we can see also what I was alluding to up here.
+We have our private, public, and we do things with them.
+And then, depending on what we've declared public or private,
+these things also transfer into the editor.
+We'll see how all of that comes together soon.
+But suffice to say, that's a look at C#-- what it looks like.
+And we'll use it, and we'll get comfortable with it.
+But it's a little bit different than what we've done thus far.
+Away from programming, we'll a very brief look at what Blender is.
+So I have it installed here.
+And this isn't required for the course.
+I will provide you with all the models and all the assets
+that you need to get working.
+But this is what Blender is.
+So Blender almost looks, at first glance, very similar to Unity.
+The big difference is, this is meant to create new assets.
+And technically, Blender does have a built-in game engine,
+but it's not used for that purpose very much.
+But the sole purpose that we would be using it in this course
+would be just to create new 3D models.
+So as you can see here, I can click on these vertices, and move them around.
+And I'm not a guru by any stretch of the imagination when it comes to Blender.
+But the helicopter, and jet, and skyscrapers,
+and those kind of simple models, I made all of those in Blender.
+And those are bundled with the project, if you
+want to take a look at how those are implemented.
+And you can download Blender at the--
+I forget what the exact link is, actually.
+Let's take a look.
+Blender dot org.
+
+And then, if we just go down here, download Blender,
+2.79 looks like the most recent version.
+Blender 2.8-- I guess it's in development.
+But there's nothing concrete about that on the front page.
+But yeah.
+If you want to model 3D assets, and you're curious,
+and you want a free piece of really awesome software,
+can't recommend Blender enough.
+But like I said, I'm going to spend too much time on it, because it's not
+something that will actually be required in the course
+to implement 3D models, to create 3D models,
+since I'll be providing all of that to you in the project in the GitHub repo.
+And so here is a screenshot of basically what we just saw.
+So the fundamental part of Unity.
+So first of all, let's take a look at the Unity editor.
+So we can see here much of what we saw in the screenshots.
+But here, I am live looking at my scene, right?
+I have a helicopter.
+I have this background back here.
+I have a camera--
+that's right here.
+You can see that it's a camera, because it's got the little camera icon.
+But it's effectively just an invisible game object.
+It's not actually going to be rendered to the screen ever.
+And notice that there are no skyscrapers, no coins, no jets,
+or anything like that.
+Those are all instantiated dynamically.
+But this is the beginning of our scene.
+And it's all laid out in advance.
+And we can see here with this camera preview--
+which is kind of hard to see because it's really small--
+but here's a larger view of what it looks like.
+And then we've got a GUI element here, we've got coins here.
+We have our helicopter.
+But all of this is a marked difference from what we've gotten
+used to, which is, program everything, and sort of load it,
+and, oh, did I put this in the right position?
+No.
+I didn't.
+So I got to.
+If I wanted to come over here and just move
+the helicopter a little bit which--
+like that.
+Whoops.
+I just triggered it.
+If you click on something, by the way, it
+will play any particle systems that are associated with it.
+So you can actually get a preview for those, as well.
+But I can easily just move it here, to the right,
+or to the left, before the game actually starts.
+And if I click on the camera, we can see it there.
+It's a little bit shifted to the left, as opposed to what it was before.
+But if I just press Command-Z couple of times, take it back to normal.
+So game object is an important concept.
+So a game object is basically everything in Unity.
+So the camera is a game object.
+The helicopter, which is right here, is a game object.
+Everything, by the way, that you want to see in your scene in Unity
+is on this left-hand hierarchy right here.
+So helicopter, the game object.
+There's got to be a light source in a 3D scene in order
+for you to actually see things.
+So directional light-- that's a game object.
+Background skyscraper spawner-- we don't see it anywhere.
+But that's also a game object.
+It's just an invisible one.
+A coin spawner.
+There's something called a canvas, which if we double-click that,
+we can see we have this obscenely large GUI here that, paradoxically,
+isn't on top of our scene.
+Unity does a very interesting thing with all of its GUI elements,
+in that it basically maps the canvas to one pixel
+being equal to one Unity unit, which is usually equivalent to a meter.
+And it draws this in a different draw call than it
+draws all of the actual 3D stuff--
+all the stuff that's down here, basically-- in World Space.
+So when you create a canvas and you see it's gigantic,
+that's just Unity's way of doing GUI.
+It's strange.
+But apparently they do it for performance reasons,
+because they don't have to calculate like fractional points of where
+the UI is supposed to be in World Space, which can get really small.
+But the canvas is a game object.
+Notice that helicopter has children.
+It's got blades, a body, and then a blades collider, which actually could
+have been part of the blades object.
+Canvas itself has two children-- coin text and game over.
+And those are the text on the top right, and "game over" in the center.
+So those are just two text objects, which
+are labels, that we can just populate with whatever text data we want.
+The event system is an object.
+That just gets added to your scene automatically when you add a canvas.
+Airplane spawner, explosion particles, and explosion sound.
+So we have all these different objects.
+They're all part of our scene, and they all do different things.
+But at the core, they're just game objects.
+That's the core-- like the bottom type.
+Yes?
+AUDIENCE: So I would imagine you're not actually using
+a helicopter [INAUDIBLE].
+COLTON OGDEN: Correct.
+AUDIENCE: So should you actually reset the position
+of the background [INAUDIBLE]?
+COLTON OGDEN: So the question was, since we are maintaining
+a consistent position with the--
+I'm going to try and scroll in, there we go.
+The nice about Unity 2 is, if you right click,
+you can use W-A-S-D to move around the scene,
+which is super easy and convenient.
+But the helicopter here stays in one spot.
+And the camera always stays in one spot forever.
+So do we move the background image, like we
+do in our Love2D implementation of Flappy Bird,
+where we reset its position?
+And the answer is--
+I will play it right now in scene view, and let you decide for yourself.
+So let's go to Window.
+I'm gonna go to Layouts.
+So I like the two by three, like I said before,
+so you can see the scene and the game running live at the same time.
+I'm going to move my camera in the scene so that I'm
+looking at this from back here.
+And then I'm going to play the game.
+[MUSIC PLAYING]
+But so.
+Here's where we-- I'm just going to hold it still.
+So what do we think is happening?
+Does it look like our thing is moving?
+Or is it staying still?
+
+It is staying still.
+Any guesses as to how we're achieving this?
+Changing the texture.
+We are scrolling its texture.
+So when you take a texture and apply it to a 3D surface,
+you map the texture coordinates to the 3D coordinates of the object
+that you want to render.
+It's called UV Mapping.
+They call it UV, because usually, when you're dealing with 3D objects,
+you have your x, y, z.
+And then you want to think of your texture separately from the 3D objects.
+So you use u, v instead of x, y, since you already have x, y, z
+allocated for your 3D object.
+
+Basically, there's an offset part of the texture--
+the material that holds the texture--
+there's an offset field that will reposition the UV mapping
+of that texture onto the 3D surface.
+And when you offset it, it will just sort of wrap itself around,
+if that makes any sense.
+So what we do is we--
+and I can actually show you in the code where this is.
+This is going to be mentioned at the end of the lecture.
+But we have the scrolling background component here.
+And there's this thing on each material called a texture offset,
+which basically shifts the UV mapping of your texture to your 3D object.
+And so, by setting that texture offset to some value offset,
+which is very similar to what we've done before.
+Notice that offset is just scroll speed times time--
+Time.time, in this case.
+And I don't mean to overwhelm with, necessarily, all the details here.
+But the bigger picture is that we're taking time--
+the amount of time since the beginning of the game is started--
+and we have some scroll speed that we've pre-determined.
+And we can just scroll the texture offset here.
+We're just placing it here at the x.
+So this new Vector2, offset 0--
+just think of these two as an x and y--
+a vector 2, vector 3.
+Vectors are just combinations of numbers.
+So 1, 2, 3, 4-- however many you want.
+A Vector 2 offset in 0.
+So we don't want to scroll on the y-axis.
+We just want to scroll left to right.
+So we're going to apply no texture offset to our y-axis,
+but we want to apply a texture offset to our x-axis.
+So that's what their offset there is.
+And I included it also here--
+notice there's a Bump Map texture offset.
+There's no Bump Map actually on our texture.
+So a Bump Map is effectively--
+I can maybe find a good Google image for it,
+if you're not familiar with a Bump Map.
+
+Let me go in here.
+
+I'm going to hope that there's no shady images on Google Images, but a Bump
+Map--
+can we see it?
+Well, it's kind of hard to tell.
+But in a lot of 3D games, you'll see like bumpiness and shininess
+on surfaces.
+And that's accomplished the majority of the time using Bump Mapping.
+Because obviously, if you were to model every single tiny little bump or model
+in a surface, it would get extremely difficult to render large objects.
+Because you're looking at thousands of polygons for a surface
+that was actually this detailed in a game.
+So what you do is, you take what's called a Bump Map,
+and the Bump Map gets--
+during lighting, it will effectively skew the surface normals of a 3D mesh.
+So effectively, it will pretend as if your 3D mesh has a bunch of bumps in it
+for the lighting.
+Only for the lighting.
+And so when it gets lit, and it gets shaded, it looks as if it's bumpy,
+but you're still dealing with a completely flat, completely
+simple cubic mesh in this case, or whatever mesh you want.
+And so the long story short, here, if you
+wanted to include a Bump Map on whatever surface you want to scroll,
+or if you want to edit the Bump Map, this
+is here just because you can also manipulate the Bump Map texture offset.
+It's an included field in a material.
+So any questions as to how this works at large?
+We still have a lot to cover before we go into a lot of the specifics.
+But conceptually, do we understand how this sort of works?
+OK?
+Cool.
+So let's go back to the slides.
+
+Right.
+So we were talking about game objects.
+So all of those things that we saw before were just game objects.
+So let's go back to the default layout, and then we can look back at our scene.
+So this is our scene.
+All of those things were all of our game objects.
+Those are ultimately containers.
+I talked about this in a prior lecture.
+But this is the beginning of an entity component system, in which case,
+these game objects are our entities.
+They are the entity class--
+container class-- for what drives behavior.
+And the thing that allows us to actually get interesting behavior out
+of this sort of abstraction is the use of components.
+And we'll talk about that.
+So components are all of the things on the right-hand side,
+by default of the Unity editor.
+So if we're looking at our camera, for example,
+and we take a look at all these things on the right,
+we can see that we have something called a transform,
+we have something called a camera.
+A GUI layer deprecated, so that's by default.
+It was imported from a prior version of Unity,
+so you could actually delete this.
+A flare layer, which we're not using.
+An audio listener-- I believe that comes with all cameras by default,
+though, in case you do want to use it.
+An audio listener and an audio source.
+So all of these different pieces are components.
+They are what drive the behavior of this game object.
+We can create just a brand new, empty game object-- oops,
+I created it as a child.
+We can create a brand new, empty game object here.
+It's just a game object in our scene.
+And it's right where our mouse is.
+Well, it's right here.
+And it does nothing.
+It has one component.
+And that component is the transform.
+Anybody guess what a transform is?
+
+Yeah.
+AUDIENCE: Is that position, rotation, scale, et cetera?
+COLTON OGDEN: Yes.
+It is the position, rotation, and scale of a game object.
+Something that was before put into six fields--
+or in this case, nine fields, potentially, or maybe
+three fields with children, is now an object that we can modify at will.
+Well, it's a component that we can modify at will.
+So if I do this-- notice, I'm just scrolling the x.
+It's just moving that transform, which is just the position of that object.
+And Unity knows to look at the transform component,
+and render our object based upon where its transform lies,
+rather than us having to manually set all these things, which we still
+can do in the code.
+We can just modify them in the Unity editor
+directly via a graphical interface.
+It's just an interesting, helpful layer of abstraction.
+So a transform is a component-- a camera, in this case.
+It's just a component.
+We can attach this to anything we want to, and it becomes a camera.
+And then we can set it to be either the default camera or not.
+The camera has a bunch of different things.
+And I can't claim to know all of the fields of every object
+in Unity, because there's just a tremendous number of things.
+But clear flags, background, culling mask--
+all these things that are relevant to how the camera does its job--
+they are all things that we have complete access
+to here in the Unity editor.
+We don't even need to touch code, really, for a lot of things.
+An interesting fun thing we can take a look at
+is if we go to Layouts-- go back to two by three, and take a look at our game
+again.
+So we have our camera currently looking at the screen here.
+It's just always in one spot.
+And it has a way of projecting the scene.
+It can do one of two things.
+It can be perspective projection or orthographic projection.
+Does anybody know what the difference is between the two, at least visually?
+So perspective projection-- what that does
+is it models how real cameras, real lenses, the human eye, et cetera,
+behave in real life.
+Things distort a little bit.
+And so you see things, depending on where you're looking at them,
+they look wider or skewed, and not completely geometrical,
+like you would if you were just to draw them at a certain distance.
+Things have vanishing points, et cetera.
+Orthographic-- things look a lot different.
+So notice instantly, so we can see here, perspective
+doesn't really change a whole lot visually with our helicopter.
+Things do change a little bit with the background,
+because the view angle is different between the two--
+the perspective and the orthographic camera.
+But if we make this a little bit larger.
+So I'm going to increase the size like that.
+
+And I play.
+One thing we'll notice--
+what's the first thing that folks are noticing?
+You can actually see the difference between the top and the bottom.
+Whoop.
+How, in particular, I'll put your attention towards the buildings.
+How do the buildings differ?
+AUDIENCE: You can't see the side.
+COLTON OGDEN: You can't see the side anymore.
+The lens sort of curves a bit.
+And so I'm not entirely familiar with all the math involved.
+But at the end of the day, what it boils down to is, with a perspective camera,
+you can actually gauge things as distance
+relative to each other a little bit better.
+With a orthographic camera, everything is completely flat,
+and no matter how far away from you it is
+on the access that's completely perpendicular to you,
+it's going to look the exact same.
+So these buildings are always going to look the exact same, no matter how far
+away they are, no matter which position they are.
+Because everything is just looked at completely flat.
+And the view matrix is calculated in a different way.
+And so, just with a simple button, you can
+change how your game looks completely.
+You've probably seen a lot of games.
+I believe Crossy Road does everything with a orthographic camera,
+versus a perspective camera.
+It has a very distinctive look, especially
+once you skew things a little bit.
+But that's just one thing that you can change just
+without having to touch a single line of code--
+how your game looks via just the camera's implementation.
+Let's take things back to how it was.
+
+And there's a lot of things like the field of view.
+So if you want to see more of the game world.
+So things like in Quake and other shooters,
+you can change this view, usually in your menu settings,
+just so you can see more around you.
+And it looks a little like a fisheye lens a little bit,
+depending on how you do it.
+And that's just more distortion of the perspective projection.
+
+Yeah.
+All of these things, they all have--
+I don't know necessarily what every single one of them does,
+just because there's just a lot involved.
+And generally, you don't have to mess with it too much.
+It just ultimately depends on what you are trying to accomplish in your game.
+And you'll end up finding specific areas of the editor
+and specific areas of the code base and documentation
+that you dive deeply into.
+But this essentially is what a component affords you the ability to do.
+When you create a component and you attach it to a game object,
+you can easily not only combine different things
+to create this emergent new behavior and combination
+of behaviors for your game objects.
+But Unity allows you, via different ways of programming the components,
+to modify them, depending on how customizable you want them to be,
+in the editor itself.
+So you don't have to touch any of this in code.
+You can just go into the editor and quickly
+whip things up because of the way that you've modeled all your components.
+And so we see other things like the audio listener.
+An audio listener is something that will literally listen for audio,
+and play it back like a microphone to the game player.
+And then an audio source is an actual source of audio.
+And so it will play that audio at the location
+of whatever that game object is.
+So we've combined all these things.
+So now we have a camera that is projecting everything
+with perspective projection.
+And it's an audio listener, so it's going to listen for audio in our scene.
+And it's also going to play an audio source and listen to itself.
+And that's just the beginning.
+We have a whole bunch of other components
+here, which we can take a look just really quickly.
+So the directional light has a light component.
+And so a light, you can do all kinds of things.
+You can make a spotlight, directional light, point light.
+All these look a little bit differently.
+You can make it have a specific color.
+So maybe if you wanted a really dark scene, you could have a dark light.
+Or you could even emulate dawn or dusk with an orange light.
+That's sort of how you'd go about doing that.
+You can bake your lighting, which means that you just pre-compute it,
+so that you don't have to render it in real time
+when you actually play it on hardware.
+A lot of different things, a lot of different settings.
+We don't have time necessarily to go into all of them.
+But looking through all of these, you can
+see all these game objects are just combinations of these components.
+And those combinations of components are responsible for the behavior
+that we get in our game.
+That's the ultimate essence of what Unity is, and how it does what it does.
+And to illustrate the difference, we've talked about this before.
+This is an inheritance chain, where Monster
+inherits from Creature, which then goes to Goblin, Goblin Chief, Elite Goblin
+Chief.
+In Unity, you could create a game object,
+and then give it a creature component, a goblin component, a patrol component--
+right?
+So maybe you want different things to patrol.
+In Unity, it would be kind of complicated.
+But you could create basically a pathway,
+and then have your entity follow that pathway at a specific time.
+And then, depending on how you've programmed it,
+you could specify all these different characteristics in the editor.
+So you could just say on the editor, OK, I
+want you to go patrol from this range to this range.
+And I want you to do it with this length of time, pause for this long--
+right?
+And then you can give that to anything in your scene.
+You could make a camera patrol if you wanted to,
+and then have that be demo code for the beginning of your game.
+The flexibility is just insane.
+Elite component.
+Right?
+If you want, maybe, certain enemies or certain objects, if they're elite,
+maybe they shine bright.
+And maybe they drop more experience or something.
+A chief component maybe has better weaponry than a non-chief component.
+And then a toxic component, maybe, is an enemy that, when it dies,
+it sprays toxic gas or toxic liquid all over the place.
+But the flexibility is there.
+You can ascribe any component to any object to get any sort of behavior
+that you want to.
+It's on you, of course, to implement all these components, right?
+You're not going to get all these for free.
+You're going to get a lot for free.
+Unity gives you a ton of components-- really good components.
+But you're ultimately going to need to program your game logic.
+And so you'll have to implement all these things-- elite,
+goblin, what it means to be all these things.
+But thankfully, it's not terribly painful.
+The way at which we go about doing all of this-- and by the way,
+are there any questions so far as to how Unity's model works,
+the difference between composition versus inheritance,
+anything we've talked about this far?
+All right.
+The way at which we actually go about making our own components,
+which is probably what you'll spend the most of your time doing,
+at least in the beginning, when you're bootstrapping your game,
+is programming what's called a MonoBehaviour.
+And so we talked about Mono before.
+So Mono is the open source implementation of the CLR.
+And MonoBehaviour, I imagine--
+I tried to look this up and see where it derives from.
+I imagine it's because it was originally a Mac exclusive project, Unity.
+And so because everything was implemented in Mono,
+and because this is way it's scripted, MonoBehaviour became the name.
+But a MonoBehaviour is what a component is.
+They are effectively one and the same.
+The difference being that a MonoBehaviour
+is how it's illustrated in code.
+In C#, if you want to program something to be a component that you can then
+attach to a game object, it needs to be inherited from MonoBehaviour.
+
+So if we go to coin spawner, here.
+And you can see the difference between what's built in to Unity
+and what's your own via--
+it'll say script here.
+So in this case, I have a coin spawner object, right?
+It's just an empty object, at least in terms of what it displays.
+It's got a transform, which is irrelevant.
+It could be literally anywhere in our entire scene.
+The only difference between this and the empty game
+object that we saw before is that it has a coin spawner.
+And this coin spawner has this thing here.
+All components that you add would have this script field here,
+just to show you that that's the script that it's
+getting it's code behavior from.
+But also, we have this field here called prefabs, which has a size of 1.
+And it's actually calculated based on how many elements
+the list that it's responsible for has.
+And we have one element, as it says, here.
+And it's got a coin pre-fab, which is here.
+And notice that I clicked on it.
+It took me right to it in my assets.
+And so prefabs and all of that-- what that means and how to get
+that all working-- we'll talk about that.
+But a coin spawner script has to exist in our code base
+before we can actually add it to any game objects, right?
+So in my project I do have--
+usually, you have assets, a folder called Assets in your Unity Project.
+And then I typically create a Resources folder.
+It's not mandatory that you do so, but just for organization, I'll
+create a Resources.
+And then I'll have a bunch of folders for all sorts of different things
+like we've done before.
+Where in the Love2D project, at the parent level,
+you have like a Fonts, a Music or Sounds, and then a source directory.
+In this case we have Fonts, Materials, Models,
+all the different assets that we will need in our game,
+but also a Scripts folder.
+And all the C# scripts here that we'll use amongst all of our components--
+all of our game objects.
+And so you could easily just go to any of these,
+rather than have to go into your operating system, open up a new window,
+and find your file, and navigate through all the files
+that Unity generates for you, which can be kind of a pain.
+You can just double-click on a coin script, for example.
+And it'll open in your default editor.
+And so one thing that I'll just mention here
+is, if you go to your Unity preferences--
+on Mac, it's Unity and then Preferences--
+you can go to External Tools.
+So by default, starting in 2018, Unity is transitioning away
+from its prior IDE, which was called MonoDevelop, which was a good IDE.
+There's transitioning away from that, and they're
+making it focused on Visual Studio as the default IDE.
+I don't use Visual Studio.
+I like VS Code.
+So what I did was-- and what you can do is--
+you can choose your external script editor here,
+if you prefer a different script editor-- like Atom,
+or VS Code, or Sublime Text.
+And then just browse for it on your file system,
+whether you're on a Windows, Linux, or Mac machine.
+And then you can easily just choose which file you want.
+In this case, I chose VS Code.
+And so that effect that that has is, whenever
+I double-click on a script within Unity, it
+will actually open the IDE or text editor
+that I have assigned to it in Unity's preferences.
+And so here is the Coin component that I have created for this example.
+And notice that every component, first of all, is a class.
+And actually, everything effectively in C#, just as in Java, is a class.
+It's a public class.
+And notice that I call it Coin, and I got this colon, and then MonoBehaviour.
+So this colon-- anybody know, anybody take a guess what the colon means?
+Tony?
+TONY: Extends.
+COLTON OGDEN: Extends, yes.
+Extends or inherits from MonoBehaviour.
+So anytime you have a component that you want
+to create, you want to add it to Unity, and allow you to see it in the editor,
+and allow you to actually drive behavior of an object,
+you need to inherit from MonoBehaviour.
+Like it says here on my VS Code, since I have the extension for OmniSharp,
+it will actually tell me, MonoBehaviour is the base class
+from which every Unity script derives.
+There's a couple of things here.
+So notice that we have a few methods.
+So void Start, void Update, and void OnTriggerEnter.
+So anybody take a guess as to what--
+ignoring OnTriggerEnter-- does anybody have
+a guess as to what Start and Update do?
+Yeah.
+AUDIENCE: Could it be just like that and [INAUDIBLE] update [INAUDIBLE]??
+COLTON OGDEN: Sorry, say it one more time.
+AUDIENCE: Would it just [INAUDIBLE] an update or [INAUDIBLE]??
+COLTON OGDEN: Exactly.
+It would be just like we did before when we created objects
+in our Love2D projects, where we had an init function assigned to every class,
+and an update function assigned to every class.
+And we would call those ourselves.
+Every MonoBehaviour can have a Start method.
+In this case, it's empty, because every time you
+create a new script by the Unity editor, it will automatically-- first of all,
+it will automatically create a brand new file for you.
+So let's just say I want to create a new script.
+So if I'm in the Unity editor, and I go to my assets--
+I right-click Create.
+And then I want to create a new C# script.
+It'll create it there.
+I can say, maybe I want this to be--
+I don't know-- Test Component, right?
+
+So this should have the effect of, when I open it in my VS Code,
+this Test Component-- this was auto generated for us.
+We didn't have to write any of this boilerplate.
+But every script that you create, by default,
+is a MonoBehaviour, which it strictly does not have to be.
+You could create a class of your own, that maybe you call behind the scenes,
+or maybe it just represents a data structure or something.
+But by default, anytime you create a new script in Unity,
+it'll save you the hassle of typing out all this stuff by hand.
+And it'll give you an empty Start method and an empty Update method.
+And so, like Tony said, the Start method gets called as soon as the object
+that it's assigned to gets instantiated.
+Well, as soon as this component gets instantiated, rather.
+Which often is the case that it gets instantiated
+at the same time as a game object.
+Not always.
+You can create game components on the fly.
+But this Start method will get called.
+Anything that you put in here will get called right away.
+And then this Update method, Unity will-- every frame,
+go through every component on every live game object--
+and will call the code that's contained within this Update function.
+And you don't have to call this anywhere yourself.
+Just by assigning this component to a game object in your scene,
+you get the update, and start, and all this other functionality
+given to you for free.
+And MonoBehaviours are actually much more complex
+than just Start and Update.
+So if you go to MonoBehaviour here, we can see that--
+by the way, I want to shout out Unity's documentation.
+Unity has amazing documentation--
+docs.unity3d.com.
+You will go through pretty much everything
+you possibly could ever want with every object implemented in Unity, in quite
+a good detail, with a lot of examples.
+But here we can see, just in the description,
+it will tell us, the MonoBehaviour will get start, update, fixed update, late
+update, on GUI-- all of these functions called for us, assuming
+that they're implemented.
+And you don't have to implement them if you don't want to.
+If they're not implemented, they just won't happen.
+If there's no start method, then that means
+there's no start logic for this component.
+So it doesn't need to execute.
+If there's no update, maybe it just needs to start at the very beginning,
+but never update after that, don't implement update.
+And update will not be called.
+All of these are optional.
+That's just a small chunk of MonoBehaviour,
+though, because you also have messages.
+So messages are functions that you override.
+As you can see, there's a whole lot of them.
+And all of these messages get called, depending on certain things that
+happen in the game scene.
+So OnTriggerEnter, for example, if our object is a trigger, and we enter it,
+then the behavior will get called in that function, which
+will allow us to do things like-- if our helicopter enters a building,
+we can call that helicopter's explode method,
+which is literally what we do in this project, thanks to this function.
+And all we really need to do is just a couple of lines of code.
+It's very simple.
+OnPostRender, OnPreRender-- all these different things
+are called at different times.
+You can look into all of these, if you want to, just by clicking on them
+and looking at their documentation.
+LateUpdate is called after all update functions have been called.
+This can be relevant for certain physics calculations.
+But there's a whole lot of different things you can do.
+You don't necessarily need to do a lot of things yourself,
+if Unity provides you with the function that gives you
+the effect that you're looking for.
+And so if you're curious, MonoBehaviour, and then the docs at large.
+This is just all the documentation-- just an insane amount of documentation.
+And that's just in the classes.
+There's all these other little side areas, as well.
+And so that's sort of what MonoBehaviour is.
+It's a component.
+It gets a lot of these functions called for you.
+You don't have to implement them.
+But if you do, you get a lot of functionality for free, basically.
+Any questions as to what a MonoBehaviour is, how it works, and so forth?
+Or any of the syntax we've seen thus far for creating a MonoBehaviour?
+All right.
+And so, here in our coin, for example, which we were looking at before,
+notice that I'm referencing something called a transform.
+Transform.position.x is less than negative 25, destroy a game object.
+If this is the coin, what do we think that this is accomplishing?
+
+AUDIENCE: It goes off the screen [INAUDIBLE]??
+COLTON OGDEN: Yep.
+So the transform, recall, was our component
+that encapsulates our rotation, scale, and position.
+So we can just say, if transform.position.x is less
+than negative 25, destroy game object.
+Because we're spawning the coins dynamically.
+When they get off screen-- just like we did with the pipes, if you remember.
+And I had a screenshot, actually, in that slide
+that showcased what that looked like.
+We can see that exact thing live here.
+If I go to Layouts, two by three, and we play the game again,
+and then I'll just die at some point.
+But if we do this, we're seeing our scene live.
+So we're following this-- yep.
+See how the coin-- as soon as the building, and the plane,
+and the coins all get to this point--
+this is negative 25 in Unity units, not in pixels.
+Everything in Unity is based on Unity units, which, by default,
+1 is equal to one meter, as opposed to-- we've been thus far using just pixels.
+But pixels aren't viable in 3D.
+[MUSIC PLAYING]
+But that's effectively what that component does.
+It's checking, in our Update function-- void Update--
+if transform.position.x less than negative 25.
+And notice that we don't actually have to declare transform
+anywhere, which is interesting.
+That's because MonoBehaviour, by default, gives you
+access to its game objects transform just by default.
+That's just something you get for free.
+And then, notice gameObject-- we also haven't declared gameObject anywhere.
+Because by default, we have access to gameObject.
+It's the game object that this script belongs to.
+That this component belongs to.
+AUDIENCE: [INAUDIBLE]
+COLTON OGDEN: This would be the actual--
+so the interesting thing about the classes
+is, you don't have to explicitly say this.
+Because if you had int myNumber equals 10, and you just say, myNumber--
+the difference between Lua and C# and Java is that,
+it will already know what myNumber is, this is myNumber.
+It will know its this objects.
+AUDIENCE: Yeah.
+COLTON OGDEN: You don't have to do that.
+
+Sort of a nice little thing to save you a little bit of time.
+Because you could then just say, myNumber plus equals 10.
+Another nice thing about C#, by the way, which we didn't get in Lua--
+you can do compound assignment operators.
+So you can do plus equals, minus equals, times equals.
+That's one of my little pet peeves I have with--
+oh.
+And notice that also, the nice thing about the fact that I
+have OmniSharp-- it'll underline.
+And this is just a trait of most IDEs, honestly.
+So you get this with a lot of places.
+But it'll tell you myNumber is not assigned, with the underlining,
+and also just by hovering over it.
+The named myNumber does not exist in the current context.
+But I can just say, int myNumber.
+And then it's gone.
+A little bit more that we have to worry about,
+and a little bit less that we have to worry about.
+A little give and take.
+But still, I think, overall, C# is going to be a lot more syntax-heavy.
+You do have to worry about things like braces, and semi-colons,
+and putting everything in a boilerplate.
+And then, obviously, type declaration, and return type declaration.
+It can be a little bit more than we've gotten used to so far.
+But it's honestly not too bad, just given that you can use IDEs.
+First of all, the fact that you're statically typing everything,
+you can detect a lot more errors in advance.
+If you're trying to do something with some type
+that you're not supposed to do, like some function accepts
+some object of some type, but you're passing in some other object,
+you'll catch that in advance.
+And so that's a really nice thing.
+But yeah.
+It is a give and take.
+And also, IDEs will give you, like I said,
+a lot of the functionality-- a lot of the autocomplete-- that
+makes a lot of this more sustainable.
+And it's not to say, of course, that Lua and Love2D don't have their own IDE.
+Like ZeroBrane Studio is popular, from what I understand.
+Haven't used it yet.
+But particularly when you venture into Java, and C#, and compiled languages,
+static languages-- having those features does save you a lot more time,
+relatively speaking, than when you're in a dynamic language.
+
+So that's what MonoBehaviours are.
+Every component of our game effectively has-- like the helicopter
+has its own script, a Heli Controller.
+The coin has its own script-- the Coin Spawner, the Skyscraper Spawner,
+the Skyscraper--
+they all have their own scripts that drive their game behavior.
+But they also have scripts and components that are part of Unity core,
+as well.
+Including Colliders and Triggers.
+So if I'm looking in Unity--
+so I'm going to go to--
+and this will actually be the last thing we look at before we take a break.
+But if I'm in Unity, and I'm going to go back to my default layout,
+just because it's a little cramped on a 720p.
+Go to my helicopter.
+Helicopter's got a couple of pieces to it.
+So let's actually go to where I can see it here.
+So one of the awesome things I love about Unity
+is, it gives you a lot of this editor magic-- this editor sort of sugar.
+It shows you visually where a lot of the things are in your game world.
+So the green rectangles-- anybody know what those are, or can guess?
+AUDIENCE: Hit boxes?
+COLTON OGDEN: Yep.
+Hit boxes.
+Exactly.
+These are colliders.
+So the blades-- it doesn't have a collider.
+That blades collider is actually separate.
+The box collider here is this collider right here.
+And so a collider is literally just something
+that collides with something else.
+And you can set it to be a trigger or not.
+If it's a trigger, then it actually won't trigger the OnTriggerCallback
+function that we briefly saw earlier.
+So the things that you want to activate triggers,
+you should make those not triggers.
+And then triggers, all you have to do is just click this little Trigger button.
+So what a trigger is is just a region that you've determined--
+or some object that you've determined-- should cause behavior
+when it gets triggered.
+So in this case, I've assigned--
+
+actually, I'll just play it.
+But the airplane has a trigger, right?
+
+All of these things have colliders, whether they're triggers or not.
+The helicopter-- its blades and its body--
+there are two colliders, two boxes.
+The coins all have colliders.
+The skyscrapers will have colliders, and the airplanes have colliders.
+The difference is that-- oh, and by the way, another cool thing.
+It's easy to get very sidetracked, just because there's
+so many cool things to talk about.
+You can pause the game while it's running.
+So it's paused right now, but it's in the exact state that I left it.
+So there's three coins there.
+I got my helicopter there.
+I can freely go about the scene.
+I can analyze things.
+I can actually modify this in real time.
+So I can change its rotation, if I want to.
+Probably don't want to do that.
+But I could if I want to.
+I can change its position, right?
+So I can move it left to right, like that.
+And notice that I actually have just the body selected,
+so the blades are kind of separate.
+I don't even know what kind of crazy stuff
+would happen if I just messed with this and just let it run.
+I haven't tested it that crazily.
+But you are allowed to step through.
+Oh, OK.
+It looks like they both just go.
+Oh, yeah, because they're parented to the helicopter object.
+So they're both going to align.
+They're going to move at the exact same rate,
+regardless of how far apart they are.
+The individual objects.
+But you can just step through your game's execution frame by frame,
+and get a sense of--
+if you're trying to pinpoint a bug, maybe, that's
+position-based or something that's tricky
+and you just haven't been able to find exactly what's going on.
+
+You can look through your whole scene and all
+of the fields of every object in step time,
+just by stepping through-- this button here--
+assuming that you're in pause mode.
+And then just looking at all the components here on the right side.
+Because those will all still update.
+All these fields will update any time you perform
+any changes in the actual scene.
+So super helpful for debugging.
+I know I've used it a bunch.
+And then if I start again, or if I stop it,
+the nice thing is, any of the changes that you
+make while it's running to your object, they
+don't get applied when you actually go back to the game.
+So notice that I messed with the two pieces, I separated them.
+And then I stopped the game.
+It ended up going right back to where it was in the very beginning.
+So all this gets just basically saved like a snapshot.
+You can do whatever you want during your game, and then come back to it,
+and it will all get reverted back to where it was.
+Yeah.
+TONY: So [INAUDIBLE] if you hit single player,
+and I kept making changes while I'm not involved [INAUDIBLE]..
+COLTON OGDEN: Yes.
+So, yeah.
+Tony just basically echoed what I just said, which was,
+if you make changes in your game while it's running,
+and you're trying to maybe tweak them such that it's perfect when you're
+actually done, they don't get saved.
+So you have to actually make a conscious effort to remember what you've done,
+how you've changed different fields, to fix any bugs, if they do exist.
+But it is something that can be disheartening or frustrating, if you
+finally fix something, and then you forget what it is you changed.
+And then you have to mess with it a whole bunch.
+So remember all the changes you make, if they're
+pertinent to your actual game's execution
+and the debugging of your game.
+
+And then there's also a console, as well, which is nice.
+If you want to output things like JavaScript style on the web,
+you can do console.log.
+You can do the same thing with a debug call here in Unity.
+I don't have any of those calls in the actual game.
+But it is something that we'll look at going forward.
+And it is something that can be very helpful
+if you want to measure something or output something that you can't
+necessarily look at in the inspector.
+In the case of this game, most of anything that we want to take a look at
+is visible in the inspector.
+But if you have an algorithm, maybe you have a generator that's not visual,
+like a level generator.
+And you want to make sure that the data structure representing your level
+is generating things properly, you can output everything maybe via hashmarks
+or something in your console, and actually
+see it that way when you're running the code,
+rather than having to run the actual game and look through it that way.
+Some things just are hard to model in the editor,
+and still need console output.
+So the console is there to help you.
+And so debug.log is the function, I believe,
+that you need to see all that stuff.
+Right.
+Colliders and triggers.
+So we had a little bit of a tangent there,
+but the helicopter is comprised of these three things.
+But the blades collider should have ultimately
+been merged with the blades object here.
+But we can think of it as the blades and the body.
+The reason they're separated-- well, there's two reasons they're separated.
+One core reason they're separated is they're just different sizes.
+So the blades are longer than the body.
+And so we have, for that reason, two separate colliders.
+So we're looking at the helicopter here.
+We can see that the collider for the blades
+extends a little bit farther than the body.
+We don't want to create a box collider for the entire helicopter,
+because a box collider right that goes out here, for example,
+might not be super fair if we're just coming right
+over a building, and our body--
+
+maybe the building's right here, and we just miss it.
+We don't want that to be collided with.
+So sometimes you'll need to combine colliders
+to accomplish the collision detection behavior you're looking at.
+The nice thing about box colliders, which we're using here,
+is that they're not very expensive, because they're just boxes.
+It's easy to compute 3D box collision with other things that are 3D boxes.
+And that's actually a topic in its own is,
+taking a complicated model or object, and then breaking it down,
+not in terms of what it looks like to be collided with,
+but how you can simplify the collision detection of something,
+like a character, by just modeling its arms, its body, its legs, as cylinders
+or boxes, rather than complicated geometry.
+You usually don't want to do peer geometry collision for anything,
+because that gets really expensive.
+You want to try and aim for simple shapes to be your colliders.
+And Unity gives you a lot of simple shapes
+by default. If you look at, for example, in our helicopter--
+if you wanted to add a component-- which, by the way,
+you can easily do here, just in the component inspector.
+If you're looking at the bottom right, there's an Add Component button.
+So you can add any of the components that you've written,
+and also all the components that Unity gives you by default.
+So if we look at it by collider, we can see
+there's a lot of different colliders that Unity gives us for free.
+Polygon collider, mesh collider, box collider, capsule collider.
+I try and strive for boxes as much as I can.
+Spheres aren't bad.
+Spheres are usually fairly easy to calculate, as well.
+But boxes are the easiest.
+Capsules are pretty easy, too.
+A lot of players will be capsule colliders, because characters usually
+have rounded heads.
+So emulating the collision for their head with a capsule makes more sense.
+And we'll look at that, actually, next week, when we use a first-person
+component that we can get for free.
+The default collider for it is a capsule.
+But the blades and the body both have their own collider.
+They're not triggers.
+But if we look at our prefabs--
+which we'll take a look at what a prefab is shortly--
+a skyscraper has a box collider which is a trigger, as we can see here.
+And the coin is a trigger.
+And the airplane is a trigger.
+So these things all trigger, except other colliders that aren't triggers.
+And if it detects a collision with a collider that's not a trigger,
+it will call the OnTriggerEnter function,
+which we saw is something that you can get with MonoBehaviour.
+Yeah.
+AUDIENCE: Could you have two values if you want to call the special
+function two at the same time, you'd have the regular [INAUDIBLE]..
+Is there an easier way to do that?
+COLTON OGDEN: Can you give me a specific example?
+AUDIENCE: Well, if I want to have a pinball game or something,
+I'd want to model functioning when my ball hits something.
+But at the same time, I just don't it to bounce off of stuff.
+COLTON OGDEN: Oh, yeah.
+AUDIENCE: So you could do that?
+COLTON OGDEN: So the question was, can I implement such that, for example,
+in a pinball game, if I have a ball that collides with something
+and causes a trigger to occur, but also have it bounce off of something.
+And you would do that with a rigid body.
+So you give it a rigid body.
+In this case, I actually gave a rigid body to the helicopter
+because the original goal of mine was to have it be affected by gravity.
+But it turned out that I actually liked it a little bit better without gravity.
+So this rigid body isn't strictly necessary.
+But it has a gravity component that you can
+assign to it that will actually, then, calculate gravity, and pull it
+down wherever-- you have a global gravity definition that's
+in your Unity settings that will affect it that way.
+And so what you would do is, you would give your ball a rigid body.
+And other things that you want it to bounce off of those,
+those also have rigid bodies.
+And they can be kinematic or not, basically,
+which we talked about before.
+Kinematic can move, but not be affected by other objects.
+And so the object that's a trigger, you still trigger code, it does something.
+So your pinball machine, when it collides with something,
+and it triggers that thing, it'll still trigger that code.
+So whether that's increment your score, or cause something
+to flash, a part of it will flash, or play a sound,
+it'll do that in your OnTriggerEnter.
+But your rigid body will also perform its work,
+and bounce off of whatever it--
+assuming that you don't destroy it with that OnTriggerEnter function,
+it will bounce off of that surface, and behave in the way
+that you are alluding to.
+Does that make sense?
+All right.
+Cool.
+
+So all these things have triggers.
+The IsTrigger flag--
+I mean, that's as easy as we need it to be.
+So you just give a box collider.
+And the nice thing about box collider, too,
+is if your mesh is a box, or square, or rectangular,
+it will usually just fit it perfectly to whatever you're trying to assign it to.
+So in this case, I remember adding the box colliders for these skyscrapers.
+It just-- because they're all rectangular, or cubical--
+I don't know.
+What's the rectangular 3D?
+I forget the term.
+What is it?
+AUDIENCE: Rectangular prism.
+COLTON OGDEN: Rectangular prism, yes.
+Because they're all rectangular prisms, the box collector fits them.
+It'll scale the right way.
+When you have differently weird shaped objects,
+it'll just basically be as big as it needs
+to be to completely encapsulate it.
+But like I said before, because the helicopter has got some weird geometry,
+if we were to do that, it would by default just be this entire box here,
+because this is the farthest it goes out on this particular axis.
+So we want to combine meshes to produce the collision
+behavior that we're looking for.
+And the trigger enter bit is relevant because, if your game object is
+a trigger, then once we collide with that object,
+we want-- and by default, when you do OnTriggerEnter,
+it will look for the collider on this object.
+It's going to take in a collider other, right?
+And what that is is the other collider-- the thing
+that's colliding with this object, with this coin.
+So the helicopter, because it's the only other object in our scene
+that has a non-trigger collider.
+OnTriggerEnter-- this is going to be a helicopter.
+We can just say other.transform.parent, because our helicopter has children,
+which have the actual colliders, and a parent has the helicopter controller
+component.
+We're going to GetComponent the HeliController.
+So we're going to go through our that objects, that other
+that collided with us.
+We're going to get its transform parent.
+We're going to do GetComponent, which is a function that will just look
+through all of its list of components.
+We specify which component we want using this identifier here.
+So of class HeliController.
+And these angle brackets are the generic type specifier
+syntax, which basically looks for it.
+You could pass in any type here, effectively,
+and GetComponent will look at whatever type is in here,
+and get the component of that type, specifically.
+So you do have some sort of type flexibility in C#,
+but you have to go the extra mile and specify it,
+and implement functions that take generic arguments like this.
+Which is similar to Java, and C++, and other languages that do it that way.
+And then once we've gotten that component of type HeliController,
+with this function call, we execute PickupCoin,
+which is a function that's part of the HeliController.
+Any guesses as to what PickupCoin does?
+
+AUDIENCE: [INAUDIBLE]
+COLTON OGDEN: Sorry?
+AUDIENCE: Increments the coin counter and tells the coin to disappear.
+COLTON OGDEN: Increments the coin counter, calls the coin to disappear.
+Well, it actually doesn't call the coin to disappear, because we do that here.
+AUDIENCE: Oh.
+COLTON OGDEN: Destroy game object--
+game object is going to be this coin that's executing this function.
+There's one more thing, too.
+Do you remember what happens when we pick up a coin?
+Exactly.
+The particle effect.
+It triggers a particle effect.
+We can go to the HeliController class and take a look at that.
+PickupCoin.
+
+Here, coinTotal plus equals 1.
+GetComponent AudioSource.
+Play.
+So it's a little bit weird.
+So with audio source, you can have multiple audio files.
+So GetComponents AudioSource is what we need to actually get
+the audio attached to this object.
+And at index 0--
+because there's only going to be one audio source anyway.
+And then we just call Play, so that'll play the coin sound.
+And then GetComponent, because there's only
+going to be one particle system associated with this helicopter object.
+We're going to get the particle system object.
+And then we're just going to call Play on that, which will actually trigger
+an emission one time of its particles.
+That's in a nutshell what colliders and triggers are.
+It's a lot of syntax at once, because Unity is really big.
+But it's pretty simple.
+Just make sure that you give the right shapes to your objects.
+Make the right things triggers that you want
+to cause behavior to happen when non-trigger things touch them.
+And then implement OnTriggerEnter with the behavior-- the game logic--
+that you need.
+In the case of the skyscraper, for example, if we look at the skyscraper.
+So I have a skyscraper component here.
+And then if I OnTriggerEnter here, it effectively
+does the same thing that the airplane does,
+which is just go through the others, transform parent game object,
+HeliController, and then call Explode.
+And so Explode-- similar thing to what PickupCoin does,
+and it triggers a particle effect.
+But it also destroys the helicopter, and it tweaks the Game Over text
+to turn on at that point.
+So any questions as to how triggers work, or any of the syntax we've
+talked about thus far?
+I know that it's a lot.
+It's kind of a fast tour.
+But moving right along.
+All right.
+Oh, and here's a screenshot I took just to illustrate the green lines--
+the box-- and then the orange is the actual mesh of the helicopter.
+So we're going take a break.
+And then when we get back, we're gonna talk about prefabs
+and spawning them, and dive a little bit deeper
+into some of the other parts of the project.
+All right.
+Welcome back to GD50 Lecture 8.
+This is Helicopter Game 3D.
+So before the break, we were talking about colliders and triggers,
+and also just getting our hands used to using MonoBehaviours, and the editor,
+and all sorts of things.
+But we haven't really taken a look at prefabs,
+which is a major part of this game.
+So the coins, the skyscrapers, the airplanes--
+those are all prefabricated assets that we have gotten
+ready for spawning into our scene.
+And we're going to take a look at how that actually works.
+So here's a list of--
+in our editor view-- all the different prefabs that we have.
+So we can see airplane, blades, and body are prefabs.
+The coin, all the skyscrapers.
+There are three different kinds of skyscrapers.
+And then the helicopter.
+The helicopter itself we're not using as a prefab,
+because I've already created it in the scene,
+and it never gets instantiated dynamically.
+But we could easily make it so, because I have
+created a prefab with the helicopter.
+So when we're looking at the scene here, we
+notice that we have just the helicopter, and we have the background.
+But there's no skyscrapers, there's no coins, and there's no airplanes.
+Well, we do have our skyscraper spawner, the coin spawner, and the airplane
+spawner.
+And the three of those are just empty game objects,
+but they have associated with them these spawner scripts.
+And the spawner scripts, we've written ourself.
+And then, once we've written them, we just simply add component here,
+and then chosen the appropriate spawner.
+And so what those do--
+if we look in our code actually, and we go, for example, to the airplane
+spawner, we have a Start method.
+We have an Update method.
+Notice that the Update method doesn't do anything, paradoxically,
+because the airplane spawner is running over time.
+We are spawning airplanes over time.
+But the way that we do things over time asynchronously in Unity
+is a little bit different than anything that we've done so far.
+So this Start method here, we see that we're calling
+this function called StartCoroutine.
+And that function takes in a function called SpawnAirplanes.
+And so at a high level, a coroutine is effectively a function
+that yields control every time it's called.
+So it'll run, and then, rather than go through its entire body of code,
+and then end or return some value, and have that just be the end of it,
+it'll actually yield, when you use the keyword Yield.
+And depending on what you've done with that Yield,
+it'll pause for some length of time, or do something for some length of time,
+rather than end that function call.
+So this SpawnAirplanes function here--
+notice that it has a while true.
+And so while true is not usually something that you want in a game,
+because that's just going to lock your game forever.
+But in the case of a coroutine, a coroutine is going to run,
+but then it's going to yield control back
+to whatever called it for some length of time,
+or depending on how we've programmed it.
+In this case, you can see here--
+yield return new WaitForSeconds Random.Range 3, 10.
+Does anybody have an idea of what that does?
+Yeah.
+AUDIENCE: The logic [INAUDIBLE] waits for between 3 and 10 seconds,
+and continues.
+COLTON OGDEN: It does.
+It yields for 3 to 10 seconds, and then continues its execution.
+That's exactly right.
+Did you have a question?
+AUDIENCE: I was thinking, why do you have three different skyscrapers set
+up?
+Couldn't you just have one skyscraper and change [INAUDIBLE]??
+COLTON OGDEN: You could do that.
+Yeah.
+I guess for the sake of demonstrating prefabs.
+And also, it's a little bit complex more complicated to get
+into dynamic material setting, and changing materials in code.
+But yeah.
+You could effectively just create one skyscraper with one base color,
+and then dynamically change its material.
+But also to illustrate having multiple different prefabs
+assigned to an object, that you can then choose at random
+to generate in the game scene.
+They might not necessarily be skyscrapers
+that will have the exact same color.
+It could be a goblin, or a orc, or a troll, or something.
+And they're all different prefabs that we've created.
+But you can put them in a list, and then dynamically choose
+which one we want at random.
+So a few different reasons.
+But yeah.
+In a situation where everything is just effectively differentiated
+by a single color and a material change, you
+could dynamically swap that as needed.
+
+This code routine that we've started-- this function that
+effectively can pause itself, even though it's being called while true
+is in play.
+It yields control with this Yield keyword.
+And what it does is, it allows us to call something over and over again,
+but then pause for some length of time.
+Right?
+We don't have to maintain a counter for spawn time in here.
+Which we could do.
+We could do float spawn time equals 0, right?
+And then float spawn increment equals like 1,000.
+And then while spawn time is less than spawn increment--
+we could say in Update, if spawn increment.
+Or we would do spawn time plus equals time.delta time first,
+to get the length of time that's passed since the last frame.
+And then we would say, if spawn time is greater
+than spawn increment, instantiate a new airplane.
+And then set spawn time back to 0.
+And then just rinse and repeat this over and over again.
+But coroutines take out this need, much like timer
+did, for having anything that you keep track of with a specific timer.
+You can do a whole bunch of different things with coroutines.
+One of them, in this case that we're doing,
+is just pausing for some length of time to do something.
+In this case, we want to wait for some time
+in between each instantiation of an airplane.
+So we'll just yield control back to our game,
+because we want to break out of this while true.
+But we don't want to break out of it and completely break out of this function.
+We want this to keep going over and over again.
+So we see here, this Instantiate function is
+where the actual instantiation happens.
+And Instantiate takes in a prefab--
+so a game object.
+So in this case, we have a prefabs list here.
+GameObject public, GameObject array called prefabs.
+So this can take in any number of prefabs that we want it to.
+
+We're going to return a range between 0 and length.
+And then also, we want it to spawn.
+We give it a position that we want to spawn in.
+So Instantiate-- it takes in an object, it takes in a position,
+and it takes in a rotation.
+In this case, we want to give it this position.
+So it's a Vector3--
+it's an x, y, and a z--
+at 26.
+So off the right edge of the screen 7 to 10.
+So within a range of verticality up towards the top.
+And then at 11 on the z-axis, which is aligned with our helicopter
+and the skyscrapers.
+And then this Quaternion.Euler--
+so 3D rotation, the math behind it is pretty complex.
+And I don't know it well at all.
+But Quaternion.Euler allows us to think in degrees,
+and actually perform a 3D rotation on something fairly easily.
+So if you want to rotate something in 3D, Quaternion.Euler.
+Negative 90 degrees on the, I believe it's z, x, y.
+In this case, the way that the default rotation of the airplane is,
+we want to set it to negative 90, negative 90, 0.
+You could also set up your prefab in a way such
+that you don't need to pass this in.
+You could do Quaternion.Identity in that case.
+But this is just to illustrate how, if you want to rotate something
+in code, how you would do it.
+So Quaternion.Euler is the way that you rotate something in 3D.
+
+So Instantiate-- global function that you
+can call anywhere you want to, as long as you just
+give it a actual object or prefab that it knows how to instantiate.
+And then WaitForSeconds-- another global object,
+which is a asynchronous object that will allow
+us to yield for this length of time.
+You pass in the length of time here.
+It takes it in seconds, because WaitForSeconds.
+And then, as soon as this length of time has passed,
+it's going to come back up here into this while true instruction,
+and then instantiate again.
+We don't have to keep track of a time or anything-- any weird boilerplate.
+We just have to call StartCoroutine here.
+And notice that we explicitly have to call StartCoroutine routine in order
+to trigger a coroutine function.
+And to do that, it returns what's called an IEnumerator.
+And so a lot of these details, you don't need to necessarily know
+the low-level details of.
+I certainly don't know all the low-level details of everything
+that happens in Unity.
+But just know if you want asynchronous behavior,
+your function needs to return an IEnumerator,
+which C# knows is a generator function which will yield control
+at predetermined times.
+And it will manage it for you.
+And to trigger it, you need to StartCoroutine,
+which is a function that Unity has defined for you.
+So any questions as to how this works at a high level, at least?
+AUDIENCE: I'm a little confused on the syntax for Yield.
+Does the Yield return--
+COLTON OGDEN: Yes.
+Yield takes in something, and you get a new to instantiate a new WaitForSecond.
+It's just the way the syntax is for yielding an object.
+Yield--
+AUDIENCE: What is it returning back?
+COLTON OGDEN: It's returning this to the Yield instruction.
+And the Yield instruction is then yielding that.
+It is a little bit weird, though.
+But you only really have to--
+this is a common pattern that you'll see.
+And so you'll just get used to it.
+
+And honestly, this is probably one of the more syntactically difficult things
+about Unity.
+So I mean, as soon as you understand this,
+pretty much anything else is fairly easy at that point.
+I would say this is one of the weirder sides.
+Because in Lua, and Love2D, and those kinds of environments,
+it's a little bit easier to do this sort of thing with as much syntax.
+C#, being a statically-typed environment, to get the same behavior,
+you have to go a little bit further.
+Do things their way.
+But that's getting asynchronous behavior to work in C#.
+And in Unity, typically, in order to avoid messy state management,
+you will use coroutines, which are IEnumerators, often
+with the WaitForSeconds object.
+And just make sure to trigger them with StartCoroutine.
+And then call that function as if it were an object.
+Just like that.
+
+And the behavior for the airplane spawner, the coin spawner,
+and so forth, they're all fairly similar.
+So StartCoroutine SpawnCoins.
+And then while true.
+So coins-- this row just spawns a random number of coins vertically.
+So you can have one, or you can maybe have a couple.
+And then for each of those, instantiate them
+at a random position on the y-axis.
+Here, random negative 10 to 10.
+In this case, Quaternion.Identity, because we don't want
+to rotate them any differently than they already are, which I alluded to before.
+So Quaternion.Identity just means no rotation applied to the object.
+So whatever its base rotation is as a prefab.
+So it'll be whatever it is when you see it in the editor,
+and when you create a new one, that's going to be its default rotation.
+So basically the equivalent of, don't rotate this by anything.
+
+And then, same as we saw before, yields a new WaitForSeconds.
+In this case, 1 to 5, so a little bit more frequently than the airplane,
+on average.
+More coins.
+As the airplane, I believe, was 3 to 10, so every 3 to 10 seconds.
+And that's basically that.
+And then we StartCoroutine, just like we did before with the airplane spawner.
+And then lastly, the skyscraper spawner.
+In this case, we only have one coin prefab,
+we only have one airplane prefab, but we have three skyscraper prefabs.
+And so the actual Random.Range here comes into play,
+because that's how we get the different color skyscrapers spawning at random.
+And like I said before, this can be extrapolated
+to whatever sort of game environment you want,
+where you have multiple types of objects that
+are more complicated than just a color swap,
+and you want to choose them at random.
+We're doing all the same things that we did before.
+And also, here, we can see that they have a random chance
+1 in 4, so a 25% chance of increasing the speed.
+So skyscraper spawner actually has-- and this is relevant to the assignment--
+skyscraper spawner has a float called speed here, which is, by default, 10.
+And this drives the scroll speed of the skyscrapers, the coins,
+and the airplanes.
+And so when we call it static, do we know what that means?
+Yeah?
+AUDIENCE: Well, it's the same for all [INAUDIBLE] objects [INAUDIBLE]..
+COLTON OGDEN: Yes.
+So no matter how many skyscraper spawners we create,
+they're all going to share this field speed,
+and it's always going to be equal to the same amount across all instances.
+So static means that it's part of the class.
+It belongs to the SkyscraperSpawner class.
+It does not belong to a SkyscraperSpawner object.
+And so we don't ever really want to change that ourselves in this game.
+But the airplane, for example, notice that in our Update function
+here, if the transform.position.x is less than negative 25,
+we should destroy the airplane.
+So when it goes off screen, we should destroy it.
+But if not, then we want to translate this object
+on the x-axis by negative SkyscraperSpawner.speed times 2 times
+Time.deltaTime.
+So we're translating it on the x-axis, and we're
+using the SkyscraperSpawner.speed as our core multiplier.
+And then if we look at coin--
+same thing.
+
+I should ask, what is one design consideration
+if we're looking at this--
+all these components?
+And let's say we're trying to get as decoupled as we
+can, and well-engineered as we can.
+What is a consideration that we can, noticing that, for example,
+this exists in coin, and this exists in airplane?
+
+AUDIENCE: What's the question again?
+COLTON OGDEN: So how could we better engineer this?
+Notice that we have--
+and taking into consideration this component model in Unity--
+what could we do with, for example, this?
+AUDIENCE: So that Unity better [INAUDIBLE]..
+COLTON OGDEN: Well, I'm thinking that, because the airplane and the coin--
+well, first of all, it wouldn't belong in the spawner,
+because the spawner's job is to spawn coins.
+But the coins and the airplanes-- they have their behavior, right?
+They have their update behavior.
+But they're all doing kind of the same thing, which is scrolling to the left,
+and then de-spawning at negative 25.
+So a design consideration here would be, maybe we have a scroll component,
+right?
+Or a scroll and destroy component.
+Or just a scroll component with an optional destroy flag.
+And then we just put this on anything that we want to automatically scroll
+to the left screen and de-spawn, rather than having
+to code this in every single class.
+So if you're ever looking through your code,
+and you're seeing, for example, this and this being the exact same, especially
+in Unity, because of how flexible components are,
+try and think about how you can make it into its own component.
+AUDIENCE: So where would you put the coins [INAUDIBLE]??
+COLTON OGDEN: You make it yourself.
+So if we went into here, into our Scripts thing, and just
+made a new script.
+And then we called it Scrollable.
+And then we double-click it, it'll open up in our editor
+that we've chosen in our preferences.
+By default, it's going be Visual Studio with the newer versions.
+But now we have a new scrollable behavior.
+And then all we need to do--
+we would say, oops--
+not that.
+If-- once again, I can't type.
+Transform.position.x is less than negative 25,
+destroy game object, right?
+And so this is the exact same thing as all that behavior that we saw before.
+So now we can take all of that out of coin--
+we can take this out, and we can take this out here, and then
+just add to the airplane and to the coin prefabs,
+we'd just add this new Scrollable prefab,
+and it'll take care of that for us.
+Yeah.
+AUDIENCE: How would you add that?
+COLTON OGDEN: So if we're going back to Unity--
+so the question is, how would you add the component to the prefab?
+So in our prefabs, note that we have airplane, we have coin,
+and we have all the skyscrapers.
+So these are all prefabs.
+Oh, and I haven't actually detailed how to create
+a prefab, which I apologize for.
+So a prefab-- all you need to do is create an object in your scene.
+For example, I did it with this helicopter.
+So I'm going to delete the helicopter, because this is just the helicopter
+prefab.
+It's not going to actually delete the helicopter from our scene.
+But if I take this helicopter here, and then I drag it in here,
+notice that now we have a prefab here.
+We could take this helicopter out, and just add a new one right there.
+So now I have two helicopters.
+That's all a prefab is.
+It's just something that you've made in your scene
+that you want to replicate or duplicate in the future, ideally through code.
+And notice it's showing here in our hierarchy view.
+But obviously you don't want that.
+But that's how you create a prefab is, you find something
+that you've configured in your game scene, and then in your code,
+you're allowed to then instantiate that prefab,
+assuming that you've made that prefab a member of whatever class
+instantiates it.
+So in this case, the airplane spawner.
+So notice that we call Instantiate here, like we saw, before on line 24.
+But it's looking at prefabs.
+It's a list, and it's looking at a random range between 0
+and the length of the prefabs.
+You have to declare a public GameObject list prefabs here.
+And then, once we do that, and we go to our airplane spawner here,
+notice that we have this prefabs list here.
+So we actually get a editor view of that code, that data structure.
+And we can just add prefabs that we want to.
+And if we change the size to 2, then we can add a second prefab.
+Or if we make the size 10, then we can put 10 different airplanes there.
+But we only have one airplane that I modeled, so I was going to make it 1.
+But this is the same thing.
+This GameObject list is that same list, only
+that's the view we have of it in the editor.
+And it's just a different way of looking at the data.
+And that's the nice thing about Unity is that, if you make
+any of your fields public, like this.
+If I did public int someNumber, right?
+And I save that, and I go back here, my airplane spawner
+should get a someNumber right here.
+And then I can just set someNumber to whatever I want.
+It doesn't do anything right now, because someNumber
+doesn't affect the script.
+But this is a nice way to take the burden from you out of the code.
+You're not experimenting with code.
+You're not tweaking some variable in your script.
+SomeNumber 10, run me, OK-- someNumber 12, run it.
+You can just assign it here in your actual editor view,
+and then just tweak it as you want.
+So I can just scroll through it.
+I can start the game and I can pause the game.
+AUDIENCE: So is it that you just make it public?
+COLTON OGDEN: You have to make it public.
+Exactly.
+AUDIENCE: Oh, then that shows in.
+COLTON OGDEN: Yep.
+And so I can just do this.
+And then I should be able to--
+I can just change this now, if I wanted to, to 67.
+And so if that actually had some sort of effect on my game world--
+if my game relied on that number being meaningful--
+this would update the scene.
+And so you can make whatever-- you can debug this way,
+or you can customize your components more this way.
+But it's just a tremendous amount of flexibility.
+And so that's how we're instantiating this from this list of prefabs.
+It's a list of game objects.
+We've made it explicit to Unity.
+The editor's going to know, OK, these are game objects.
+And so prefabs are game objects.
+So we can just put any of these into this field
+here, this element 0 field, or however many fields we have.
+And it will, in the code, randomly choose one of those,
+and then instantiate it.
+So any questions as to how prefabs work, or instantiation,
+or anything like that?
+
+OK.
+
+AUDIENCE: Does each prefab have a unique number or not?
+COLTON OGDEN: Does each prefab have a unique number?
+Not a unique number.
+They just are all assets in your folder here.
+They have some kind of identifier to Unity that's hidden from you.
+It might be visible from you if you look.
+They might have some sort of generated ID or something like that, so
+that it knows, underneath the scenes.
+But it's not something that you worry about in your actual code.
+We've created a list here that's just--
+it will expect some number.
+It doesn't know how many.
+And then, in the editor, you can actually tell it how many.
+
+Because every list that you make visible in
+the editor will have this size field.
+And that's just part of the editor's abstraction.
+The editor has abstractions for a lot of different objects.
+You can create a lot of different objects in your MonoBehaviours,
+and make them public, and Unity will have a different view for them.
+Things like color pickers, and stuff like that.
+I don't know the exact object offhand, but if you make a public color
+picker in your MonoBehaviour or something like that,
+you'll actually get a color picker here that you can choose a color for,
+which is pretty awesome.
+And there's a lot of different customized views.
+
+I think, actually, the directional light might be an example.
+See this color here?
+This is somewhere in code.
+There's a public color something.
+And then in the editor, when you're actually editing it,
+you can choose the color.
+And Unity gives you the option to make it wherever you want.
+And notice it's actually affecting the background there.
+One of the really big strengths of Unity,
+and a reason to really make your components customizable,
+is this one-to-one mapping between your data, your code,
+and your editor view of the data.
+Take the burden away from you programming it,
+which you're more prone to make mistakes, too,
+and also waste a lot of time.
+And then just be able to modify.
+How much faster is it for me to just say,
+I want this red color, rather than color.r equals something,
+and then color.g equals something, color.b equals something.
+And then assign it that way.
+So that's just a simple example to illustrate it.
+But there's a tremendous amount of potential involved
+in making your components customizable.
+And so that's what I did here.
+Because I wanted the skyscraper spawner to spawn not just one skyscraper
+but several skyscrapers, I created this public prefabs list,
+that I can then populate from Unity here.
+And say, OK, this object, this object, and this object.
+Put that into the skyscraper spawner here, in these slots.
+And then my code knows to instantiate it, randomly picking one of those.
+Yeah.
+AUDIENCE: In the example earlier, how would you
+actually go about making something scrollable now that you've made that?
+Would you just add component to the coin?
+COLTON OGDEN: How would you go about making something scrollable now that
+you've--
+AUDIENCE: You declared that Scrollable class, right?
+COLTON OGDEN: Oh, yeah.
+So I have a Scrollable script here.
+Oh, do you mean the infinite scrolling background, or the scrollable object?
+AUDIENCE: The one where you define it as being destroyed when it's [INAUDIBLE]..
+COLTON OGDEN: Oh, yeah.
+So in order to do that-- so we've made the Scrollable script here.
+So you would just go to-- in this case, since we're
+instantiating all of the coins, and skyscrapers, and airplanes as prefabs,
+you actually edit the prefab itself.
+So I'd go to this coin prefab.
+I'd add component here at the bottom.
+And I would add Scrollable there, which is a script.
+And you can tell it's yours, because it says script there.
+Just like coin here is a script, and rotate script is a script.
+That's actually an old script that I didn't use anymore,
+because I just made it part of the coin itself.
+But this is another part of what makes the coin class, by the way,
+is this transform.rotate x, y, and z, either relative
+to itself or to the world space.
+In this case, it shows the world space, because I want
+it to rotate on the world's y-axis.
+But if you rotate an object, its own x, y, z still exist.
+And so you can have something rotate about its own x, y,
+and z, regardless of its rotation in the world.
+And so I want the coin to always rotate.
+So 5 degrees on the y-axis here.
+So this is another part that you could take and make it its own script--
+just a rotatable script.
+Auto rotate script.
+And then just make these public fields, like public x, public y, public z.
+And then you could change those in the editor,
+and then actually customize your objects without having to go into the code
+itself.
+AUDIENCE: So you don't have to do any collisions, actually, yourself.
+You just click the button and type in the Collide function.
+COLTON OGDEN: Yeah.
+You don't have to do any of the collision yourself,
+because Unity comes with a 3D physics engine.
+You have to tell it what to do when the collisions happen.
+But you don't have to actually code the 3D physics engine yourself, which
+is a tremendous amount of work.
+One of the big selling points, definitely,
+for doing any 3D things in Unity.
+I mean, a lot of engines now have 3D engines for free.
+There was a time when it was less prevalent.
+AUDIENCE: How would you know what you collided with?
+COLTON OGDEN: Because there is a collider that it gets.
+
+Where is it again?
+Is it the skyscraper, for example?
+So every skyscraper, when it collides with something,
+this OnTriggerEnter gets passed in this collider other.
+And so that's going to be the object that you collided with.
+You can assign a name to an object, and then get its name, as well, in code,
+if you needed to do that.
+In this case, we wanted to know whether it's the helicopter or not.
+So we got the HeliController from it.
+But in our game, it's kind of a special case,
+because there's only one type of object that
+has a collider that's a non-trigger, and that's the helicopter.
+So we can assume that this exists when we do get a collision.
+But otherwise, we probably want to say, get component of HeliController,
+and then test it for equal to null.
+And if it's equal to null, then we want to not do something.
+If we tried to call explode on a null object,
+that's going to be a null pointer exception.
+And then you're going to crash your game.
+But in this case, we're guaranteed for that not to happen.
+Because, like I said, the only collider that
+can collide with this that's not a trigger is the helicopter object.
+So does that makes sense?
+AUDIENCE: Sounds like a physics problem with an exploding element.
+COLTON OGDEN: Oh, yeah.
+Yeah.
+That's all too real.
+
+In this case, though, all explode is is, thankfully, just destroy game object
+and then start a particle effect.
+So any more questions as to how instantiation,
+prefabs, using the Unity editor, interacting with your model
+behaviors, public variables?
+Yeah.
+AUDIENCE: You get processes, you first enter the data in that to there,
+and then it runs the code to load the data,
+or can you also put value data in the editor?
+COLTON OGDEN: You cannot define--
+so the question is, do you first create the data in the editor,
+and then the code, and then tie them together that way?
+In order to get a new component, you will have to create the class first--
+the model behavior that you want--
+and give it the public fields that it needs for the editor to actually read.
+So the editor reads your script, looks through all the public fields,
+and then will create the necessary GUI elements in the editor
+to interact with the code.
+But this needs to exist.
+All this code needs to exist.
+Anything that has these public variables that you want accessible in the editor
+needs to exist in code first, and then you
+have the power to use it in the editor.
+And then it's customizable at that point.
+Any more questions?
+All right.
+So that's the prefabs.
+So we looked at texture scrolling before.
+And we're going to go kind of quickly through this.
+But all texture showing was, if we recall,
+was I have a scrolling background class here.
+It's got a scroll speed.
+So if we wanted to, since it's public, we can edit it in the editor
+and make it faster or slower.
+
+But if we maintain a reference to our renderer.
+Every object has a renderer-- mesh renderer, typically, for 3D objects.
+And the renderer has a material associated with it.
+Everything in Unity has a material.
+And material doesn't necessarily have a texture.
+But in this case, our background does have a texture,
+and it's going to be called MainTex by default.
+That's the main texture, if we want to assign a texture
+to see visually on a material.
+So material can just be a color often, but it can also
+be a color and also a texture.
+So in this case, the background is a texture.
+It does have a texture assigned to it.
+And notice that if we go to the background,
+and then here is where we actually create.
+So this is a material here.
+It's got a shader.
+So we're not going to talk too much about what shaders are.
+We've talked about them briefly.
+In Unity, you can go quite a bit farther with them.
+Well, technically speaking, I guess you could go equally far with Love2D--
+2D shaders and 3D shaders, at least in vertex and fragment shaders.
+But for all intents and purposes, we're not
+going to go into detail on shaders today.
+But they're very similar.
+In this case, every material has a shader in Unity,
+in order for it to render.
+Because anything that renders needs to be shaded in Unity.
+But notice that here we have a texture.
+So this is that main texture thing that we saw before.
+And then this is the bump map here.
+We don't have a bump map, because our texture isn't bumpy.
+It doesn't have any contour detail or anything like that.
+But you can just select a texture here.
+So I could give it that texture if I wanted to.
+Or I have another couple of textures here.
+
+This texture here.
+It doesn't matter which texture you choose, but you can choose a texture.
+And then that material will then, it will calculate,
+based on the mesh, how to draw that texture best to it.
+And you can set every material's texture offset via its SetTextureOffset
+function on the x and the y-axis.
+And that'll shift it, effectively accomplishing
+what a scrolling background needs.
+It'll draw it, and then it'll basically wrap around to the other side.
+So that's how we get the infinite scrolling texture.
+We just set its texture offset.
+We specific call SetTextureOffset on the main texture,
+and then we pass in a Vector 2.
+So just two numbers--
+offset and 0.
+Because we don't want to touch the y-axis, so it was 0, and then offset
+is just some value that increases over time.
+And then Time.time, recall--
+time since the beginning of the game has started.
+Time.delta time-- time since the last frame.
+And so we can just do one calculation in here and update every time,
+and then multiply it times scroll speed to get
+the scroll amount that we want here.
+And I've set it to 0.1 just for a semi-slow effect.
+But in the editor, if we look at our scrolling background, which is here.
+And then I've made it public, so I could just easily make this 1.
+And I don't know how fast it's going to be, but 10 times faster.
+So probably pretty fast.
+Yep.
+So it's hauling.
+But yeah.
+All that is is a shifting how it maps the texture onto the 3D surface.
+And this 3D surface, to be clear, is just a plane.
+So just a plane.
+And notice that it doesn't get rendered from the back.
+So anything which is a polygon has one side that gets shaded
+and one side that does not get shaded.
+So if you see invisibility on one side, and not invisibility on one side,
+that's not a bug.
+That's a feature.
+That's the texture scrolling side of things.
+Anybody have any questions as to how that works?
+We won't really need it for much going forward.
+It's not part of the assignment.
+But it ties in to what we've done before.
+So I thought it would be interesting to cover.
+Last thing we'll look at is audio.
+Audio is pretty easy.
+All you need in Unity to do audio is an audio source and an audio listener.
+So a source plays audio.
+So James, if you are an audio source, I'd be an audio listener.
+And I'm listening for audio and playing it back
+to the speakers when I hear any sort of source of audio in the game world.
+So you can have infinite audio sources, but ideally one audio listener.
+And it's usually whatever main camera that you're drawing with.
+And then sounds in Unity can be either 2D or 3D.
+In this case, all the sounds that I've put into this game are 2D.
+And that's just this spatial blend here.
+Notice that there's a 2D to 3D slide.
+And so that'll calculate, based on where the sound is,
+how it sounds in the game space.
+And it's based on how far away it is, and what side of you it is.
+And so the main camera has the audio source for the music.
+And so it just starts the music right away.
+Notice that we didn't have to code any of this.
+I just attached an audio source to the camera.
+And then there's a Play On Awake checkbox, and a Loop checkbox.
+So normally we've done like--
+at the start of our game code, set looping to true, and then
+play the source.
+In this case, we'd have to do none of those things.
+This is just given to us by Unity by default.
+AUDIENCE: You put the audio on the camera?
+COLTON OGDEN: Yep.
+AUDIENCE: You could put it on anything.
+COLTON OGDEN: You could put it on anything you want to.
+AUDIENCE: The sound is relative to that object.
+COLTON OGDEN: The sound is relative to that object, yeah.
+
+That's audio.
+It's pretty simple.
+I mean, it's an art form when it comes to how
+you want to position things in your game world,
+and how you want them to sound, and whatnot.
+And you can get more complicated with it.
+But that's how you would do basic 2D, in this case, audio.
+But you could easily also do 3D audio just
+by making this set to 0 from 0 to 1.
+And you can make it more or less 3D, too.
+If it's not all the way to 1, it'll somewhat be 2D.
+So you'll hear some of it no matter what, and some of it will be 3D.
+And then setting it to 1, it'll be purely 3D.
+So if it gets far enough away, you won't hear it at all.
+
+The explosion sound, as well, gets triggered.
+And so this happens in the--
+I forget exactly offhand where it gets triggered.
+
+I believe it's in the HelicopterExplode function?
+Oh, yes.
+
+I created an object in the scene that has an audio source for the explosion
+sound.
+And because I made this public, I can just put it on this object.
+And so there's a reference to that audio source at all times.
+And so I trigger explosionSound.play whenever we call this Explode method
+on the HeliController.
+For the reason that I didn't put it on this object, because we destroy
+this object as soon as we get into a collision.
+And so I didn't want to put the explosion sound
+audio source on this object, because it would get destroyed in there.
+It would not play audio, effectively, as soon as we destroy it.
+So we have to have it somewhere else on the scene.
+I could have also just made the object invisible, but I didn't.
+I destroyed it.
+
+And so, yeah.
+That's this explosion sound object which, if we look at the helicopter,
+in the HeliController, which is all the way down here.
+Notice that it has a reference to an explosion particle
+system and an explosion sound.
+And we just have to click and drag the object effectively from here to here
+to pair the two of them.
+And then the script that this is referring
+to will always have a reference to those, as long as these
+are set to something.
+And notice that we also have coin total we've made public.
+So I guess I could experiment with it.
+And then speed-- we made this public so that you can make the helicopter
+faster, if you wanted to, or slower.
+And so you'll find it often useful to make a lot of these fields public
+just for you to experiment with.
+And then there's never really harm in doing so,
+because folks aren't going to be able to actually see this in the editor
+when they download your game.
+So make as much public as you want for debugging purposes,
+and just have fun with it.
+But that's audio.
+Audio sources produce the sound.
+Audio listeners listen to the sound.
+And actually make it go through your computer speakers
+or whatever your default audio system is.
+And here's just a showcase of the two on the camera.
+And that's audio.
+So any questions as to how the audio works at all?
+All right.
+A couple of last things before we close out here.
+So the Asset Store is probably one of the biggest things about Unity
+that sells it.
+So oftentimes, it's a lot easier just to get something,
+whether it's a library, if you're programming, or something else,
+get something that's implemented for you,
+so that you don't have to implement it yourself.
+In this case, there's an RPG Systems for Rapid Development
+something, Visual Scripting system, looks similar to Unreal.
+There's a ton of things in the Asset Store-- models, scripts, audio, editor
+tool kits.
+A lot of cool things.
+A lot of it's free, if you want to experiment.
+So a lot of the assets that I got to mess with in this game here
+are free, like the coin and some of the other stuff that's bundled with it.
+There's a lot of really cool things and really cool systems
+to help you for $10 or $20.
+You can spend a little bit of money, and then
+get like 25% of your game done right away.
+And then you can actually get closer to shipping it.
+So I think it's hugely valuable to be looking at the Asset Store
+and thinking about how you can save your time that way,
+if you're trying to actually ship a game and get to market.
+So definitely look through the Asset Store.
+See if there's anything that will make your life easier
+when it comes to developing games.
+Because I know that I've used it several times, and I rarely regret doing so.
+So Assignment 8 is going to be pretty simple.
+So for the second part, there's a bug in the game
+where, if you die over and over again, the scroll speed never resets.
+So it is keeping faster, and faster, and faster, and faster forever.
+But it's a one line fix.
+And I want you guys to find where to fix it, given that we know,
+given what we've seen today.
+And there's a hint here about static variables.
+So it will also be detailed in the spec as well.
+But this is an easy part.
+This part's fairly easy, too, because all it really is
+is taking the kind of the same stuff we've looked at--
+the coin generator and coins--
+and then making gems that spawn in addition to the coins at a rarer rate.
+And these gems should be worth five coins.
+And so when you collide with the gems, just add 5 to the coin total.
+And if you collide with a coin, add 1 to the coin total.
+And that's basically it for Assignment 8.
+So next time, we're going to dive into first-person games in Unity.
+So we'll look at some of the features that we get for free.
+We're going to implement a simple maze-like game where you can navigate.
+And it will be dark and kind of scary, similar
+to a game called Dreadhalls, which is a mobile VR game.
+And we'll actually test out Unity's VR, and try and get a VR headset in here
+so people can check that out.
+Cool.
+Thanks a lot.
+I'll see you guys next time.

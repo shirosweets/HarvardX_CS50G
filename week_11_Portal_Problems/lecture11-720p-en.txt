@@ -1,0 +1,2114 @@
+[MUSIC PLAYING]
+
+COLTON OGDEN: All right.
+Good afternoon, everybody.
+Thank you so much for coming to today's talk.
+My name is Colton Ogden.
+I'm the course instructor for GD50, which
+is CS50's new Introduction to Game Development course.
+We started this last spring and we've been having lectures every week
+so far for the last semester.
+Last week we took a look at Portal, which
+is a famous game by Valve, whereby you get a gun that can essentially
+shoot these portals that defy the laws of space
+onto different services in the game.
+Walk in and out of them and teleport through them and see through them.
+And there are a host of interesting challenges associated
+with implementing a game like this.
+Now last week we looked at a simple version of it in Unity,
+but today we are joined by Dave Kircher and Tejeev Kohli of Valve Software who
+actually were on the Portal team and implemented
+all of the interesting sort of design and technical decisions
+that went about making it work and making it fun and believable.
+So without any further ado, this is the "Portal Problems."
+Thank you.
+[APPLAUSE]
+
+TEJEEV KOHLI: Hi.
+So we're just going to run through.
+Both me and Dave were actually students when we were hired by Valve,
+and we were hired to recreate the work we did as a student project for Valve
+for Portal 1 and for Portal 2.
+And today we just wanted to talk to you about some
+of the issues we had trying to create the mechanic for portals,
+and then also some of the design, both the technical and some of the design
+issues that we had to tackle and work on to make the mechanic work properly.
+So Dave is going to start off and then I'll jump in later.
+DAVE KIRCHER: Hey, folks.
+As he mentioned, my name is Dave Kircher I was hired
+on specifically to work for Portal.
+So I'm going to go ahead and preface.
+We're jumping through a lot of topics today and jumping very quickly,
+so this is a very video heavy presentation
+so that we can jump quickly in and out.
+And I'm sorry if I go a little too fast.
+I'm kind of optimizing for the stream.
+So hopefully, if I have gone too quickly over something,
+you can review the stream and see it a second time.
+So without further ado, let's start off-- just quickly.
+I'm assuming that most of the people here
+have played Portal or at least are familiar with it in some sense.
+That's just an assumption.
+And that, for at least the technical portions,
+that you are at least somewhat familiarized with 3D rendering.
+If you're not, you may need to study up a little bit and then come back.
+But let's start off with just what is a portal?
+A portal is a discontinuity in 3D space.
+It's a 2D discontinuity where we basically
+define a 2D rectangle somewhere in space such that the front face-- sorry,
+the back face of the 2D rectangle is defined as the front face of another 2D
+rectangle.
+So I've got my simple little example here of this blue portal
+and this orange portal.
+We're defining them to be back to back, which gets us this result over here.
+So from the perspective of this little portal guy,
+it should look like there's another room attached with a cube in it.
+But we're not actually moving 3D space at all
+because otherwise we're trying to make sure that this perspective is
+true for both this guy and the cube.
+And then you'd have this weird overlapping space
+that doesn't make any sense to anybody.
+So we do a lot of hacks to make it seem like space
+is folding in these interesting ways without actually moving space.
+Another way to think of it is that it's a door.
+If you look closely at this doorway, it's a very standard door.
+It's a door like you walk through it, different stuff happens.
+But what I'm not telling you initially is that this actually isn't a door.
+For technical reasons, this level required a portal here
+because we needed this room to move.
+So even though it looks like a doorway, it's completely fake.
+And that it's a doorway that actually takes you
+about a half mile across the level.
+But it looks like a door, and so my job on the Portal series
+was to make sure that when we're creating portals that they
+feel to the player like a doorway.
+And if you think of them in terms of a doorway,
+all the interesting stuff for a portal happens on the inside of the doorway
+and nothing interesting happens on the outside.
+And it's my job to make sure that all the interesting things that
+are happening outside the door don't happen.
+Because that's all stuff that doesn't make any sense.
+So as you can see, I just flew across the level.
+And that's the other side of that door that we just looked at.
+And I'm walking through it and it's a doorway.
+So it's a door that doesn't take you a couple of inches.
+It takes you about a half mile across the level.
+
+Now we're into our rendering section, which
+is basically one of my main expertises in the portal area.
+So we're going be talking about quite a few things
+and I'm going to jump in quickly, so hopefully I
+don't spew it out too quickly.
+That's kind of my problem.
+So there are primarily two layers to render a portal of view.
+There might be more, but these are the two that I am primarily familiar with.
+The preliminary way that we did it with Narbacular Drop, which
+was the predecessor to Portal was with rendered texture.
+And then when we got to working on the Portal franchise,
+we switched to a method where you draw it
+all in a single pass using what's known as a stencil buffer
+and I'll be talking more about that in a bit.
+But there are tradeoffs to each method.
+So with a texture, you have to have separate textures per portal view.
+And if you have support for recursion, you
+have to have many, many textures pre-allocated to do this.
+So your memory growth gets big very fast.
+You have to use the Painter's Algorithm or something like it
+to render your portals.
+You basically have to figure out the deepest portal you
+can see into and render that one first.
+And then any outward ones from that you're
+going to render them because they're going
+to contain a view of that first portal.
+So you have to render it in that order.
+And I don't know if it's true anymore.
+It definitely was when I originally was working on the first portal.
+That you couldn't effectively use anti-aliasing,
+so you get small visual artifacts as you get close to a portal
+because it would be rendered as a texture that doesn't quite
+render the same way as the rest of the back buffer.
+But it is the simplest to implement, especially
+if you don't support recursion at all.
+It is super simple to do because you can ignore the Painter's Algorithm
+and just render all of them before you of your main view.
+By contrast, when you render with stencils,
+it renders the entire frame to the back buffer
+so you don't have any extra texture memory requirements.
+You're doing it all in a single pass.
+You're starting from your main view and working your way in.
+You actually have to nest it a little bit, so it's interesting.
+You are guaranteed to get homogeneous visual quality
+because it's a single pass.
+The way you're rendering the rest of your frame.
+But it has a lot of extra complexity of when you render them
+and how you render them.
+So this rendering portion is going to require
+quite a bit of spatial thinking.
+So I'm going to show you this video.
+Basically this is a layout I'm going to use a couple of times.
+Does this play?
+Hopefully-- yes, OK.
+This is a room layout that I'm going to use a couple of times
+where I've got an orange portal and a blue portal.
+And behind each one is a thin wall with some stuff behind it.
+But hopefully to help illustrate what's in front of the blue portal,
+you can see there's a whole bunch of blue stuff over there.
+
+So yes, that is the example layout I want you to kind of keep in your head
+because spatial thinking is important to actually have reference.
+Let this finish one more time.
+
+OK.
+Now this is something that pertains to both rendering with textures
+and stencils and I'm going to let this play once
+because I was advised that if I front load this too much,
+it sounds confusing.
+So while I'm playing this, I want you to look at the fact
+that when the orange portal is on screen and when it's not,
+everything inside where the orange oval is
+looks exactly the same for when it is and when it is not there.
+
+And so what I'm doing here is as I'm toggling between the views
+is I am teleporting to where the virtual camera is.
+That's rendering out of the orange portal.
+Whoops-- come on, go back.
+Oh, God.
+OK.
+I'm toggling back and forth.
+I'm looking into the orange portal, but I'm
+toggling to where the virtual camera is behind the blue portal.
+So if you remember back to when I said that we're
+defining the back face of one rectangle to be
+the front face of another rectangle, that
+means that they should be coplanar at all times.
+And so if you think of my player model in terms
+of walking it to the orange portal.
+When I'm rendering my exit view, I should end up behind the blue portal
+as I'm rendering out of it.
+So it's important to remember that all the angles carry over from that.
+And most importantly that whether you're rendering textures or rendering
+to stencil that nothing inside ever moves
+because it should be the exact same view angles,
+the pixels should be in the exact same place.
+If they're not in the same place, your math is wrong.
+And this is especially important when rendering with textures
+because one of the first mistakes I've seen several people do
+is that they render the entire screen to a texture.
+And then they map the entire texture to this little quadratic here
+and it looks all weird depending on how close or far away you are.
+But as long as you project the--
+
+sorry.
+Trying to work with videos is not the easiest.
+So as long as you project where the vertices of your mesh
+are in screen space, you can reuse those coordinates as your texture coordinates
+and then it will line up perfectly.
+So that's the point of why it's rendering as one-to-one.
+You just want to make sure that you're rendering the same parts
+to the same part of the screen.
+Now I said I'd be using that previous layout a bunch
+and I swear I'm going to get back to there.
+But this is a much better layout for rendering with stencils,
+and so now you need to learn a new layout just for a minute.
+It's only used in stencils.
+But I've got these two portals looking at each other.
+They're kind of-- one stacked on top of the other,
+and they've got these light bridges that are just
+serving to show you that transparencies are kind of a special case.
+So I'm going to play it one more time.
+So you just got two portals facing each other.
+And even though they're tiny, it does make an infinite recursion down
+into the portals.
+
+So rendering with stencils.
+I'm kind of assuming that for this part of the talk
+that you have some idea what a depth buffer is.
+You may need to read up on that if you don't.
+The stencil buffer is very similar to the depth buffer
+in that it defines rules and operations for when we can wholesale just not
+draw a pixel or when we do want to draw it.
+And then also while we are drawing pixels,
+you can define several operations of how to modify the depth buffer.
+But for all intents and purposes, it's invisible to the user
+except for the end result. So stencil buffer, a lot like a depth buffer,
+but you're controlling the values in code instead of by vertex depth.
+So before we render any scene using stencils, what we're going to do
+is we're going to clear our stencil buffer at the same time
+as we clear our depth buffer.
+We're going to clear it to all zero values.
+And the stencil buffer we were working with with Portal 1--
+I believe it only had two bits.
+I could be wrong.
+It might be up to eight bits, but it's not a lot of bits.
+So we need to be very conservative with the values we put in there.
+So we're going to clear it to zero.
+So everything in it is zero.
+And then we're going to render all of the OPEC objects in our scene
+and that's where we get to the visual I'm showing you here.
+So you'll notice that none of the light bridges are here.
+None of the cool fancy window stuff is here.
+So all we've done is draw in all the opaque objects.
+And then we take a special detour to render a portal.
+At this point, we've rendered this oval here.
+And while we're rendering the oval, we tell the rendering system
+to increment the stencil buffer wherever we render a pixel.
+So while we're rendering, all of the pixels here go from 0 to 1
+and that's an important bit.
+So we're going to be able to use that to tell the depth--
+to tell draw operations where to draw from then on.
+And then as soon as we've drawn the incrementing of the stencil buffer,
+we tell all draw operations from then on to only draw
+where the stencil value is 1.
+And we tell it to not modify anything.
+We're only drawing where there's a 1.
+And then we can basically just forget all about stencil buffers
+for a little bit and keep drawing.
+But at this point if you've been following along with the depth buffer,
+we've already drawn this nice little wall behind the portal.
+So the depth is the same as this little quad here.
+And so the first thing we do is we render a full screen quad with depth
+at maximum value, which does really effectively
+make this a hole at this point.
+And if we were to continue drawing opaque objects and things like that,
+they would just show up in this hole.
+So then we start--
+after we have drawn, after we have punched our hole in depth
+and we've required that all draw operations have this matching
+stencil value of 1, then what we do is we just start over in our main scene
+again and just draw it again.
+But this time we move our virtual camera.
+Just the same operation as I showed you in the rendering.
+It's one-to-one, we just have to do a matrix transform such
+that we're behind the blue portal and we draw it again.
+And so, let's see here.
+I think I have a magnifying glass.
+So you may notice that we're in--
+whoops.
+OK, I can't apparently zoom and use a laser pointer.
+So you may notice that the player model is there,
+and then the exact same setup as I had shown you before.
+It's the same set of quads and the oval again.
+And we do the exact same thing again.
+We tell it to increment so all the values in this tiny little oval
+here are now 2.
+And then at that point we tell, OK, only render pixels with a stencil value of 2
+and then we can just ignore stencil buffers again.
+We punch the hole again, and then we recurse again.
+And we go into a value of 3.
+At this point--
+I'm going to get more into detail on it later,
+but we stop recursively rendering to stencil buffers
+because otherwise we'd draw a whole bunch of scenes
+that we're not going to actually see.
+We pull a little trick that I'm going to get into.
+So as we've drawn all of our opaques, we would theoretically do our detour.
+We don't.
+And then we finish by drawing all of our translucent objects.
+And I know it's very tiny to see them there,
+but it will become more apparent later.
+I think that-- sorry, that's actually our rendering trick.
+And there, now we've actually drawn the translucence in that view.
+And I know this is very small, but it'll make more sense at recursion level 1.
+So as we draw our translucent objects, we're
+still all confined to drawing where stencil value is 2.
+And then once we are done drawing all of our translucent objects,
+we render the portal oval--
+whoops, sorry, sorry.
+I'm going to pretend that we're drawing to the big oval
+here because it's easier to see.
+We would draw another quad at this level, sort of like a window,
+telling it to decrement the stencil value back to 1.
+I'm sorry, I need to take a step back.
+We need to replace depth so that there's no longer a hole there.
+So we draw the full screen quad with depth equal to the portal plane
+while still restricting to the nested view and then we decrement.
+Sorry.
+So by the time we've done decrementing, that
+means all of these pixels inside this first recursion are now 1 again.
+Every single one of them is a 1 on the stencil value.
+So we can continue rendering the translucence from the first recursion
+just like we did when we're doing the opaques.
+We can say just restrict your drawing to all stencil value 1.
+And then we finish our translucence there.
+We do the exact same thing again while we're going back to the main view.
+We fix up our depth and then we decrement the stencil values again.
+And then we just finish out our main scene,
+and now you have portals drawn using stencils.
+They required no extra texture memory whatsoever.
+So bouncing back to the scene that we had
+shown before this, one of the things that we had to solve pretty quickly
+is when you have some object in the middle of a portal,
+you have to be able to see it in two places at once.
+And the way that we do this is we literally just look up
+every piece and rendering geometry.
+It uses every texture and replicate it and teleport it every single frame
+to wherever the original is.
+And while we're replicating, this object over here.
+You can see that it's slightly more in front of the orange portal.
+So basically the rules are defined such that whichever object--
+whichever side of the object has its origin in front of the portal
+is the master.
+And the origin for this cube is right in its middle,
+and origin is just a term that we use to define the one point in space that
+defines where this object is.
+So usually it's in the center of an object.
+Not always, but that means this is the real one.
+And this is our complete and utter fake one
+that we have to do for every single object that is penetrating the portal.
+Now when we duplicate geometry and whether we
+not-- whether we duplicate or not, we have another problem to solve.
+I'm going to let this video play.
+I'm going to be toggling a broken part on and off.
+So when the cube is not behind the wall, that's the fixed version.
+And when you can see it behind the wall, that's the broken version.
+So if you think about replicating geometry,
+we have replicated the entire model to this orange portal.
+Which means all the stuff that is supposed
+to be in front of the blue portal is also sticking behind this wall.
+Because once again, we have defined the two faces to be coplanar.
+So what we have to do is we have to use what's known as a clip plane
+to tell the rendering system, you know what?
+Just don't draw any pixels if the mesh is on this half of this half space.
+And we define the half space to be the portal plane.
+And we can turn this clip plane on and off
+as we're drawing objects inside the portal plane
+and that's what makes it work.
+Otherwise it would clip the whole world.
+I'm going to play the video again.
+It happens.
+So, yeah, we're just telling it, hey, you
+need to just ignore every single pixel that's on that half of all of space.
+Don't draw them.
+And that makes it so it doesn't seem like it's
+sticking out the back in weird ways that people don't understand.
+OK, now this is a very similar concept.
+Something that we coined the term "banana juice" for.
+Even back in Narbacular Drop because it's just confusing.
+And I know you're asking yourself, what in the heck is "banana juice?"
+That doesn't make any sense.
+So we decided to use a completely insane term for it.
+Because even our technical shorthand for describing the problem
+didn't accurately describe what it was.
+So we decided to use a term that--
+it was obvious that explanation was needed.
+So what we've got here is I've got my orange camera
+and I'm looking into the orange portal here.
+And that means I've got my blue camera, virtual camera here,
+looking out of the blue portal.
+And if you remember back to my example, we've
+got this geometry that's behind the blue portal.
+And it's between the blue virtual camera and the portal,
+and if we render that, it's going to look completely broken.
+So "banana juice" is a term to define this broken stuff
+that you would see if you were looking behind the thin wall.
+And I have a video of it here.
+I believe I'm toggling back and forth between views just like when
+I showed you rendering as one-to-one.
+And that's me turning off the clip plane.
+This is what it would look like if we were in the virtual space and the clip
+planes were not enabled and then I go back to our main view.
+And you'll see as I move around in a second that it looks completely broken
+and it kind of breaks your brain if you don't understand what's going on.
+So that is "banana juice," and you fix it exactly the same way
+as with the entity clipping.
+You have clip models, but what we do is I'm going to replay the video here.
+If you're watching, this entire part of the level is now clipped.
+So what we do is while we're rendering a virtual camera,
+we just clip the entire world behind the portal plane.
+All of it.
+Everything that's back there.
+So that's how you fix "banana juice" too.
+It's not super difficult once you understand it,
+but I can tell you it took me about two days
+to figure out exactly what was going on when I originally saw it.
+It just didn't make any sense.
+So moving on again, I know we're jumping a lot and I'm sorry.
+We're just going to keep moving on at a quick pace.
+So infinite recursion is something that people kind of expected
+to see when they were playing portal.
+If you ever played the original Narbacular Drop,
+we didn't support any form of recursion and it was kind of a letdown.
+So I'm going to go into how this works.
+So in this view, you can see that we have this blue portal.
+That's our first recursion right here and it's taking up most of the screen.
+And then we've got this blue portal that you can see the entirety of it.
+That's our second recursion.
+And this one in here is completely and totally fake.
+So that one, there is no portal there whatsoever.
+What we're doing is we're taking whatever we see
+of this portal, the second recursion.
+We're taking that exact view from the previous frame.
+We're taking those pixels and then we're basically doing a fix up
+in case you moved your camera around.
+And we're applying the texture coordinates from the second portal
+to where the third portal would be.
+And by a completely fake, I mean we didn't even render this blue oval.
+That's just a copy of this oval right here.
+So it's the exact same thing as if you point a video camera at a video monitor
+that's showing what it's recording.
+You get that feedback loop.
+But we have access to a little bit of extra special math.
+That means that we don't get that weird snaking
+effect if you move it back and forth.
+We can fix it up quickly.
+But this video is actually going to show you about how this quickly breaks down.
+Because if you're thinking ahead, you might
+be wondering what happens if you can't see all the second portal.
+And the answer is that we stretch it.
+So as you watch the third one, it just kind of stretches off in weird ways.
+Which is a problem that, if we spend a bunch of time,
+we probably could have fixed.
+But in game development, sometimes you just call it good enough
+and move on because I bet anybody that played the original Portal never
+noticed this whatsoever.
+[LAUGHING]
+
+So another breakdown of it, which I find personally annoying and interesting
+at the same time.
+I'm just going to show the video of it first.
+As I'm walking, you'll notice at the third recursion, which is completely
+fake, you're going to see a pop.
+You're going to see every single time I walk through a portal, it pops around.
+So this is actually fairly easy to explain once you understand--
+really understand how the hack works.
+So if you look at my visualization here, this
+is what the actual recursion would look like if we actually did it.
+So we've got a couple of portals here at these blue lines.
+And so inside our first portal that we're fairly close to,
+our field of view is really wide.
+And then as we get to our second portal, it gets really narrow really fast.
+But then as we get to the third, it narrows even more.
+And then the fourth, it narrows even more.
+But since we're cutting and pasting, the second recursion,
+if you look down here on this visualization, this is the hack.
+So we take this one, the second visualization, and copy
+and paste it onto the third and onto the fourth.
+And you can notice that this doesn't converge at all.
+It doesn't narrow.
+So we're seeing the same amount of wall around each
+of the recursions no matter what, no matter how narrow this magenta cone is.
+So as we walk through a portal, the magenta cone,
+we're picking a portal that's further off because now
+that's the second recursion after we walk through a portal.
+So it starts off narrow, which is closer to what
+it should look like at infinity.
+It should narrow to basically where you're seeing a blue tube.
+But then as we walk closer and closer to the main portal,
+then it's going to widen and widen and widen.
+And so there's just a pop where it snaps into place.
+So hopefully that made sense.
+And once again, completely changing topics because we
+got so many things to cover.
+So when we're rendering portals, we have to have
+a mix of rendering first person and third person.
+So in this case, you can see I've got my third-person model over here
+through this portal.
+Another third person model over here.
+And then we don't see it in the main view because I'm about to turn it on.
+It would look really weird if you saw the third-person view in the main view.
+Yeah.
+I mean, some games do try to fix this with very special representations.
+They'll try to draw just the legs or something like that.
+But, yes, so we have to have a complicated system
+to figure out when to draw third person and when to draw first person.
+And if you were to guess, I bet you would say, well, just
+render a third person every time you look through a portal.
+And it turns out it's slightly more complicated than that.
+I'm not actually going to get into the complicated version,
+but I'm going to show you how it's broken
+if you use that simple rule because why would life be easy
+and we would just be able to render just when
+we're on the other side of a portal.
+So in this case--
+let me look up.
+So you'll notice in this case, I'm on a tilted angle.
+And this is a case where my feet are on one side of the portal
+and my eyes are on the other side of the portal.
+So it kind of breaks the original system that
+would say, oh, just render if you're on the other side of a portal.
+And so, yeah, it's a little more complicated.
+Not terribly.
+It should actually look way more broken than this,
+but we actually had the fix in several places.
+And this is a special build where I had to go back and break things
+and only broken it in one place.
+Yeah, OK.
+And then the last on our rendering portion.
+So earlier I had talked about how we need to duplicate
+geometry that is mid-portal.
+But there's also another thing that we need to duplicate,
+which there are screen space affects where we can query
+draw operations and things like that.
+And so one way that we use these draw operations that are in screen space
+is to determine how much light glare to use around these lights.
+And so how these work are basically we draw a quad
+while we're drawing the light.
+And then we say, OK, in a couple of frames
+I want you to tell me how many pixels actually drew.
+And we're not allowed to actually query this immediately because of pipeline
+reasons.
+We don't have the results for several frames.
+So we have to cache off that handle that says
+how many pixels did you draw and we'll get the result at some point later.
+Sometimes you're lucky and it's just one frame, but usually two
+or three frames-- you have to save it for a while.
+But you may notice that even though we're not
+replicating the geometry of the light, we're drawing two of them
+because they're in screen space.
+So that means that this query system had to be smart about it
+and I'm going to show how we have two separate results.
+Now if we had used the engine as it was originally written,
+there would be just one query for one light.
+But then that would mean that these lights would dim in unison.
+So we need to have separate buckets for each view of portals.
+And every view query that portal--
+any view query that is issued while in that recursion,
+we have to keep it in a totally separate bucket and call it back later.
+And then as we walk through portals, we have to transfer those buckets.
+So if I were to walk into the blue portal at this point, all of those
+handles we have to transfer to the main view.
+And then all the ones that are from the main view we transfer into what was now
+orange because we would be walking out of this orange one
+if we walked into the blue.
+So, yeah, that is the quick set of rendering things I wanted to cover.
+So now I'm going to hand it off to my colleague, Tejeev,
+to talk a bit about design.
+Give your spatial thinking a bit of a rest.
+[CHUCKLES]
+
+TEJEEV KOHLI: So that was a lot of technical stuff
+about rendering of portals.
+And you can see it's more complex than it seems at first.
+The naive solution seems like we'll get you most of the way there,
+but then as you start putting in more things in the game and more ways
+to play a game, to interact with the game,
+you see there's a bunch of different complexities
+that you have to account for.
+And a lot of those complexities are not just in a technical sense,
+but also from a design sense.
+So I just want to talk through some of the issues
+that we came up with as we were making Portal 1 and 2 and some of the ways
+we tried to solve them.
+One of the first things I wanted to mention
+was when first coming up with the idea for portals,
+before figuring out if we should spend a bunch of time
+making this idea, this new game mechanic that most people haven't seen before.
+What we did was--
+Dave and his team made a prototype of Portal
+in a 2D game engine that is used in DigiPen while they were students.
+And it was made in-house DigiPen 2D engine.
+And you can see here that it's a 2D version of Portal,
+but it's still got all the basic game mechanics that are used in Portal.
+And the main goal of doing something like this is to vet out the mechanics
+and see if they're still fun at their core.
+And part of what you do here is you playtest, right?
+You make this simple prototype, and you get
+other people to try it out and play it and say, hey, is this fun?
+Is this something that we should spend our next year working on
+as a proper 3D game?
+And the prototype you can see had most of the basic functionality
+there and kind of vetted out the idea of the mechanics to take it forward.
+And as we take the mechanics forward, one
+of the first things that you realize is this
+is a brand new mechanic that people don't really understand
+and you have a train them.
+Train them with how the mechanic works and also
+train them with sufficient knowledge so they
+can use that mechanic to solve puzzles, which is the core of the game.
+And one of the things that we did is you have
+to have certain sections of the game where
+you can be sure that the player has the knowledge that they need to progress.
+So a lot of this is about making sure that the levels you're designing
+are done in such a way that when the player finishes that level,
+they have that knowledge that you want them to have.
+And one of the ways we ensure that is through doing a lot of play testing,
+and play testing is something I'll talk about a little more as the talk goes
+on.
+But the basic idea of play testing is just
+getting someone else to play the game.
+And that someone else could be a coworker
+who sits next to you, your friend--
+anyone else really.
+Someone you get especially to come play the game from outside the company,
+but usually it's just your coworkers, people that sit next to you.
+People that see you work on the game but don't know exactly what you're doing.
+And you can observe them and see what they're doing,
+get some feedback from them, and then use that data
+and iterate on the mechanic.
+And you can see here, this was a level in Portal 1.
+It was pretty early on, this level, and you could see the portals here.
+The blue portal here is moving on a timer.
+It moves from one to the next to the next.
+And the idea of this level was by the time players solve this,
+they understand that I go in one portal and come out the other.
+That's the basic idea here.
+And in Portal 1, this level did a pretty good job of teaching players that.
+For Portal 2, we have a very similar puzzle.
+I'm going to just try and play here.
+It's a pretty similar puzzle.
+The idea is the same thing.
+You have the three sections that the portal can go.
+The one change we made here was we move the portal away from a timer
+and moved it to a button.
+So this way the player has more control of where the portals are opening.
+There are a few reasons for this.
+The main one here is like the level in Portal 2 has a lot more visual noise.
+There's a lot more like--
+it's an old level, a lot of foliage, a lot of destroyed stuff.
+So it's not as clean as Portal 1.
+And also, there's a case of Portal 2, there's
+a lot of people that have already played Portal 1
+and are probably already familiar with the mechanics.
+So we don't want them to have to go through the timers
+and wait for all the things to happen, even though they know how it works.
+So this way they can just go in and show us
+that they know how the portals work without having
+to wait through all the timers.
+And the basic goal is the same thing.
+That by the end of this level, we're confident that the players understand
+how portals work.
+
+One of the other things that you learn through play testing
+is you learn what you need to teach the player.
+There's sometimes when you'll be making the game
+and there's certain things that you as a designer or as a creator
+won't think are challenging concepts or are things that need
+to be talked to players explicitly.
+One of those things that we noticed early on
+is this concept here where a lot of players kind of thought portals
+were one way.
+That you go in one and you come out the other and that's it.
+But they have to be taught that you can actually go in both ways.
+You can go in the blue one and come out the orange,
+or you can go in the orange one and come out the blue one.
+And so this puzzle specifically does that, where the blue one
+is the only one that'd be moving.
+The orange one stays stationary.
+First you go in the blue one, you come out the orange one, replace the blue,
+and then you go in the orange one and come out the blue one.
+The idea with this again is you have to figure through play testing
+is how you figure out the different things.
+The different discrete small things that you need to teach the player.
+And also try to figure out how to teach them in a way
+where they're figuring it out instead of you telling it to them.
+So for the most part in Portal 1 and 2, there's
+certain things that we tell the player.
+But for the most part we want them to figure it
+out and have that epiphany themselves.
+Because then they really learn it.
+If you just tell it to them, they might not take in the exact knowledge.
+Another thing here is this was a level in Portal 2,
+but we noticed through one of our play tests--
+I looked through a few of our play tests that players were super
+hesitant to place portals on the floor.
+Even though this level is probably the fifth or sixth one in the game,
+and you've done that a few times in the game before this.
+But usually you are doing it way down there
+and doing a fling mechanic where you fly through the portal and come out.
+So players have placed portal on the floor before,
+but they haven't done it right at their feet.
+So we had to design a scenario here where the only way forward--
+you're trapped in this black room with nothing else
+and the only thing you can do is place a portal on the floor there.
+And that's one of the things that you realize as you keep testing.
+You'll come across players of different skill levels
+and different knowledge of video games and different knowledge
+of how controls work.
+And typically you want to make sure that you're not only catering
+to the low end or the high end.
+You want to make sure that both of them can have a good time with your game.
+So you want to design puzzle games in a way that aren't super intrusive.
+If a player that sees this get here already
+knows that I can place portals on floor and go by.
+This doesn't seem like anything that's stopping him.
+This just seems like part of the level.
+But to a new player that comes in here and is
+like I don't know how to proceed, it takes them a while to figure it out.
+And then when they have that aha moment, they feel pretty smart about it.
+So you want to make sure that you're designing stuff
+in a way that isn't frustrating players that already understand the mechanics,
+but also isn't making players that don't understand the mechanics have
+to be super frustrated as well.
+
+Another thing that we had to do--
+Portal 1 and 2 both have this mechanic where you go into a portal on the floor
+and come out one on the wall and it keeps your momentum and velocity
+and flings you forward.
+One of the things we noticed while we were working on this mechanic
+is that there's a lot of times when players don't exactly quite line up
+as they're falling through the portal.
+Which means that when they fall in, they're going to fall out--
+they're not going to come out of the portal on the wall in the correct way.
+And a lot of times players won't know that they had the right solution,
+they just kind of messed up the execution a little bit.
+And we want to try and help the players in these cases,
+but again try to be not intrusive about it.
+Because you want to make sure that the players--
+as they're solving puzzles, they're not thinking
+that they had the right solution but it didn't work the first time I tried it.
+So now I have to rethink the whole solution even though the solution was
+correct the first time.
+So one of the things we used-- we used a few different things
+to help the players out in this way.
+And again, with the idea of them being mostly invisible to the player.
+They're not always completely invisible and in some cases
+we have ways to opt out of them.
+But this is one of the things that we used.
+So if you notice here, the player's going
+to drop through the orange portal.
+But as you notice as I walk through--
+walk forward here, I'm purposely not going to fall exactly straight.
+And one of the mechanics we had in the game was--
+it was pretty subtle there, but I'm going to do it again.
+You'll see I'm walking to the side and the game kind of funnels you
+into the portal.
+So we had the special thing we used in portals, for portals
+that are on the floor facing mostly up.
+Imagine there's a cone coming out of the portal,
+and if you're falling from some height and if you're
+within that cone and the cone--
+it's not super wide.
+It's pretty narrow.
+If you're within that cone, then we kind of
+funnel you into the center of the portal.
+So that when you're coming out of it, you're
+going to be lined up perfectly with it.
+And as you can see, the third time I did it there, it didn't happen.
+Because the way this works is that it only
+works if you're looking at a portal.
+So it works the second time, but the third time I'm
+going to go mostly in the same direction and it's not going to work.
+So that's our way of trying to make these things be non-intrusive.
+To where if players don't expect to go in that portal, it's not going to work.
+But if the player is looking at a portal and they expect to go in it,
+we kind of nudge them along a little bit.
+And you can see it here, and this is a second case
+of the same thing where there's a portal on the floor and the ceiling.
+And you can see as the funnel is working,
+the play is perfectly in the center of it.
+But I'm going to look forward a little bit and disable the funnel.
+And you can see the player's going to go off axis
+because the funnels are disabled and the player slowly went out of it.
+
+Yeah, the funnel is disabled now.
+
+And again, the idea of this is to reduce a bunch of the player frustration
+and to reduce a bunch of the false negatives that players get.
+You want to make sure that players that think they've got the solution,
+and if it was the correct solution, you want
+to kind of help them out a little bit.
+You don't to solve the puzzle for them.
+You don't want to give them, like, here's the answer.
+But you do want to try and help them out a little bit
+because that helps that makes the game a little bit more fun
+and reduces the frustration.
+
+So that was the help that we had for when you're entering portals.
+We also have the opposite and that was there in Portal 1.
+And in Portal 2, we introduced something that
+was the opposite of a helper, which we used when you're coming out of portals.
+So Portal 2 had this mechanic called Aerial Faith Plates,
+which is pretty straightforward.
+You step on this faith plate and it propels you to the air.
+And the level designers can place the faith plate on a level
+and can kind of control the trajectory of the arc
+of where the player is going to fly.
+And this arc is not really visible to the player,
+but it's pretty apparent based on the level design.
+So you can see in this one, I'm going to play the video as I'm talking
+and then maybe play it a couple of times.
+So the tech that was developed for these Aerial Faith Plates
+is something that we reuse for a fling helper.
+So you can see here there's all these--
+I'm going to turn on some debug draw.
+And you can see right here.
+So this green arc here is the arc that's on the faith plates,
+but you can see there's some stuff coming out of the walls there as well.
+So this is a part of the level where the player is going to fling out of.
+
+He's going to fling a box out of that actually because he wanted this to work
+for objects as well as the player.
+So you can see as the box goes through here
+and then here, these are those faith plates.
+And then when the box comes out of that, we
+have the box follow the arc that's kind of predetermined.
+Because that's I think what the player is expecting at that point.
+They expected to have solved the solution-- solve the puzzle.
+But the funnel, the trigger here--
+this kind of corrects the arc to make sure that it's always going
+to go in the place the player expects.
+And we also have a case of the same things working for the player.
+So you can see here there's two different arcs that
+are coming out because we doubled up the triggers over here.
+The way these triggers worked in the game
+is they won't always enable when the player touches them.
+They require a minimum velocity threshold.
+So the player has to be doing most of the work.
+So the player has to have figured out a way in the level
+through the puzzle design to get that velocity.
+But we know that there's some differences in physics and differences
+in the exact mechanism you might use.
+So we're just saying if you got the minimum velocity that we acquire,
+we're going to take it all the way there.
+So in this one, you can see we have two different cases.
+So if I just fall out of the portal, it's not going to activate any of them.
+If I somehow manage to get some velocity,
+is going to activate the fail case one and take me there.
+And the reason we have the fail case one is
+because we want to make sure that if players somehow get
+most of the velocity but bonk on the wall,
+they don't keep thinking that they can-- that's the correct way to do it.
+So we want to make it obvious that you failed.
+So again it's the same way.
+We have to help-- you're helping the players out but not by giving them
+the solution.
+Just by making it obvious that the thing you did was correct or wrong.
+And then if you do the correct way in this level, which
+is to get philosophy doing that, and then you make a portal there,
+you're going to do the correct thing and swing out of it.
+And again, the main idea here is to get rid of those false negatives.
+Especially here because there's a few different spots on the wall
+that you can put a portal.
+And we don't really want to restrict a lot of that
+and just put the one square on the wall.
+That is the solution square.
+Because again, if you put the portal down here or put the portal up here,
+the arc is going to be slightly different.
+So this mechanism we had just kind of corrects
+those arcs and makes sure that it goes in the one or two ways that we want.
+
+Another thing we added in--
+this we added in Portal 2--
+was highlights for your portals so you can see where
+your portals are placed through walls.
+And this is something that's super useful in levels
+where you have to keep track of which portal you placed over there.
+So you know which one to place over here.
+Because sometimes it's like, OK, I just got out of the blue one
+and the orange one's over there.
+So if I place the blue one--
+oh, I got to do the whole puzzle again now because I placed the wrong one.
+So this helps a lot in just making sure that you know where your portals are
+so you can be like I want to come out of that one,
+so I'm going to place the other one.
+And this is something we added in Portal 2 and it was pretty helpful.
+And it's also helpful in the co-op version of the game.
+Because in the co-op one, you want to see
+where both the players' portals are at all times
+and this kind mechanic helps in that.
+Another thing we added to kind of help the player a little bit
+is a thing we call the placement helper.
+And this does not use a whole lot in the game,
+but there's a few sections in the game where
+we want to encourage the players to come out
+of a portal in a particular direction.
+So we have these things that we place in the level with a certain radius.
+And if you place a portal within that radius,
+we just kind of snap it to the direction--
+to the center of it.
+But they don't a timer.
+So if you place one portal and you're like,
+oh, I actually want to place it over here, you can always opt out of it.
+And that's again what I was talking earlier.
+You want to add something-- excuse me.
+You want to add these helpers in a way that, for players, they're mostly
+invisible to most of the players.
+But the players that want to opt out of them have a way of opting out of them.
+[COUGHS]
+
+Excuse me.
+So you can see the first portal that's placed does get snapped,
+but the second one that's placed is exactly where the player wanted.
+And we use these in a few spots in the game,
+but they weren't used a whole lot because for the most part
+you want to have-- you want to make sure the player feels
+like they're in control.
+
+And one of the other things that was a lot of fun
+while making Portal, and Dave will talk a lot about this--
+excuse me-- will talk a lot about this later is the physics of portals,
+or physics of objects interacting with portals.
+And for the most part we're trying to be super accurate with it, right?
+We're trying to make stuff work the way players expect in real life
+because that's kind of what we're trying to simulate here.
+But one of the things that we thought that we added here-- that we thought
+was more fun than accurate.
+So you can see the--
+[COUGHING]
+
+Sorry, I'm a little bit sick.
+You can see here that when the box starts off,
+it's just resting on the floor.
+So it's got no initial velocity whatsoever.
+So when you place the blue portal down, the expectation
+is probably that it keeps resting there or maybe it
+goes in the center of the portal and just stands there.
+But that's not a super fun game mechanic.
+So here we just have it be so that objects coming out of portals
+have some minimum velocity.
+So they always have some minimum velocity.
+And this works in lots of other parts of the game like the paint.
+And you can see here that there is some air
+resistance that takes place and the paint does slowly come down.
+But once it comes down to this minimum velocity, it just stays there.
+And this is-- it's like completely fabricated fiction.
+I guess there's no real physics for this.
+It's just kind of like this is more fun than trying to simulate real physics.
+So you can see here air resistance is making
+it go down, like they're slowing down.
+But once they get to the minimum velocity, they just stay there.
+
+This is about it.
+So once it gets here, it's just going to stay here.
+It's not going to go below that.
+
+And speaking of gels, the gels actually came up--
+were an idea that we had for our student game
+that we made while we were in DigiPen.
+It was called "Tag--
+The Power of Paint."
+And in Tag, you had a paint gun that you used to shoot the different colors.
+And the Portal 2 mechanic was adapted from this and it's pretty similar.
+But one of the things we did get rid of for Portal 2
+was the idea of having the paint gun.
+Because one of the core ideas we had while working on Portal 2
+was that any mechanics we add to the game should really work with portals
+and should really interact at a core level with portals.
+So we thought instead of using a gun to move the paint around,
+it will made much more sense to use the portals to move the paint around.
+And that was kind of core not just with the gels, but with any new mechanic
+we added to the game.
+Was that portals is the core idea of the games.
+Everything we do should kind of center around how portals work.
+
+I'm just showing you the different colors we had in Tag.
+
+One of the colors that we added in Portal that wasn't there in Tag
+was the portal gel.
+And this was again going with the idea of how
+do we make the gels and the portals interact better.
+So this one just lets you spread around white paint
+so you can put portals anywhere that the paint can go.
+And this is a pretty cool mechanic in that
+it allows for a lot more open-ended level design and a lot more player
+freedom.
+Because you can play portals essentially anywhere now.
+Because for a lot of the game we're restricting
+where the players can put portals on the black surface or the white surface.
+And this just allows--
+you can just put white anywhere and put portals anywhere.
+We didn't use this a whole lot because it is pretty open-ended
+and it does break a lot of puzzle designs.
+But there are a few cases where we use it in a pretty open-ended way
+and have the player just kind of have fun.
+Spend some time painting the whole level and then figuring out what to do.
+And these kind of levels usually have a couple of different solutions
+because we don't know where the players are going to paint.
+So we just put a bunch of different ways to get to the exit and players.
+Some players figure out all the knobs.
+Some players find the first one and just go there.
+And it helps to break up the pacing a little bit from the conventional puzzle
+design with the specific spots where here are some white spots, here
+are some black spots.
+So it helps break that up a little bit.
+One of the things that didn't make it through from our student game
+was the sticky gel that you saw in the student version.
+So this is going to look a little bit broken
+because this is from a really old version of Portal 2
+because the sticky gel got cut pretty early on.
+And you're going to see some stuff here that doesn't really
+make sense, but just go with it.
+
+So you can see we used purple instead of blue here.
+So you can jump on-- you can walk on walls and stuff, which is pretty cool.
+So here you can see there's blue paint coming out of there
+but you can't see the actual paint blobs because there
+are invisible for some reason.
+I couldn't figure it out.
+But you can see the actual paint on the walls, on the floor.
+So this is just an idea of the kind of puzzles
+we were trying to come up with using sticky paint.
+There's an extra portal there for some reason.
+Ignore it.
+This is a really old version of the game.
+So this is the kind of puzzles we are trying to come up with.
+Of combining the different paint colors and portals together.
+But we did end up cutting this feature though.
+There were a few different reasons.
+One of them was obviously it is quite disorienting.
+You can see going up a wall and trying to figure out where
+the ceiling is, where the floor is.
+Especially in a lot of these levels where
+they're mostly just black and white.
+It gets pretty disorienting and we had more than a few play
+testers complain about that.
+But the other big reason that we cut it is because it didn't really
+interact well with portals.
+You don't really want to walk into a level
+and have the pots already placed for you.
+And there's no real good way to make pots on the entire wall
+without having to place the portal like 50 times.
+And also it didn't really interact well with the portal player
+physics and portal physics, and Dave will talk some more about the player
+physics through portals.
+And this is one of the things that you can see.
+We had a paint gun for a little bit, but we ended up cutting it.
+So you can see I'm painting the wall over here
+and I'm going to walk on the wall.
+But as I enter the blue portal, you can see oh, it's
+not going to let me go through.
+But if I go through this way, it works.
+And that's just one of the things that's like, well, we've got to solve this.
+We've got to ship like this.
+We've got to solve the problems.
+And we spent some time trying to work on these issues.
+But at some point, you realize that you're not
+guaranteed to solve these problems no matter how long you spend on them.
+So at some point you've got to just be like, OK,
+I don't want to spend an extra month or two
+trying to fix these problems not knowing if you'll get there.
+And plus there's other reasons why the mechanic isn't working out.
+So let's just stop working on this and work on other stuff instead.
+Another thing we ended up cutting--
+this is from Portal 1 that was present in Narbacular Drop was the ability
+to place portals through portals.
+And it's a pretty confusing thing and that
+was the main reason we cut it because most players just
+thought it was way too confusing.
+Because you're placing the blue portal by looking through the orange
+portal here.
+So the blue portal is--
+he's pointing through the orange portal here and facing the blue portal over
+here because the other blue portal is behind them.
+It's just like-- it's too confusing.
+And also it doesn't--
+there's not a lot of puzzle design that you lose by disabling this feature.
+The thing you do gain is players aren't getting super confused
+and also you're not necessarily cutting a bunch of puzzles
+that you can't make now.
+So this feature got cut as well.
+And this is something that we didn't really cut,
+but we stopped using in Portal 2 that was used a little bit in Portal 1
+was the idea of a double fling.
+And I'm going to show it here.
+So double fling is basically placing a portal
+while you're falling out of a portal.
+And it's one of those things that it works pretty well.
+It's a pretty cool mechanic.
+And it was used in a few spots in Portal 1.
+A couple of puzzles required it, like this puzzle here required you
+to do this double fling.
+But one of the things we noticed was a lot of players
+have difficulty in executing a lot of these super hyper-sized,
+high-precision movements even though they know
+what the solution of the puzzle is.
+So players will walk in this room and figure out, OK, I've got to do this,
+I've got to do that, and this is going to work.
+But then a lot of players have trouble walking out of a portal,
+making a portal as quickly, and it adds a lot of stress.
+And we wanted to move away from a lot of the twitch movement based stuff
+and towards more of a kind of, aha, I got it.
+That kind of stuff.
+And once you get it, we don't want you to spend a bunch of time
+in making sure you get the precise movements right.
+So this feature we didn't really cut it.
+It's still a mechanic that works in Portal 2,
+but none of the puzzles in Portal 2 required it anymore.
+And once we added the level editor, a lot of the puzzles people
+are making do require it and a lot of players like it.
+But it's not something that we thought we wanted to make everyone have to do.
+
+Another thing that we changed from Portal 1 to Portal 2
+was these energy balls.
+These energy balls at the time--
+part of the reason we used them in Portal 1
+was because they were there in Half-Life and it
+was an already created mechanic that we had that we could just keep from them.
+But the basic mechanic is these things fire--
+these things fire this ball that bounces around
+and it needs to go in this receptacle here under my gun right now.
+And it should go in this receptacle here and once it goes there,
+it finishes the puzzle.
+There are a few issues with this mechanic, though,
+in that there's a bunch of timing element involved here.
+Because the ball takes time to travel.
+And also if you get hit by it, you die.
+Which, I mean, it's fine.
+It's a game mechanic
+But for Portal 2, we just thought, how can we improve on this idea?
+And the thing we came up with was using lasers instead of the energy balls.
+Lower the volume a little bit.
+So here you can see it it's the same level from Portal 1
+and you can even see the energy ball dispenser going away and being replaced
+by a laser because we want to make sure the player is
+like, GLaDOS is improving these mechanics now
+and got better versions of it.
+So the laser effectively is very similar to the energy ball.
+It goes in one and you want it--
+it goes in over here and you want it to go to the receptacle over there.
+The big advantage here is that the reaction is instant.
+So if the player got the solution or not, it's instantaneous.
+You don't have to have situations where you place the exit portal
+and now you have to wait for the ball to go all the way across the level
+and see if it lines up or not.
+This way it just instantly does it.
+Plus it also opens up a bunch of different game play opportunities
+because now you can use multiple relays in the same level.
+You can have the cube that redirects the laser.
+So overall it felt like an improvement over the energy ball.
+
+And talking about lasers, so far we've been
+talking about a bunch of these smaller decisions we've
+made to solve these smaller problems as they kept coming up, like entering
+exiting portals, making sure things are lined up or not,
+improving on the specific game mechanics.
+But one of the things that you need to do
+when you're trying to make a whole game is
+to see how these mechanics come together and how you can combine them together
+to make a whole game.
+To make a few puzzles that increase into difficulty, complexity,
+and go towards some crescendo.
+And one of the ways we did that is by kind of using this kind of process
+that I'm going to go through.
+And we used it a couple of times both in Portal 1 and in Portal 2.
+And there's a few different mechanics that we used the cycle over and over
+for.
+And that's kind of how the entire game track is designed.
+So it starts off with an introduction, and the introduction
+is the puzzle we just showed you.
+That's the intro puzzle for lasers and it's really straightforward.
+It just shows you the mechanic.
+You go through one portal, come out the other, goes into the receptacle.
+It's really straightforward.
+Introduces the mechanic.
+Most people would get tripped up on this.
+From there, we then try to saturate the player with that same mechanic.
+We introduce different twists on that same--
+without introducing a whole new mechanic,
+we just introduce different versions, different tweaks on that same idea.
+So this room still only has lasers.
+But now we've introduced relays and cubes.
+And you can experiment, figure out how to connect the three lasers together.
+Figure out how to move the cube, figure out
+how to move the laser through the portals.
+But still it's only lasers.
+Nothing super complex yet.
+Then we give you more of that.
+We give you more of just the same mechanic.
+Here there's two things firing lasers and two things you've got to connect.
+And so it's the same idea.
+It's like just using lasers, but not super complex.
+Just building on the complexity little by little.
+Followed by a puzzle that's like, OK, this
+is a puzzle that's going to teach you all about lasers.
+By now you've seen lasers in a few different ways.
+This one, once you get this, you understand how lasers work.
+You know everything there is to know about how lasers work.
+So this puzzle here--
+excuse me-- that's two cubes and three things firing lasers,
+and on the other side of the puzzle there's
+three things-- you've got to connect them.
+And this puzzle is very difficult, but by this point,
+you've been slowly introduced to different ideas
+of how lasers work and this one is taking them all together.
+And then once we've done that, then we start combining them.
+Then we start taking, OK, now you've got a laser
+and a different cube and a bridge.
+And by this point you've seen a whole separate--
+we've done the whole introduction, saturation, graduation track
+with bridges as well.
+So by this point, you go in there and, OK, I
+know how bridges, I know how lasers work.
+How do they work together?
+How do I combine them together?
+And then we start escalating from there.
+And then you go into this puzzle that has a bridge, has a laser,
+has a turret, has some cubes coming out, has a catapult,
+has a bunch of this stuff.
+But by the time the player gets here, they're
+not really overwhelmed by it because they
+have been introduced to all these mechanics separately and also
+smaller combinations of them.
+So that when they get to this point where
+there's a bunch of different mechanics, they
+know how they all work individually.
+And that's kind of the process that we use of slowly ramping up
+the difficulty, first with a single mechanic, then combining them.
+And then that's kind of how we take the individual smaller design elements
+and combine them together and turn them into the whole game.
+
+And now I think Dave is going to come back and talk some more about physics.
+
+DAVE KIRCHER: And after I cover these last four bits of physics,
+we're going to open up for questions.
+I know we have a whole miscellaneous section that we've outlined here,
+but that's more just buffer material.
+So I'm hoping you're going to put your spatial thinking caps back on.
+So how we handle portal transitions is there's two distinct methods.
+One is that we've got volumes here, which we call touch volumes or trigger
+volumes.
+And those are centered around the portal.
+So I've got my blue portal here and that was green volumes here.
+And you'll notice it's entirely in front of the portal--
+that's important.
+And then we've got this yellow volume here.
+So the yellow volume is--
+it's whole job is to tell us which objects in the world
+are just kind of close to a portal, and I'll come back
+to why that's important to the minute.
+But it separates us from having to think about objects
+that are way out in the world all over in the white space around here.
+We don't have to think about them.
+And we also know they're not objects behind the portal
+because we're only interested in stuff that happens in front of the portal.
+And this green volume here is where most of the magic happens.
+This volume says the objects in it are so close to a portal
+we need to think very hard about what they can do and what they can't do.
+We're going to let those objects start passing through the portal.
+And so we keep these objects in two separate lists.
+Objects that are in this green volume no longer intersect with any objects
+out in the white space out here.
+They don't have to think about them.
+They're kept in a completely separate list
+and they don't collide with them at all.
+They also don't collide with world geometry.
+I'll get to that in a bit.
+And then objects in this yellow volume are
+the only ones that the objects in the green volume have to worry about.
+So these are objects that are just kind of close to a portal.
+And so another important interaction with portals is ray casting.
+So we're only interested in rays that pass through the portal quad.
+So if a ray happens to just pass the portal plane,
+but not intersect the quad, we don't do anything with it.
+It's not special.
+We just treat it like any other ray in the world
+and let it do its merry thing.
+But we got this magenta guy.
+It intersects with the portal.
+So now we have to recast a new ray out the other orange portal which
+essentially gives us two ray segments.
+And if you think about that, if you were to write any piece of code that
+just did the ray casting and hand back two ray segments
+when somebody was expecting one, you're probably going to get weird results.
+So this means, the fact that this is happening,
+means that we have to go through every single system in the game that possibly
+casts a ray through a portal and fix every single one to understand.
+But if we give you back multiple segments, different things happen.
+Instead of assuming that this starting point goes directly
+to this end point, which doesn't even go in the direction
+it wanted to in the first place.
+And so at its core, remember how I told you
+every object had an origin, a single point that
+defines where it is in space.
+We use the ray casting to determine if an object that's
+in this green volume and just kind of moving around.
+We use a recast from one point where it was
+one frame to one point where it was another frame
+to see if it either passed through a portal or outside the portal
+because if it went over this way, we do nothing at all.
+If we went this way, we need to teleport it.
+So that's the basics of our handling.
+
+So how do we let objects pass through walls?
+This is one of the things I spent a whole lot of time
+on because we wanted our portal transitions to be very seamless.
+Remember in one of my first slides I showed you.
+It should be like a door.
+People expect to walk halfway through the door and just stand there.
+And how we do this is--
+I'm going to talk about it a bit first.
+Whenever you place a portal, we take a snapshot of all the world geometry
+around you and create a very small representation of that
+and carve a hole in it.
+And we don't do this for the entire world because that takes way too long.
+And by way too long, I mean a quarter of a second.
+And in game terms, that's just way too long.
+I don't know if it was a quarter of a second.
+I remember originally that we had a problem where
+I think carving the mini-version took a quarter of a second,
+so it probably took several seconds.
+So I'm going to show you a scenario here where I've got a portal
+and it's going into--
+it's going along this corridor gateway, gangplank thing.
+And it's going to go into this little classroom area.
+And as I go back around the wall, I'm going
+to show you a debug mesh of our collision representation.
+So in this debug representation, we've got these green lines.
+These green lines and then also these cyan lines--
+or I'm probably mispronouncing that.
+I call them bluish, but my colleague has told me I need to call him cyan.
+[CHUCKLING]
+
+So I'm going to call them bluish now.
+So these green lines and the blue lines are in local space.
+So they're with the blue portal that we placed locally.
+And I know it's super hard to see, but there
+are a bunch of red lines over here and some magenta ones.
+Those are from the other portal that's in the classroom that
+are flipped and glued to the back of our local portal.
+So it's all in this local space and around this blue portal.
+We put some new stuff behind it and some new stuff in front of it.
+And so you may be asking yourself what the colors actually mean?
+Green here is representing a brush geometry, which most level editors, you
+can create walls and various shapes directly in the level editor.
+And at least in our terminology, we refer to these as brushes.
+So they're usually very simple convex shapes and super easy to deal with.
+And this bluish geometry is from what's known
+as a static prop, which is a model that somebody modeled in a model editor.
+So it's going to be arbitrarily complex, but it
+has to be made up of convex shapes.
+But we take a small snapshot of that and then carve it up.
+Sorry, I forgot to mention.
+So we call it a static prop because we are guaranteed it does not move.
+And that's very important because it's really easy to simulate things that
+don't move.
+They don't move.
+
+And the same is true of the red and magenta here.
+The red is the brush geometry on the paired portal side
+and the magenta is static props on the other side, which is mainly the desks.
+And as I'm looking through here.
+You can see just a small snapshot, and then you
+can see this magenta outline here of the desk mesh on the other side.
+It's important to know that that's not me looking at the mesh
+through the portal.
+That's the local space version and it just
+happens to line up the desk because we have to make sure everything lines up.
+Otherwise your physical interactions will seem weird
+if something is halfway in a portal and it's
+kind of not colliding with something or it's colliding with it wrong.
+As I walk through, you'll notice all the colors
+change because we switched spaces when I walk through in a second.
+So now all the colors are local space for this side.
+So, yeah, that is how we carve a hole.
+It's a very, very small area of the level that we carve a hole in.
+And so we're getting back to the volumes I showed you two slides ago.
+If we carve a small representation of the world,
+we have to know when the player is colliding
+with that versus the regular world.
+Because if they're colliding with the regular world,
+they're going to collide with the wall that's behind the portal
+and they're not going to go through it.
+So we have to use exclusively that carved version
+when they're close to a portal.
+And we do that-- we're using the same volumes I was talking about earlier.
+This is a 3D representation of them.
+And you'll notice that they have space--
+a large amount of space above and below the portal.
+That's important because it's a 3D space instead of a 2D space.
+So as I enter the yellow space, I still collide with the world.
+I still collide with all the desks and things.
+Because I'm still-- while I'm exclusively in the yellow volume,
+I'm still colliding with the world.
+I'm going to show you.
+It's a bad example, but it's the video I've got.
+I'm going to hit this chair behind this desk
+because it's still in the real world.
+And then as I transition into the green volume,
+I am exclusively colliding with our carved version of it.
+Which-- that was a bad frame to cut.
+If I happen to look back in the portal--
+which side is scrubbing?
+OK.
+Sorry.
+So if you happen to look inside the portal, you might be able to see it.
+There is-- I know it's super hard to see, I'm sorry.
+But we did carve a hole.
+There's no there's no geometry right here to stop us going in.
+And since we're exclusively using this new mesh,
+we're allowed to just go through that space.
+
+OK, so more importantly than static geometry, which
+doesn't move and is super easy to physically simulate,
+we have dynamic props and things that move.
+Specifically in this case, boxes.
+So the way we model this is very similar to how we did with geometry.
+We're going to be duplicating everything and I'm
+going to show you by walking in a portal.
+So this blue box that just appeared is my player.
+My player of physics object that's replicated from this orange portal
+to the backside of the blue portal.
+And this is using a system known as a physics shadow.
+At least that's what our system is.
+I'm not really a physicist.
+That's just what we call our representation of it.
+So I mean, I haven't dealt with many physics systems when I talk about that.
+So what a physics shadow does that's different
+than our rendering geometry is we're not allowed to actually teleport it
+from one frame to the next because if you teleport a physics
+object, then all sorts of interactions that intersect,
+they have no previous basis to go from.
+Of like how to solve that.
+They can't rewind time because they've suddenly teleported
+into an interpenetrating space.
+So all of our physics objects--
+we give them a target of where they need to go.
+Sorry not all of our physics options are shadows.
+So just like the player volume and just the examples I'm about to give you.
+We told them where we want them to go and they try their best
+to apply forces and rotations to go there, but if it doesn't work,
+we're kind of SOL and they do their best.
+So I'm replicating that for the player over there.
+And we're also going to replicate it for the cubes in a second
+once I get around to placing them.
+And so it's important to note that we're not really
+solving the discontinuity in space because that
+would be way too hard, at least for a person of my skill level.
+What we're doing is we're saying each side has--
+this cube over here is the master of it's physics and this cube over here
+is the master of its own physics.
+And this cube over here is just trying to replicate
+whatever this guy is doing.
+So they don't quite line up, but they work well enough.
+And in game development, good enough usually goes a long way.
+So as I'm using it, you might notice they don't quite work super well,
+but you can see that I've got this representation over here.
+I'm pushing it in my virtual version and it's all lining up kind of.
+And, yeah, that's how we do it in Portal.
+So I'm going to go ahead and tell you that I'm really glad that we
+didn't have levels with more than two cubes because if you try to do this
+with a train of cubes-- three or four--
+it breaks down horribly.
+And this last little bit is me just showing you
+that we're not intersecting with anything in the back of it
+because we're not inside the green volume or the yellow volume
+because we're behind the portal.
+It's really important to manage your lists of what can interact with what
+when we're faking holes in space and overlapping space.
+I spent a whole lot of time on this.
+And I think that is the end of our physics material.
+So we had some more miscellaneous filler material,
+but it looks like we've ran over a little bit of our initial time.
+So we're going to open up to Q&A now.
+We might get to our miscellaneous material later.
+But, yeah, if anybody has got questions, now would be a good time.
+
+AUDIENCE: Could you talk a little bit about how lights interact with portals,
+or just lighting on objects and, like, will you get shadows from the portal?
+DAVE KIRCHER: So originally, I had a slide on that.
+TEJEEV KOHLI: The question was about lights.
+DAVE KIRCHER: Oh, sorry.
+Yes, sorry.
+The question was how lights interact with portals and shadows and things.
+So I'm going to preface with saying that most of this stuff I did a decade ago.
+So if I say something that's not true, I'm not trying to lie.
+I just don't remember it.
+So basically there was a time during Portal 1
+where we tried very hard to make light work through portals
+and we kind of settled on a cheap solution.
+Where we would define a point barely in front of one portal,
+see what lights were projecting what amount of color on that,
+and just kind of make it a massive sphere on the other side that
+would kind of do that.
+So the downside was is that you only noticed it
+in cases that were very high contrast, which is also the case in where
+it was the most broken.
+So we just don't do it.
+TEJEEV KOHLI: On Portal 2, we tried for a while
+to have the portals themselves project light on things
+and that was also kind of broken for a while.
+And then we just took it out.
+DAVE KIRCHER: Yes, so we just punted on that one.
+Too hard.
+TEJEEV KOHLI: Any other questions?
+Yeah, sure.
+AUDIENCE: What were the performance implications
+of having to draw on that stencil buffer multiple times?
+DAVE KIRCHER: So the question was what were the performance
+implications of having to draw multiple scenes with the stencil buffer.
+So it's very analogous having to just draw a more complex scene.
+You're just drawing more quads and things.
+On one of the slides in our miscellaneous section--
+you know what?
+Why don't I just go ahead and jump to it?
+
+So it's very important.
+So when we're rendering things in a 3D space,
+we have what's known as a frustum.
+It's kind of a pyramid, which comes out from your camera.
+And you can use it as a very quick test to see if you should even
+bother rendering something at all.
+So I've got--
+I'm going to use my side--
+my sides.
+The sides are defined by the screen itself.
+So the screen that you're drawing has a top, has a bottom,
+so those project into space.
+So we take our one side we can say, OK, if an object is completely
+on the other side of this plane, we don't even
+need to bother trying to draw it.
+We can just skip it.
+And so one of the optimizations we have in Portal
+is that every time you look through a portal,
+we can find the frustum to a smaller space.
+I took the easy route in that I kept it as an object that
+still had four distinct sides.
+So sometimes it's a little bit broken.
+But in this case, you can see--
+in this case, you can see I'm looking through a blue portal
+at this little button here.
+And I've got this-- it's probably impossible to see,
+but I've got this mesh coming out.
+This is the updated frustum of everything we try to draw.
+So you can see it mostly just encapsulates a little bit of level
+and the button itself, and that helps us not even attempt to draw
+the complete scene over and over again.
+But I don't think I ever did a performance analysis,
+so I can't give you concrete numbers.
+But it was better than trying to draw the entire scene over and over again.
+Because since we still had the depth buffer on our side,
+we had already drawn most of the screen.
+And then we also had the stencil buffer telling us
+not to even attempt to draw most of the pixels.
+It was not nearly as bad as trying to render the entire scene.
+But we did find that for the graphics cards of the day, which not even
+all of them supported stencil buffers.
+Some people that played Portal 1, they got textures.
+We found it was best to just limit to two recursions
+because we could do our depth, or we could do our recursion fake
+and it worked pretty well.
+And I don't think it was terribly expensive
+even for the cards of the day.
+TEJEEV KOHLI: I know there were cases during Portal 2
+when we were trying to make it work on consoles,
+there was a lot of proof tests.
+There were four cases, especially in co-op,
+when you're playing in split-screen with four portals on screen at the same time
+all looking at each other.
+It's like 16 views being rendered of the entire world at the same time.
+And there were these like weird edge cases where like,
+if you do that, you get two frames per second.
+Just don't do that.
+[LAUGHING]
+
+There was a few things in levels that had changed where--
+like the corner case was the worst.
+Where if you have a wall like that and you
+can put a portal right next to each other on both sides of the corner.
+So we had a couple of cases where we had to actually change the levels
+to not have those cases.
+So you can't play--
+so we just moved the corners apart like 16 units or whatever.
+So you can't always see both portals through both the views.
+So there was stuff like that we had to work through especially
+for consoles back in the day.
+Like we were working on PS3 360s.
+I'm sure now it's better, but it's been a long time since we've done that.
+DAVE KIRCHER: If I remember correctly, using stenciling
+was strictly less expensive than using textures,
+because you're still going to draw the same amount of geometry,
+but you have no texture cost whatsoever.
+Hopefully that answers most of that.
+
+AUDIENCE: How did you cover all of your bases for each level,
+so that a player could never get stuck?
+In the sense that if you fell off a cliff
+or maybe accidentally erased a portal, you could always find a way to go back
+or to keep progressing forward?
+TEJEEV KOHLI: The question was about how we
+covered our bases to make sure the players can't get stuck in levels
+if they do something bad.
+Mostly through play testing and then later on through bug testing.
+It's a lot of just trying to make sure that you can see parts of the level
+from different parts.
+Towards the later process of when we're getting closer to shipping,
+we do something called the greasy pig pass for the levels.
+Where we make sure the players can't literally get stuck on walls and stuff
+as they're walking through them.
+So we have a bunch of invisible geometry there
+that'll make smooth the collisions along stairs and along--
+because especially in Portal 2, there's a bunch of these broken pieces
+and a bunch of foliage and broken parts of the levels
+that are tilted at weird angles and stuff.
+And it's like for the most part, we left them as is.
+But a lot of cases we had to go in and put invisible stuff
+everywhere to make sure that the wall might
+look like it's broken up into like 15 different pieces,
+but the player's just colliding with a flat plane.
+It's to make sure that those things don't happen where
+the players don't get stuck in spots.
+And there's also a bunch of level design work that goes around and making sure--
+because we have to take care of the opposite as well, right?
+We have to take care of, well, we've got to make
+sure the player can see the exit portal from the start of the level
+so they can't just portal and portal and get to the end.
+And so doing that process helps with what you are asking as well.
+Because if you can make sure that the exploits aren't there,
+you're also getting rid of cases where the player can get themselves
+in a bad spot.
+And so it kind of works itself out through the course of development.
+You don't go in starting to make a puzzle
+or making a level with that in mind a whole lot.
+But as you start refining it, things get tweaked and things get tuned.
+Some things you might be have to tweak for like port reasons.
+Like this doesn't work on PS3.
+So you got to go, OK, I got to fix this and tweak the puzzle a little bit.
+But then once you tweak the puzzle, now you've
+got to do the whole testing all over again.
+Because all right, I can't just put a portal place on there
+because now you can solve the puzzle without doing any of it.
+So there's a bunch of work that has to go on from that sense.
+DAVE KIRCHER: And it's important to note that as we
+get closer to shipping a product, more and more of our dev team
+switches to play testing.
+And we have some very smart and mischievous people
+that that specific question of how do you make sure you don't get stuck
+is on the checklist.
+It was on my checklist at least of, like, I am
+going to make sure I can't get stuck.
+I'm going to sit in this level for about half an hour
+and think long and hard about how to get myself stuck.
+And if I can't do it, then pass.
+[CHUCKLES]
+
+AUDIENCE: Was there anything that you would have liked to have pursued,
+but didn't, due to either time constraints on shipping
+or the limitations of graphics cards of the day that you thought about,
+but for whatever reason, couldn't do?
+DAVE KIRCHER: The question was was there anything
+that we didn't pursue for various reasons before shipping?
+And I can't think of anything.
+I think I was pretty happy with what we produced.
+Most of the things I focused on were bugs
+that we shipped because once again, getting back into shipping mode,
+as you get closer to shipping something, you
+want to touch the code less and less and less.
+Even if you know that the fix is going to work 100%, it will definitely work,
+it might break something new.
+So I certainly have a small list of things that I wished I had fixed,
+but nothing that I wish I--
+AUDIENCE: Basically, like, features like the sticky paint, for example.
+DAVE KIRCHER: Yeah, yeah.
+Yeah, I can't think of any features that--
+TEJEEV KOHLI: There's stuff that we worked on that
+obviously didn't ed up shipping.
+Some of them we touched on over here.
+I don't know if sticky paint was something
+that we should have worked more on, though,
+because I feel like we spent a lot of time trying to get it to work.
+And the reasons for cutting it then are still valid now.
+So I'm saying if we were to go back, I don't think
+we would try to solve that problem.
+We'd probably come up with new problems to try to solve.
+We did have-- like another thing we tried
+was I think we tried it after the game shipped for like a DLC expansion was
+reflection paint.
+So it was paint that would reflect the different elements of the games
+like reflect lasers or reflect light bridges.
+And we didn't get too far with it.
+Again, it leads to a bunch of weird levels
+because you have to have all levels have angles.
+Because if you think about Portal, most of the levels
+are like 90 degree walls and stuff.
+And 90 degree reflections don't go anywhere.
+So we had to have--
+make this super contrived looking levels with these weird 45 degree angles
+everywhere and they can reflect things.
+And then all the problems like, well, how often--
+how many bounces do we allow and things.
+And also stuff just looked weird, like tractor beams reflecting off
+of walls just looked weird.
+There's probably other ideas that I can't remember right now,
+but there are--
+a lot of them get cut short pretty quick because the flaws are really apparent
+pretty quickly.
+You might sit down and think, oh, this is a great idea.
+I'm going to go out and work on it.
+And then as you start working through it and testing it out with others,
+you start seeing all the problems.
+And those problems get apparent pretty quickly.
+And at that point, you make the call.
+Just be like, this is not worth pursuing anymore.
+We had some more game modes we were trying to work on.
+I think we had a competitive mode for a little bit we worked on.
+DAVE KIRCHER: We actually have a slide about that for a little bit.
+It didn't get fleshed out.
+But after Portal shipped, we immediately said
+to ourself what does multiplayer look like?
+And so the first thing we tried was deathmatch.
+Turns out that's a horrible idea.
+Everybody wants to just put portals under other people's feet.
+So you spend most of your time just completely disoriented or confused.
+And then I think we made a collect the coins kind of like,
+oh, do flings and things.
+But once again, everybody wanted to put their portals
+under other people's feet.
+So now we have co-op.
+TEJEEV KOHLI: The co-op was very successful, I think.
+And there's a bunch of other challenges that come
+with co-op that we had to work through.
+I think, yeah, we tried some more different competitive modes.
+We tried a time trial kind of mode, but they're doing it together.
+But that's effectively just playing two single player games at the same time.
+So there's not much interaction.
+Any time you let players interact in a competitive way in Portal,
+they just want to put portals on their feet.
+That's really all they want to do.
+It's fun for a bit, but not as the receiving end, right?
+It's not fun-- or they just want to keep bumping each other's portals.
+Like when they want to put their portal at exactly where the other guy's
+portal is.
+Like they walk in and they go in there instead
+of where they were supposed to go.
+It's fun for a bit.
+I'm not saying there's no merit there.
+DAVE KIRCHER: By "a bit," I think he means about five minutes.
+TEJEEV KOHLI: Yeah, by "a bit," that's the thing you look at, you're like, ah,
+that's funny.
+But then you realize there's no real--
+at least in the mechanics we tried, there wasn't much depth to it.
+It's not something you could flesh out for a game mode.
+It's more of something you could do as a level--
+as a gimmick once.
+But then there's not much reason to do that.
+The cost of doing that is really high, so you have to figure out
+do you want to spend a bunch of dev effort
+in making this gimmick that's going to get really old and lots of people
+are going to get annoyed or frustrated?
+So you just don't do that.
+In the back there.
+AUDIENCE: You mentioned that you could cache some stuff--
+things in the pipeline for some of the lighting plots--
+earlier.
+I'm wondering if there were any other kind of hardware hacks
+that you do in order to keep the targets that you want for the portal behavior?
+DAVE KIRCHER: So the question references how there were some pipeline
+restraints on the pixel queries.
+And if there were any hacks that we had to do to meet performance,
+I believe yes.
+TEJEEV KOHLI: And any other stuff we did.
+
+DAVE KIRCHER: Once again, I'm going to have
+to say that I did most of this stuff 10 years ago.
+I can't think of anything off the top of my head.
+There wasn't a whole lot.
+TEJEEV KOHLI: We did stuff with the paint.
+I don't know if we did a bunch of hacks, but one
+of the big hacks on the paint that we did was the paint that you're seeing
+is not the paint that's doing the painting.
+
+So I mean that's, like, nobody can tell.
+That's pretty good.
+But especially on multiplayer, the paint that the client is seeing
+is not the paint that the server is seeing.
+Because we couldn't transmit all that data,
+so they're both generating their own data.
+But then the server is the only one doing the actual painting,
+so all the blobs that the client is hitting in the world do nothing
+and the server blobs do the painting and then tell the client paint over there,
+paint over there.
+So that's the kind of thing-- because the network bandwidth is pretty limited
+and there's a lot of paint flying through the world.
+So we couldn't just transmit all the paint all the time,
+so they all generate their own paint.
+Blobs that are through the world, and then the painting
+itself happened on the server and then that gets transmitted.
+But the paint flying through the air is different on everyone,
+but it's random enough that you can't really tell.
+
+AUDIENCE: Is Half-Life 3 going to have portals?
+TEJEEV KOHLI: I don't know.
+DAVE KIRCHER: No comment.
+[LAUGHTER]
+Probably not.
+In all seriousness, after the initial Portal came out,
+one of the other experiments was not only what does multiplayer look like,
+but how fun is this in a Half-Life environment?
+And it turns out that the way that Half-Life is made,
+there are a whole lot of slightly scripted sequences to make things work.
+And so the way those levels are designed are
+fundamentally different than Portal levels
+and they basically just break down.
+So if there were portals in Half-Life, then Half-Life
+would seem a lot more like Portal.
+TEJEEV KOHLI: If you think about a Portal level, it's pretty constrained.
+The sight lines are pretty constrained.
+The level takes place in a box.
+You can't see really far.
+There's a lot of kinks in the walls so you can't see all the way to the end.
+Half-Life levels aren't designed like that at all.
+So you would just go in a level and make portals all the way to the exit
+and then skip all the game play.
+I mean there are probably mods that allow you to do that,
+but I think the games themselves and the mechanics are fundamentally
+different enough that I don't think they interact really well.
+Unless both of them change or one of them
+changes a lot so it's no longer the game you wanted.
+
+I think you were up first.
+Yeah.
+AUDIENCE: You mentioned that you had done, like, a student game project
+before you got hired by Valve?
+What was the story there?
+TEJEEV KOHLI: So the question was asking about our student game projects.
+So Dave worked-- we both went to a school in Redmond called DigiPen.
+Dave went there before I did.
+DAVE KIRCHER: I graduated in 2005.
+I worked on a game called Narbacular Drop.
+Which if you Google for it, it will be the only result
+because the name was chosen so that would be the only result on Google.
+If you could spell it, good luck.
+And so that was our senior project at DigiPen--
+my team at the time.
+And so we ended up through a very convoluted long story showing
+that at Valve, and they hired us on the spot
+to basically recreate those mechanics for them.
+And that was actually-- there wasn't a whole lot
+of confidence at the time that would actually ship, but it became Portal.
+So it seemed like a good thing.
+TEJEEV KOHLI: Yeah, and I was part of a team that made "Tag--
+The Power of Paint," the video I showed with a paint gun, and that
+was our team's junior project at DigiPen.
+And same thing, Valve saw it a couple of times
+and hired the entire team to come work on that mechanic at Valve.
+And then once we got there, it became obvious to try to integrate it
+into Portal 2 and that's how we start working on Portal 2
+and that's how the Portal 2 gels came about.
+
+AUDIENCE: The paints and gels which were introduced as a mechanic in Portal 2
+ended up being part of the story as well.
+Can you talk about how some mechanics end up affecting the story
+and how story elements end up affecting the mechanics?
+TEJEEV KOHLI: The question was about how the story and the game mechanics
+interact and how one affects the other.
+So the way at least in Portal 2, and I think Portal 1 was very similar.
+The way it kind of works with Valve is we don't really
+have an overarching design for a design doc for the game before we start.
+It's a lot of smaller things that we try to combine using similar techniques
+like what we discussed today.
+And the story kind of builds us out of using the same techniques.
+Because the way we kind of vet out most of our design decisions
+is by play testing.
+And the story follows a very similar plot but you don't really want one--
+either one to override the other.
+Because if you see the game, like if I make a bunch--
+if we have a team that made a bunch of puzzles
+for the game that haven't been very play tested.
+And then the writer comes in and does a bunch of writing for it
+and then you realize three weeks later that half these levels aren't shipping
+anymore because they didn't test well, then
+you made a bunch of dependencies that didn't really work.
+Portal was lucky in that the puzzles themselves are compartmentalized
+as you enter the elevator.
+Or you exit the elevator, you do a puzzle, and enter the elevators.
+So they're all pretty compartmentalized.
+And a lot of the writing that was done for it was essentially just jokes.
+So a lot of those jokes do fit in to most of the puzzles.
+So the puzzle can change and the joke can just be inserted into it.
+But for the overarching story of the game,
+I think that required a lot more collaboration.
+So the writers were on-site.
+They were Valve employees and they were sitting in the same room
+as us watching us play test, bouncing back and forth ideas.
+And we used-- we had GLaDOS for most of the game.
+And the voice artist was local, so we had her come in many times
+and record a bunch of lines.
+We also used some like fake online robot voice for a while,
+but those are hard to judge because the play testers almost
+never laugh at those jokes.
+Because the robot always doesn't really know how to speak them.
+But it sounds like a robot so it's not it's better than nothing.
+It's better than just putting text on the screen, which we also
+did for a while.
+So with the writing, there's two things that you're trying to test, right?
+You're trying to test out the individual's jokes, and a lot of them
+can be transported to any level.
+So they're not super dependent on the levels.
+But then once the story starts coming together
+and starts taking shape, at that point you're making changes to the levels
+to accommodate the story.
+And from that point on, you have to have a pretty good amount of confidence
+that these particular levels are going to ship in the game.
+And so that that starts happening I think fairly late
+into our dev cycle at least.
+There's always an overarching goal.
+There's always a goal of you're trying to capture Wheatley
+or you're trying to go kill GLaDOS, but the exact mechanics of how that happens
+doesn't come together until fairly late.
+Because you don't want to spend a bunch of time integrating
+your story and your levels without having a bunch of confidence
+that these levels are actually good enough to ship.
+Which we do have for a bunch of the game,
+but as new levels and new mechanics are being introduced,
+it all kind of goes haywire.
+So it's just mostly a pretty strong collaborative process
+between the writers and the designers and it all
+goes back to the play testing.
+
+AUDIENCE: Can you talk a little bit about how
+the sound interacts with portals, like in 3-D positioning
+of the audio sources?
+DAVE KIRCHER: So the question was how sound interacts with Portal.
+And my memory's a little fuzzy.
+I'm pretty sure we tried to replicate a little bit using
+just a simple-- basically the exact same solution as with our lighting.
+Where it's like we have a sample point in front of a portal and we
+have an emitter on the other side.
+I can't remember if we shipped that way.
+TEJEEV KOHLI: I think we did.
+DAVE KIRCHER: Yeah.
+TEJEEV KOHLI: I think there's a microphone or in-game microphone
+and an in-game speaker on the portals on both sides.
+So if you're on this side of the portal, you'll
+hear what's happening on the other side.
+Pretty sure that's how we shipped.
+DAVE KIRCHER: Yeah, but I don't think we made any special concessions
+to make it seem like it was going through a tunnel or anything like that.
+We just wanted to make sure you could hear what was going on.
+TEJEEV KOHLI: Not through the portals specifically.
+I know there was a bunch of stuff we did for the tractor beam.
+Like when you head to the tractor beam, it
+kind of fuzzles everything else around you and muddles the sound a little bit.
+But going through the portals themselves,
+I don't think there's anything specific we did there.
+At least not that I can-- it's been a long time.
+DAVE KIRCHER: It's been a long time.
+
+AUDIENCE: What were examples of puzzle games
+that inspired you when you making your games?
+TEJEEV KOHLI: Uh, Portal.
+[LAUGHING]
+
+The question was, what puzzle games inspired us
+when we were making our game?
+
+DAVE KIRCHER: I can't think of a strong inspiration.
+I'm mostly a code guy, so I didn't do a whole lot of the actual puzzle design.
+But when I'm thinking back, we didn't have a whole lot of sources
+to draw on because it was a fairly new concept in general.
+I can't think of any sources I drew on.
+I mean--
+TEJEEV KOHLI: I wasn't kidding when I said Portal.
+When we were making Tag, I think Portal had come out a year
+or two earlier before that and was really good and a big success.
+And we were trying to learn from how they were
+teaching the players different things.
+And that's one of the biggest things we took away
+in our student game was how do you teach players different mechanics?
+And I think Portal did a really good job of that.
+By teaching by doing instead of by showing.
+So like the players doing all the stuff and then
+figuring it out instead of someone showing a video
+or just telling the player, hey, here's what do you do next, and then go
+and doing that.
+So we tried to take that at heart, and as we
+were doing in our game introducing new paints and new mechanics,
+doing it the same way where we introduce them in a way
+that the usage is obvious enough that the player will try it out.
+And when they try it out and it works, they feel really good about it.
+Because they feel like they figured it out instead of us doing all the work
+and showing them what to do.
+So a lot of that kind of was a specific thing that we took from Portal
+and trying to do it in our game.
+
+AUDIENCE: How many people did it take to create these two games, Portal
+and Portal 2, across the different functional units--
+development, writers, and the rest?
+TEJEEV KOHLI: So the question was about how many people
+it took to make Portal and Portal 2.
+Portal 1 was a pretty small team for the most part.
+DAVE KIRCHER: So Portal 2 started as the seven people that worked on--
+TEJEEV KOHLI: Portal 1.
+DAVE KIRCHER: Yeah.
+Sorry, Portal 1 started with the seven people
+that worked on Narbacular Drop directly transplanted.
+And then we started working fairly early with two writers.
+And we were leveraging other people at Valve
+to answer questions and help us hit the ground running as far
+as how to use the engine.
+But it was mostly just those nine people working day to day.
+And then Portal 2 ballooned quite a bit.
+TEJEEV KOHLI: Portal 2 was a much bigger team.
+By the time I joined Valve in 2009, I think there was already
+a pretty big Portal 2 team.
+They already had a field the mechanics figured out.
+The game was pretty different from what you see now, but at that point
+it was already maybe 10, 12 people.
+And then like it slowly increased.
+Like we were four or five that got hired for our paint game.
+So we joined that team.
+And then I think by the end of it, there were probably
+close to 40, 50 people working on it.
+That was towards the very end because we had to ship on two consoles and PC
+and we had a whole co-op mechanic.
+And there was a whole co-op campaign be worked on separately
+as well as a single player one.
+So it was a pretty big team by the end of it.
+Much bigger than Portal 1.
+And the game itself I think is much bigger than Portal 1 as well.
+I think the single player campaign itself is probably
+more than twice as long.
+And the campaign-- the co-op one is probably also that big.
+DAVE KIRCHER: I remember in Portal 1 we would have to do frequent integration
+testing and I think I got my play time on Portal 1 down to like 45 minutes
+and Portal 2 is several hours.
+TEJEEV KOHLI: Yeah.
+So it's a much bigger game, so it took a lot more people.
+
+AUDIENCE: How does the game engine that you used compare to Unity?
+Is it more straight-up C programming from scratch,
+or is it a lot of the drag-and-drop stuff you see?
+TEJEEV KOHLI: So the question is how did our game engine
+compare to something like Unity.
+For both Portal and Portal 2, we used Source,
+which is our in-house game engine.
+And it's very different from how Unity works.
+So the way Unity works is mostly like a really big editor.
+Like what you're seeing in the editor is the game essentially.
+Like all the entities and stuff are loaded.
+Obviously more stuff gets loaded at one time.
+But what you're seeing is what you're getting.
+Whereas the way Source works is it's got a bunch of these discrete tools that
+make stuff.
+So there's a level editor, which is where you make your level.
+And then you import that into the game and you run the game separately.
+And what you're seeing in a level editor is not what you see in the game
+because a lot of the entities and stuff don't translate to the editor.
+A lot of the lighting and stuff has to be pre-baked.
+Unity has some pre-baked lighting as well.
+But in the way it worked in Source--
+Source I think is a combination of a bunch of discrete tools
+for each different aspect of the game.
+So I get a separate particles editor, separate model editor,
+separate editor for VO and the face poser, and the separate level editor.
+And then there's a game engine that takes the compiled versions of all--
+compiled outputs of all those things and then puts them in the game engine
+and combines them together.
+And then all the code is pretty much exclusively C++.
+I don't think there's really anything else.
+There might be a couple a handful of things that are not,
+but all the tools are C++.
+All the game engine all the runtime code is all C++.
+Source 2 is a little bit different, but still going forward on that front,
+I'm not trying to do what Unity's doing.
+Because Unity is more of your running scripts--
+C# scripts-- and then you're just compiling them while the editor's going
+and the rapid iteration and stuff.
+Source doesn't really have that same model of working.
+But the advantage is that we control all of it
+and then the ceiling for what we can produce
+is theoretically quite a bit higher.
+So there's tradeoffs to it.
+And also we make all our tools and all our engine stuff in-house
+and we're the primary customer for our games.
+So we're not trying to do what you Unity is
+doing and trying to service to anyone out there who wants to make anything.
+And Unity has thousands of people working on their engine
+and we have quite a few orders of magnitude less.
+But I think we are aware of all the tradeoffs we're making.
+
+We're not trying not to do what they're doing.
+We're just seeing-- and we're learning from them, too,
+and Source 2 has taken a few cues from stuff like Utility and stuff
+like Unreal.
+Trying to be more user friendly even to our own customers, internal employees.
+But it's not like--
+the way of working is very different between Source and Unity.
+
+I think we're good.
+All right, well, thanks again for having us.
+[APPLAUSE]
+
+COLTON OGDEN: Thank you all so much for coming.
+So there's some extra pizza outside, but that was Portal Problems.
+So thank you very much.
