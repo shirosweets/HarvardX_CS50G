@@ -1,0 +1,1882 @@
+[MUSIC PLAYING]
+
+DAVID MALAN: All right.
+Welcome to Introduction to Game Development.
+My name is David Malan, and this is Colton Ogden.
+And this is a class that assumes only a class like CS50,
+which is the colleges and the extension schools introduction to computer
+science but more generally we just assume
+that you have prior programming experience in most any language
+and therefore have some comfort with some
+of the basic constructs of programming.
+But we assume no background in Lua or Lab 2D or any of the frameworks
+that we'll be using in the class.
+All of that lies ahead.
+So, if you're like me, you probably grew up with video games of some sort.
+And when you maybe started programming, the programming environments
+were perhaps very text based, black and white terminal window, and the like.
+And maybe you did something graphical with a language like scratch or Alice
+or beyond, or if you're in the world of the web,
+you've made more graphical applications of some sort, but still pretty static.
+The sort of content comes on the screen, then the content changes, and so forth.
+And it's a little less obvious if you're a little newer to programming
+how you go about creating some of those games
+from yesteryear with which you all grew up,
+where there's a lot more animation, there's a lot more asynchronicity,
+lots of things happening at the same time.
+A lot of events happening, and you all NOT--
+not only want to capture this interactivity,
+but also want to respond to events that are
+happening, especially if you have players
+elsewhere next to you or online.
+And so the way the course will be structured
+is through a narrative of these various games, many of which
+you might have played yourself.
+But over the course of the semester, we dive
+into the context of each of these games and look
+at some of the underlying principles, the constructs via which
+they were built up, and really use them as a point of departure
+for talking about those various capabilities
+that you might integrate into your own games.
+And then punctuating the semester, ultimately,
+will be a number of milestones.
+Some in the form of smaller assignments that are meant to reinforce just some
+of the more recent material and sort of set you up for success when the course
+is deeper and more hands on projects. , Because indeed,
+the project is where you'll build or extend some of your own games.
+And then the class itself will culminate at the very end of the semester
+with your very own final project, an opportunity to propose,
+to design, and implement a game that somehow or other draws
+upon the course's lessons.
+So that when you walk out of here in just a few months' time,
+you've not only played your fair share of games,
+but have actually built several of your own.
+So without further ado, allow me to turn things
+over to Colton for a look and a stroll through yesteryear's Pong.
+COLTON OGDEN: Thanks, David.
+I'm very excited to begin teaching you guys this course
+because game development was actually what got me
+into programming in the first place.
+I remember back in 2006 or 2007 buying this book here,
+3D Game Programming All In One, which was a look through 3D game programming.
+And it was a monolithic text in the context of a game engine
+that was popular in the late 2000s called Torque.
+It's not as in vogue these days, but it at the time was pretty popular,
+and it used a language called TorqueScript.
+And I remember reading through this book and seeing all this code,
+and I had never seen like source code at all before,
+or had ever been introduced to programming.
+And, frankly, I found it quite intimidating,
+because I was looking at all the syntax that I didn't understand,
+and I didn't know anything about game development.
+I had always played games growing up and been fascinated by it,
+but as I started getting more comfortable with computers
+and I started to get more curious about it
+and realized that it was a major profession,
+I started to dive a little deeper.
+This was my first foray.
+And after spending a little bit of time away from it
+after looking through the source code for a TorqueScript, which
+was rather arcane, a lot of percent symbols and dollar signs
+are the weird things that I just hadn't gotten my mind around.
+I went back to it, started to really learn the basics of programming
+and other languages, like Python and c and c++,
+and I grew to really like programming and computer science a lot.
+And here's just an image of what Torque looked like at the time.
+It was really the sort of predecessor to Unity nowadays.
+Although, in my opinion, Unity does things a lot better.
+It was more accessible, it uses languages that are more in vogue
+and popular and used by other people already in other domains.
+
+And so we'll be covering Unity at the tail end of the course.
+So we'll be covering predominantly 2D game development.
+But the topics that we'll be covering today
+as we get started in the context of Pong are these bullet points here.
+Lua, which will be the language that we're using predominately
+throughout the course, which is a dynamic scripting language very
+similar to Python and JavaScript.
+We'll be covering LOVE 2D as our primary game framework, which
+is a runtime and a framework which exposes all of its methods
+for drawing, audio, input, etc.
+via Lua, so that it's very easy to write code very quickly,
+but get very good results.
+And the documentation for their framework is superb, in my opinion.
+Today we'll be talking about a few just basic principles
+as we get our feet wet with game development.
+Things like drawing shapes, drawing text,
+these are both very big aspects of Pong, which
+is just a very simple game based on shapes and text
+moving around the screen.
+We'll be talking about Delta Time and Velocity, which Delta Time is probably
+arguably one of the most important variables
+that we keep track of in any game framework or engine, which is just
+the amount of time that's elapsed since the last frame of execution
+in our game, measured in LOVE 2D in terms of seconds, fractions of seconds.
+We'll be talking about game state, because you
+can have a state in your game.
+You can be at the title screen, you can be playing, you can be in a menu.
+This will, obviously, be very important because you want different update logic
+and rendering logic depending on what state you're in.
+We'll be talking about basic object oriented programming,
+for those who might be unfamiliar coming from C.
+It's basically a way of encapsulating our data, any of our game objects,
+in such a way that the variables that are relevant to them
+are put together, along with functions that will operate on that data.
+So instead of having like 20 different variables for all
+these different objects that you have to keep track of in your code,
+each individual object can keep track of all its own information,
+like its position, or anything else that's relevant to it.
+We'll be talking about hit boxes today, predominantly,
+in the context of box collision, because we'll
+be talking about Pong, which is just paddles and a ball.
+Those are all rectangles.
+And they'll be colliding with what's called axis aligned bound--
+axis aligned bounding boxes, which makes calculating whether two boxes collided
+very simple, as opposed to calculating rotated hit boxes,
+which is a bit more complicated.
+And then, lastly, we'll polish off with sound effects,
+because adding that polished layer, in my opinion, is important
+and it ties it all together and makes it feel like a more cohesive whole.
+So two important things that we'll need to do when we're following along
+with the examples, which I'll show you a link to the repo in a moment,
+is getting LOVE 2D installed.
+It's a very simple process.
+The first link here is just a download link.
+So it's available for all major operating systems.
+So Linux, Mac, and Windows.
+And then the Getting Started link down here below
+will give you some tips as to how to get started,
+actually running it on your machine on Mac, iAlias,
+the actual runtime executable within the app that it comes with.
+So in my bash profiles that I can easily just type love space
+dot in any directory that has a main dot Lua file,
+and I can run it anywhere very simply.
+And there are similar instructions located on the page for other operating
+systems.
+And this is the repo here, which has all of the source code
+that we'll be using today.
+And I've structured it in a series of 13 different subrepos
+so that you can follow along and we can build upon Pong starting from scratch,
+going all the way to a fully implemented game.
+So the first thing we'll talk about is what Lua is.
+We'll be using Lua for about 75% of the course.
+It's a very popular dynamic scripting language.
+Portuguese for moon, and it was invented in the early 90s
+as primarily a config language and a runtime language
+for compiled code bases to save time on adding code to those code bases
+and recompiling them.
+A lot faster and a lot easier, especially in the context
+of the 90s when computers were much slower, to expose
+the core functionality of your application to Lua so that you can just
+run it dynamically and then interact with your compiled code on the fly,
+rather than having to recompile and wait minutes,
+potentially hours, just to get some new behavior.
+It's a language that's focused around the concept of a table.
+Almost everything in Lua aside from basic variables, are tables.
+A table is essentially a dictionary in Python or an object in JavaScript.
+Very similar.
+Intent, for embedded use in larger applications,
+and the very nature of Lua intended to be
+used in the context of these large applications
+meant that it was perfect for interacting with game engines.
+Because game engines are a perfect example of code bases
+that are traditionally compiled code for speed purposes.
+But it can be very cumbersome to have to add minor functionality,
+and then recompile it and potentially have your whole studio take hours.
+So we'll be using Lua and a compiled game framework, LOVE 2D,
+to allow us to rapidly develop.
+It's similar to JavaScript and Python.
+A little bit more so to JavaScript.
+And it's very excellent because it was initially
+intended as a config language, and a-- just sort of a glue layer.
+It's very good for storing data and code together, almost one in the same.
+So LOVE 2D is a fast 2D game develop--
+development framework.
+It's compiled in C++ and it runs very efficiently.
+Because it's so simple, despite the fact that we're running it in Lua,
+and as modules for basically anything you
+would need in the context of 2D game development.
+Only 2D game development officially, although some people I know
+are working on slight little 3D experiments, but nothing official yet.
+But it has graphics, keyboard input, math, basically, anything
+you could want in the context of 2D game development.
+It's completely free.
+It's portable.
+You can even run it on mobile and also the web.
+And it's excellent for prototyping, even if you don't necessarily
+want to publish a game in LOVE 2D, it's great and easy and fast just
+to whip something up in LOVE 2D, and then port
+that over to whatever framework or engine
+you might be using in the real world.
+So before we get into looking at some actual concrete code,
+I think the most fundamental thing we should take a look at
+is what a game loop is.
+So a game, fundamentally, is just an infinite loop, like a while true or a
+while one.
+Only in this case, every iteration of that loop we're doing a set of steps
+back to back over and over again.
+We're processing input so we're seeing, has the user pressed
+a key on the keyboard, have they touched their joystick,
+have they moved the mouse, clicked the mouse.
+If they have, we need to feed that into our update.
+We need to keep track of that, and then change anything in our game state
+that relies upon that input.
+So we should move our paddles, we should detect collision,
+we should register all of this, and then whatever has updated,
+we want to rerender that.
+We want to render it--
+render where it's changed so that we have the--
+we see on our screen, visually, that things have actually
+changed in our game world and we interact with it,
+and we get a sense that we're using something,
+interacting with something dynamic.
+And in the context of 2D games, the most fundamental way of looking at the world
+is via the 2D coordinate system, which is just simply
+as we learned in geometry in high school, x and y-axis.
+In this case, it's slightly different than what we typically learn.
+In high school, we tend to learn that the xy origins, sort of bottom left,
+y positive goes up, negative goes down, positive x goes right,
+and negative x goes left.
+But in this case, we're actually starting in the top left,
+and then it goes y positive down, y negative up, x positive right,
+x negative left.
+And everything that we want to draw in our game
+needs to have an x and y-coordinate to draw in order
+for it to be visually seen on the screen.
+So today's goal, we're going to start a fairly low level
+and work our way up through examples today and in future classes.
+Our first game is arguably one of the simplest,
+but also, one of the most famous games of all time, Pong,
+which was released in 1972.
+And the gist of Pong is you have a paddle
+on the left side of the screen, a paddle on the right side of the screen,
+whoever scores 10 points by getting the ball past their opponent's paddle
+onto the edge of the screen, wins.
+And so today in our lecture, the scope is we want to, first and foremost,
+draw shapes to the screen, because that's how we get our ball and-- ball
+and paddles rendering.
+And those are just simply rectangles.
+We want to control the 2D position of these paddles,
+because we want them to move up and down and want the ball to also move.
+We want to detect collision between the paddles and the ball,
+because that's how we get the ball to deflect off the paddles,
+and to deflect off the ceiling and the floor.
+And, also, how we detect whether it's gone beyond the edges of the screen,
+such that one player scores a point.
+And then we want to add sound effects for sort of a feedback
+and sort of put ourselves into the game a little bit more.
+And then scorekeeping, because ultimately the purpose of the game
+is to beat your opponent, so you want a way
+to see who has scored 10 points first.
+And so we're going to look through a set of examples now in the repo.
+If we look at Pong Zero, I've set this to be called, The Day Zero Update.
+It's a trend among many games to have the games release major content
+updates as the x update.
+So just to be cute, I think we'll call each individual example here,
+The Something Update.
+And so I'm going to go into the Pong Zero
+Repo of the directory, the GitHub repo.
+And if we're looking at Pong Zero here, we can see it
+says here, The Day Zero Update.
+I've commented everything fairly heavily so that we can--
+if you're reading the code, you can sort of get a sense of what's going on.
+At line 23, we're going to start off by just declaring
+a window width and a window height.
+And these are just constant variables that
+will be accessible throughout the rest of our application.
+So I'm just setting 1280 by 720 as an arbitrary resolution.
+It doesn't matter too much.
+An important thing that we need to look at here is that line 29,
+we're using a function called love.load, and I'm actually
+going to go back to the slides here.
+We're going to look at a few functions, and I'm
+going to go over them and just sort of tell you
+what they do before we look at the code in too much detail.
+So love.load is just a function that-- given to us by LOVE, LOVE 2D,
+and we overwrite it.
+We give it behavior, we tell it what to do.
+And LOVE 2D is going to look at it in our main.lua file.
+If we're looking at Pong Zero, you'll see it just has a main.lua file.
+LOVE 2D expects just a main.lua file, and will run the main.lua file,
+and you can reference any other file within the directory from that main.lua
+file.
+It's our bootstrap, effectively.
+We're going to override love.load with whatever
+we want to execute at the very beginning of our application.
+It's just a startup function.
+We can also define all that behavior outside of the function above it,
+but it's good practice to find it within love.load
+so that someone reading your code will know,
+OK, this is where all the startup code takes place.
+Love.update(dt) is a very important function.
+This function takes in a variable called (dt).
+Love passes it in a function.
+You're going to overwrite it with your own behavior,
+and Love is going to execute this every frame, passing it in delta time,
+and you can use delta time (dt) in that function
+to change your application based upon how much time has passed.
+(dt) will always be a fraction of a second, potentially more,
+depending on how slow your computer is.
+But, typically, one-sixtieth of a second.
+And you can scale anything in your game by that amount
+to get even behavior across all frame rates.
+Love.draw is the other big function amongst--
+between update and draw.
+Two of the two, arguably, most important functions.
+Love.draw is the function that we're going
+to define that has all of our drawing behavior, our rendering behavior in it.
+And that's where we can draw our paddles, we can draw our ball.
+And then update is where we can like change
+the paddles position and so forth.
+Two more important functions we'll take a look at in the first example.
+Love.graphics.printf is the LOVE 2D analog of printf and C. The difference
+being that this printf lets us actually draw physically
+onto the screen versus a console.
+We give it a text as a string, and an x and a y-coordinate and, optionally,
+a width and an align, and it'll will draw the text at xy,
+but it will also take into consideration the width,
+and it'll also take in consideration the align.
+The with is how much to align it, and the align is the mode of alignment.
+So if we say x is zero width, our window width, and then we say align center,
+it's going to go between zero and our window width and center align it.
+So that'll have the effect of center aligning our text.
+But we can just as easily say, right, and it will right
+align it between those two and have the effect
+of rendering the screen-- rendering the text
+along the right edge of the screen.
+And then lastly, love.window.setmode takes a width and a height
+and some optional parameters.
+Those parameters being things like V sync and full screen,
+and will actually set up our window and get it rendering onto the screen.
+And so if we go back to our source code here, it-- at line 29,
+we're overwriting love.load.
+We're passing in love.window.setmode, window width and window
+height, which recall we defined up above as 1280 by 720.
+We're passing in a table.
+This is the syntax for a table, these curly brackets.
+And the way that we define keys and values is just with an equal sign
+therein.
+So full screen gets false, resizeable gets false, V sync gets true.
+So it's going to not be full screen, it's
+going to be a not resizeable but it is going to be
+synced to our monitor's refresh rate.
+And that's where V sync is, short for vertical sync.
+And then on line 40, we're overwriting love.draw,
+and this has the love.graphics.printf function, they're in,
+and we're saying-- we're passing in the string, hello, Pong.
+We're starting it at x zero, we're setting it
+at y window height divided by 2, minus 6.
+Because the default font size in LOVE 2D is 12 pixels tall.
+So we're shifting it up by six so it's perfectly
+centered vertically in the screen.
+And then we're setting the alignment amount, the width, to window width
+so that it's going to align it within the entire width of our window.
+And now we're setting it to center alignment.
+So it's going to be center aligned within our entire window
+starting at x zero.
+And so if we go to Pong zero, and then we actually run it,
+it has the effect of doing this.
+We're just rendering in our default font, default size,
+hello, Pong, right in the middle of the screen.
+So not a terribly exciting example, but it
+is showcasing the most important functions of LOVE 2D,
+so that we can get started with slightly more interesting examples.
+So, our first content update, is the Low-Res Update.
+So we're developing Pong and Pong is an old game.
+It doesn't look like the example that we just looked
+at where the font is fairly high res.
+We want something that looks a little more retro.
+So what we want to do is get our resolution
+looking like it's from a game released in 1972.
+So what we're going to do is look at a few more important functions here.
+So Pong One has these functions.
+So love.graphics.setDefaultFilter.
+This function, the purpose of that, is every time
+we have a font or an image in our application,
+it's going to be applied a filter by default.
+So it's going to by default a bilinear filter.
+So what's going to happen, the effect of that
+is, basically, whenever we magnify or downscale a texture,
+it's going to think that-- it's going to assume
+that we want it to be slightly blurred so as to not look too pixilated.
+Which is good in certain contexts.
+For higher res 2D game development, that's good, but as we're going to see,
+that's not particularly good in the context of retro games.
+Retro games have a very 2D, crisp, pixilated aesthetic,
+and we want to preserve that.
+And so this lets us set a default filter.
+We'll see that in usage shortly.
+Another important-- very important function which is the input phase
+of our game loop that we saw earlier, love.keypressed(key) is what's going
+to allow us to start interacting with that aspect of our game.
+So love.keypressed(key) is a callback function that LOVE expects in main.lua.
+We're going to overwrite it.
+It gets passed in a key, and this function
+gets called every time by LOVE 2D whenever we press a key.
+It'll detect a key pressed, and it will call this function.
+Whatever we've defined in here, it will call it,
+and we can set it to take in certain keys
+and perform certain operations on that input and it will get a string.
+So if we say-- if we press the escape key,
+key is going to be equal to the string escape in that function,
+and we have access to that.
+And another important function, love.event.quit.
+This has just a very simple effect of quitting the application,
+though we can call it in the code as opposed to doing it ourselves.
+And so here's an example of what texture filtering looks like.
+Point filtering is the same as nearest neighbor
+filtering, which is what we're going to be using.
+Bilinear filtering is shown on the right, where it looks pretty blurry.
+That's what LOVE 2D applies by default to both fonts and to textures.
+
+And we'll see that in an example.
+I can actually run it in two different styles.
+So if you go to Pong One in the repo, and then we run it,
+we see here, hello, Pong is now blown up.
+And we'll look at some more code, actually,
+to see as to why it's blown up.
+But if we go back to our code, let me pull up Pong One.
+
+Go to main.lua, and then I'm going to explain this in just a second,
+but let me comment this out and we'll see the difference here.
+You can see it looks a lot blurrier.
+And that's the default texture filtering taking place.
+It applies, like I said, not only to textures but also to fonts.
+And that's not the aesthetic we want.
+So let's look at Pong One in detail, starting at the top.
+On line 28, we're acquiring a library.
+This is how you get a library in your LOVE 2D
+application, or your LOVE application.
+Just equals require and the name of the library.
+Push is what we're going to be using to take our 1280 by 720 window
+and turn it into a virtual resolution window at 432 by 243.
+We can start to think of our game in terms of a more low res feel,
+and think about it in 432 by 243 pixels, but still render it
+in a window that's arbitrarily sized.
+In this case, we're preserving the 1280 by 720 window that we saw before.
+If you go to our love.load function, we see this being used on line 47.
+Instead of love.window.setmode, we're now
+using push setup screen, the push libraries setup screen function,
+where it takes a virtual width, a virtual height, our regular window
+width and our window height, and then the same table as before.
+And this has the effect of setting up a window that's
+got our concrete dimensions of 1280 by 720,
+but a virtual resolution of 432 by 243.
+And so now, when it renders, as we'll see shortly, as--
+well, as we already did see, actually, it's magnified.
+It has the effect of giving us a lower resolution.
+And in line--on line 58, if we look at the love.keypressed function,
+we've put in there, if the key equals the string escape,
+then love.event.quit.
+So now we have input handling.
+We've overridden love.keypressed(key), which LOVE 2D is going to look
+for in our application, and then call as needed.
+And then we're just looking in there.
+If the key is escape, then love.event.quit.
+And if I run the application, I can now press escape on my keyboard
+and just quit it and not have to command quit or click
+the X on a Windows application.
+And we've changed one more thing, also, in the love.draw function on line 70.
+We're using the push library now.
+We need to-- it functions sort of as a state machine in that we
+set it to start rendering at a virtual resolution with push
+apply start, and then push apply end, and then anything in between,
+this is very similar actually to how Open Go works.
+We won't go into too much detail.
+But this is very similar in spirit to how much of Open Go programming works.
+Push apply start, push apply end.
+Between that, whatever we call, is going to render at this virtual resolution.
+And so we are calling the same love.graphics.print(f) function,
+hello Pong Zero, virtual high divided by two minus six.
+Same parameters.
+And it has the effect of rendering everything that's still got
+the old aliasing going on the skin--
+texture filtering going on as the effect of giving us our magnified text.
+So same text, same size, but now our window of rendering is much smaller.
+So--
+Any questions so far on how any of this works?
+OK.
+Awesome.
+So we've gotten text right into the screen, but we're nowhere close to Pong
+yet, so the first big thing, I think, that's
+going to get us closer in that direction is what we're
+going to call the rectangle update.
+So some important functions that we should look at.
+Love.graphics.newFont.
+The default font, I believe, is Arial.
+We don't want Arial in our application, because we want something
+that looks a little more retro.
+We want something that looks more relevant.
+Love.graphics.newFont will basically take a path to a font file
+that we have in our folder, which if you're in the Pong 2 folder,
+you'll see a font.ttf file, and a size.
+Because every font object that we instantiate
+needs to have a size, because the font objects are immutable.
+Once constructed, they cannot be changed so they need to be allocated on a size
+by size basis.
+Love.graphics.setFont will take whatever font
+object we've acquired from this function call, and we can set it here
+and it'll set the active font in LOVE 2D to be that font.
+Love is a state machine in the same sense
+as before, in that it will have an active font at any one time,
+and whatever print functions you call, will use the currently active font.
+And that also applies to whatever color you might want to render to the screen,
+whatever.
+If you have a font and you want to maybe render it in red,
+you need a set LOVE 2D's active color to red as well.
+Love.graphics.clear is a function that takes an RGBA quadruple,
+and will flush the screen in that color.
+It just has a simple effect of wiping the screen in that color.
+Useful for drawing just flat color backgrounds.
+And then the last function, probably the most important function,
+is love.graphics.rectangle.
+And this is the first function that we'll
+see that actually ends up drawing something beyond text to the screen.
+It takes it a mode, which can be fill or line, an x and a y
+and a width and a height, and it'll draw a rectangle in that mode.
+So either filled, so a filled rectangle, or a line rectangle.
+It'll take-- it'll draw it at xy with the width and the height
+that we pass in.
+So let's go ahead and take a look at Pong 2
+where we can see this actually implemented.
+So Pong 2, we have our font.ttf in there that I've included.
+And then a main.lua.
+And by the way, I forgot to mention last example,
+push the library that we required is also just in the same directory.
+And you can just do require as long as the file is there within the directory,
+it will just load it.
+You don't have to specify .lua.
+It assumes when you require some string, that it follows with the .lua suffix.
+So we're here looking at main.lua in Pong 2, the rectangle update.
+So on line 28 to 34, it's all the same stuff.
+We're acquiring push.
+We have our width and height virtually and physically.
+In our love.load function, we are on line 43
+declaring small font to be a love.graphics.newFont,
+giving it the path font.ttf because it's right there
+in the same directory at size eight.
+And this is going to create a font object, small font, that we can then
+set as the active font as needed.
+So if we go down to line 78 in the same directory,
+we see we're calling love.graphics.clear,
+and so we're passing it in a color.
+I sampled some images of Pong on Google Images
+and saw a background gray that I liked, so 40, 45, 52, RGB, and then 255 just
+means completely opaque, so no transparency, the alpha component.
+And then we're doing the same print.function
+as we did before on line 81.
+Below that on line 89 down through 95, we're actually
+calling love.graphics.rectangle.
+And these are drawing the two paddles and then the ball.
+So, note, love.graphics.rectangle fill mode,
+because we want the paddles to be completely filled, as is the ball.
+We're giving it an xy of 1030 and a width height of 520.
+And on 992, we're-- and that'll have the effect of drawing it a little bit
+shifted from the top left corner, five pixels wide, 20 pixels tall.
+On line 92, we're doing the same thing, except we're
+going virtual width minus 10.
+So it's going to go to the right edge of our screen, virtual width minus 10.
+So 432 minus 10.
+So 422.
+And then virtual height minus 50.
+So it's going to be slightly--
+it's going to be slightly up from the bottom of the screen.
+So we have our top left paddle and our bottom right paddle.
+And then the ball is dead center.
+So we're sitting-- doing another graphics-- rectangle call.
+Virtual width minus two divided by two.
+So right in the middle, minus two, because our ball
+is going to be two pixels wide by two pixels tall.
+And same thing with virtual height, minus two.
+Our virtual height divided by two, minus two.
+So I'm going to go ahead and CD into the Pong 2 directory and run it.
+And that has the effect of we have our new font here in the middle.
+So it looks nice and retro, much more so than the Arial font as before.
+We have a rectangle here, five pixels wide by 20 pixels tall.
+A ball in the middle, which is four pixels wide by four
+pixels tall, and then a paddle on the bottom right,
+which is the same dimensions as the paddle on the left.
+So it looks very similar to Pong.
+It's not interactive at all, but we sort of getting the feel of what
+we want our application to look like.
+We have it mostly sketched out.
+So any questions so far as to how this works?
+OK.
+Awesome.
+So Pong 3.
+So currently we have no interactivity with our application,
+and we want to be able to move the paddles around.
+We don't want to just be looking at an-- at an image the whole time.
+So the paddle update is going to solve this problem for us.
+We're going to actually get our first sort of-- beyond pressing escape
+to quit the application, we're going to get a sense
+of interacting with it dynamically.
+So the important function that we're going to look at in this example
+is love.keyboard.isDownsomekey.
+And this is true-- this is a Boolean function.
+It just returns true or false depending on whether the key that we pass in
+as a string is currently pressed down on this frame.
+So it just returns true or false.
+And so let's go ahead and take a look at the demo.
+We're going to go ahead and pull up Pong 3.
+The main.lua, they're in.
+
+Notice that line 37 if you're looking in Pong 3 we, have a new constant
+we've defined called paddle speed, which gets the value 200.
+And this is just an arbitrary value that I found was a good speed.
+But this is how fast our paddle is going to move.
+We're going to scale it by delta time, so we're
+going to multiply it by how many seconds have passed.
+Typically, a fraction of a second since the last frame.
+And this is going to, therefore, move the same distance
+over time depending on whether your computer is
+running at 10 frames per second or 60 frames per second.
+So if we go down here to line 63, I've also set up two new variables.
+Player one score and player two score.
+Those are both initialized at zero.
+We're going to add in this example, also, some rendering of the score.
+And notice here on line 49, I've also added
+a new font, which showcases how you need to separate fonts based on their size
+because they're immutable objects.
+Score font gets love.graphics.newFont.
+Same exact font file, but it's 32 pixels large because the font-- or the score
+when rendered in Pong is pretty large in the middle of the screen.
+And so we're creating-- we have two different fonts now.
+One for rendering our message, one for rendering our score.
+And it's just going to render these two variables, player one score and player
+two score.
+And then we've also initialized our y values
+for the rectangles, the paddles on the left and the right.
+We need to keep track of their y position, because paddles in Pong
+can only move up or down.
+So player 1Y gets the same value it did before when
+we initialized the rectangle, when we drew it onto the screen.
+It's going to start at y 30, so pretty high up.
+And player 2y is going to start pretty low, virtual height
+minus 50, which is 432 minus 50.
+And so in love.update, which is our first actual use of the update
+function on line 75 with the (dt) parameter that gets passed in.
+Note, remember that LOVE 2D will pass that in for us,
+but we need to give it-- we need to define the behavior inside of it.
+We're using love.keyboard.isDown, and we're passing in the string w
+and s for this first block.
+This first block here is player one's movement.
+So, traditionally, on computer WASD is to move--
+and this example, we're going to allow ourselves to move both paddles,
+so we're going to use w and s for the left paddle,
+and up or down for the right paddle.
+So if love.keyboard.isDown w, which means--
+or we've currently pressing the W key, player 1y
+is going to get itself, plus negative paddle speed times delta time.
+So it's going to move up.
+It's going to take negative paddle speed, multiply it by delta time,
+and add that onto our y value, which will have
+the effect of shifting our paddle up.
+And it's the opposite for--
+on line 82 for-- if we're pressing the s key.
+We need to increase the y by positive paddle speed, because recall,
+y-axis movement is--
+up is negative, down is positive.
+We're doing the exact same thing with the paddle on the right
+except we're using up and down as the strings into love.keyboard.isDown.
+And then down below here, we are rendering in addition
+to what we rendered before, also, the score now.
+So on line 125, note that we're calling love.graphics.setFont, scoreFont,
+because if we don't call this, it will use just whatever the last font was,
+which by default is the eight pixel font because we set that
+up top in our program.
+We want to set it to the score font, and then we
+want to call love.graphics.print.
+In this case, I'm just printing them in concrete places not, using printf.
+Virtual width divided by two minus 50.
+So no matter how we scale our window, it's
+always going to be 50 pixels to the left of the center of the window,
+and the 30 pixels to the right of the center of the window
+if we're rendering the player two score.
+And so if we go into Pong 3 and we run it, it looks the same as before.
+Note, that we do have a score now in the middle of the screen, zero and zero.
+But, more importantly, we can move our paddles up and down.
+But there's one problem, and that's I can move beyond the edge of the screen,
+which is not behavior that we want in our application.
+So we have some interactivity, it's moving along,
+but we still have a long way to go, unfortunately.
+Or fortunately.
+So let's go ahead and look at the ball update.
+So we have paddles, they can move, they can move beyond the edge of the screen,
+but we don't have a ball that-- it just sits in the middle of the screen.
+And that's not what we're looking for.
+We want to have a ball that we can actually bounce between the paddles
+so we can get an actual game going beyond just moving paddles.
+So a few important functions we're going to look at.
+We're going to get our first look here at random.
+So in games, random number generation is a very common thing
+so that we get unpredictability and variability between different instances
+of our game.
+An important function that just belongs to Lua.
+It's not a LOVE 2D thing, it's just a Lua thing.
+Math.random seed numb.
+So many of you have probably heard of like seed,
+like a random number generator, seed, and that just
+means a random number generator.
+Because it's pseudo random, it needs some sort
+of starting value to base all of its random numbers off of.
+It takes a starting number, it performs some mathematical operation
+on that number to derive new random values that we can then
+use in our game engine.
+But if we give it the same number every single time,
+it's just going to give us the same random numbers every single time,
+which means it's not going to be random at all.
+It's going to be very consistent.
+So we need a way to seed our random number generator,
+give it a different initial value or seed,
+and we're going to do that with the function math.randomseed somenumb.
+OS.time is an important function in the context of this,
+because a very common way of getting a different number every time
+you run your application is passing it in whatever the current time is
+in seconds, because usually it's a very large number that
+is going to be different every single time you run your game, no matter what.
+Because it's based upon, in the context of most engines,
+in the context of Lua, what's called Unix Epoch time, which is zero
+zero UTC January 1st, 1970, which is some huge number nine or 10 digits long
+that changes every single second.
+And then in order to actually take advantage of all this,
+we need a function to get a random number,
+and so we do that with math.random, which takes a min and a max,
+although you don't need to technically pass a min,
+it'll just implicitly deuse min as one if you don't pass it a min.
+And it'll return a value inclusively within that range.
+So if you say math.random one, 50, it'll give us
+a random inclusively between 1 and 50.
+And if we just say math.random 50, it'll do the same exact thing.
+It'll say-- it'll assume rmin is one and give us a value between one and 50.
+And then two important mathematical functions
+that are very basic but helpful in the context of games almost everywhere,
+it's just math.min, which returns the lesser of two values,
+and math.max which turns the greater of two values.
+And we'll see this in the context of clamping values to some range.
+So let's go ahead and take a look at a demo here.
+So I'm going to go ahead and open up Pong 4.
+
+And going to look at main.lua they're in.
+
+So here on line 47, we see we're calling the math.random seedfunction as before.
+And note that we're passing in OS.time, another function call,
+because OS.time is going to be different every time we run our application.
+So we're seeding our application every time
+we run it based on whatever the current second is relative to zero, zero, zero,
+zero, zero, zero, January 1st, 1970.
+Which is going to be different every single time we run.
+Assuming we don't run it within the same second.
+And then if we go down to line 71 and seven-- or, sorry, 67 and 68,
+we now have--
+we're giving a starting value to our ball,
+because we want to actually start manipulating our ball.
+So we give it an X and a Y. So we're setting it right to the center again
+but, now, we're defining a variable for it
+instead of just rendering it statically with our love.graphics.rectangle
+function, because we want this to change over time.
+We want to start letting our ball move around the screen.
+So these x and y variables are going to start changing now,
+and they're going to change relative to its current velocity.
+And its velocity is going to be stored in ball dx and ball dy.
+dx and dy are common shorthands for delta x and delta y,
+which is how you represent velocity.
+So what we're going to do, effectively, is take whatever our delta x and delta
+y are and add them onto our ball frame by frame,
+and that's going to have the effect of updating
+our ball's position by some value.
+And separating the delta x and the delta y
+will allow us to have different angles, different trajectories for our ball.
+And then another thing that we're also doing in this application,
+we're starting with the concept of a game state.
+Because now we can have a starting state, and what we're going to have
+is a play state.
+And so all we're going to do here in this example
+and in this application is start state as a string.
+In future examples, we're going to use what's called a state machine
+and actually separate out different states into their own--
+into their own modules.
+But in the context of this game, we're just
+going to use a simple string just to illustrate
+how it works, and we're going to say our first state, when we start the game,
+should be the start string in the start state.
+And so here on line 86, what we're going to do
+is solve a problem that we had in the last example, which was,
+the paddles could move beyond the edges of the screen, which is not behavior
+that we should permit.
+So we're going to call math.max on zero, and the same operation
+we were doing before, and that will have the effect of returning whichever
+of those two values is greater.
+So if the value is--
+if we're adding negative paddle speed to our y value
+and it goes into the negative range, which
+means it's beyond the top edge of the screen,
+zero is going to be the greater of those values
+and so it will always be zero in that case. math.max returns
+the greater of the two values.
+So it'll have the effect of clamping it such that it never
+goes above the top edge.
+The inverse is true for line 96, where we
+call math.min on virtual height minus 20,
+and player 1.y plus paddle speed.delta-- times delta time.
+And this will have the same effect, it will return whichever
+of these two values is lesser.
+In which case, if we've gone above virtual height minus 20, which
+is down at the bottom of the screen shifted by the size of our paddle,
+it's going to set it to virtual height minus 20.
+So we never go below that point.
+And we're doing the same thing for player two, exact same logic.
+And then if we're in the play state, we're
+going to actually update our ball's position.
+So we're in the-- if we're in the start state, ball's not going to move at all.
+But if we're in the play state, we want ball x to equal ball x plus ball
+x times delta time.
+And note that there is no shorthand in Lua
+for adding the value to itself, which is why we're calling ball
+x equals ball x, plus ball x times delta time,
+instead of just saying ball x plus equals ball x times delta time.
+Just a language decision that they made.
+But if we're in the play state, this will
+have the effect of scaling whatever our current ball's velocity is and--
+times delta time, so it stays frame rate independent.
+And then adding it to ball x and ball y, which will shift it.
+And we get this actually working down here in line 170--
+174.
+We're now-- instead of just rendering flat numbers to the screen,
+we're actually using ball x and ball y to render.
+And if we're in the play state, those will get updated.
+But if we go back up to line 127, now, we're in the love.keypressed function,
+so we're starting on line 120.
+Before we just had the if key equals escape, then love.event.quit.
+But now on line 127, we're going to check
+to see if the key is equal to enter or return,
+and then we're going to use that as our way of just testing state changes.
+So we're going to say if the game state is equal to the start,
+once you press entered, the game state should be equal to play.
+Otherwise, set it back to start.
+And we set it back to start, we're going to re-initialize our x
+and y to be in the center, virtual width divided by two
+minus two, virtual height divided by two minus two,
+and we're going to give it an initial random starting velocity again.
+And note here, this math.random two equal--
+is equal to one, and 100, or negative 100.
+It's just Lua's way of doing a ternary operation.
+So in C, you will often have like--
+you would be something like math.random two equals one,
+and you would have a question mark, 100 colon, negative 100.
+It's the same exact thing, but Lua doesn't
+have that sort of shorthand for a ternary operation, so we do it with
+and and or.
+We use logical operations instead to do the same thing.
+And note here we're also showcasing that math.random can take
+either one argument or two arguments.
+In this case, we're saying math.random two,
+which means it will give us a value between one and two.
+So a 50-50.
+And then if we do negative 50-50, that means
+we'll get a value between negative 50 and 50.
+So a range of 100, effectively.
+And so what that has the effect of doing, if we run our application,
+we go into Pong 4.
+
+We're in the start state so now we're rendering--
+if we're in the start state, it's set to render that message.
+If we press Enter, the ball gets a random veloc-- it's actually
+applying the velocity frame by frame.
+It's updating in the update method.
+If we press Enter again, it gets reset and we're back in the start state.
+So we do it again, it's getting a random value.
+Do it again, random value.
+Random value.
+So every time we're getting a different random ball value.
+But what happens if we try to actually run it, or try to interact with it?
+Nothing.
+Goes straight through.
+So we're missing a key piece, even though we
+have the core components of our game engine implemented,
+we don't have any concrete game play, nothing's interacting.
+And that's a major piece that we need to look at.
+And so the next--
+before we actually start doing that, though, we're
+going to take a look at the class update, Pong 5.
+And so in order to get into more of a-- in order
+to scale our code more effectively, we need
+to start looking in terms of classes.
+And instead of having an x and a y for our ball, an x and a y for our paddle,
+a delta x, a delta y for our ball, all these different variables that
+are sort of all over the place starting to bloat our code,
+before we get too crazy with it, we should think about
+how can we put this data altogether so that we can just think in terms
+of our paddles or our ball object.
+And so we use what's called a class.
+If unfamiliar, a class is simply a way of taking all these variables that
+we've been using thus far, but putting them together in a container such that
+we can just say, paddle.x or paddle--
+you know, in this case, car.
+If we have a function called drive car, now we can just say, car.drive instead.
+We don't have to have functions that are separate from our values,
+that-- we can put them all together.
+We can ask what's our car's current mileage instead
+of having all these different variables all over the place.
+So the classes are effectively blueprints.
+Use it-- you define a class.
+You say, OK, my car class is going to have
+a-- it's going to have a mileage variable,
+it's going to have a paint variable, it's going to have a make and a model,
+it's going to have all these things, and it's going to maintain its own state.
+It's going to maintain all of that for us.
+
+as seen here.
+And, typically, these are what are called fields.
+And then we'll have methods as well.
+Functions that, instead of being like completely separate from this data,
+a car now basically owns its own functions.
+It has its own method called drive, or turn, or honk, et cetera,
+and we don't need to have a function called,
+like, turn car, or honk car, et cetera.
+And then this class is effectively a blueprint.
+Well, we'll see shortly how to define a class,
+but in order to actually have like one paddle that has its own set of data,
+and another paddle that has its own set of data, we need to define--
+we need to instantiate, create objects from this class.
+Basically, use this class as a blueprint, but take it to a factory
+and create concrete cars from the blueprint.
+And those are objects.
+
+And so as seen here, our paddles and ball
+are perfect simple use cases for doing this.
+So let's go ahead and take a look at Pong 5.
+
+So in Pong 5, immediately, if you look at the directory structure,
+you can see that we've added a ball.lua and a paddle.lua.
+And it's tradition in most languages that have object oriented programming,
+as it's called, to capitalize class names just so you can differentiate
+classes, for example, from concrete objects or variables or functions.
+So if you go to our main.lua, on line 35,
+we're requiring a library, called class, which
+is what's going to allow us to actually create these classes.
+Because classes are not native--
+they are in a sense a native Lua feature,
+but Lua's way of doing object oriented programming is a little bit convoluted.
+Some folks have kindly put together a library that makes it a lot simpler,
+and a lot more closely related to other languages that do object oriented
+programming more predominantly, like Java or C#, or even Python,
+allow us to use the keyword class in a way that's very similar to those
+libraries.
+On line 39 and 43, we're acquiring our own code, paddle and ball,
+and we're going to take a look at those right now so we
+can see what a class looks like.
+So I'm going to go ahead and open up a--
+
+the ball file, ball.lua.
+And we can see here all we need to do just
+to create a ball class is, using our class library, ball gets class,
+and then curly brackets like that.
+And so now we have a class object, a class table,
+effectively, because everything in Lua is a table.
+But we can think about it in terms of objects.
+We have a class object called ball, and then we
+can start to define functions that belong to this class.
+So we're going to define what's called a constructor, or an init function
+in this case, an initializer.
+And it's going to allow us to initialize our ball with whatever we want.
+In this case, we want to start our ball off with an x and a y
+and a width and a height.
+And notice within here we have a word called self.
+Self and this are common words in object oriented programming languages
+that mean whatever object we're creating with this class is going to be self.
+So we'll see that--
+we'll see that shortly.
+Self.x gets x.
+So whatever concrete object we create using this call,
+this init call, set its x to this x, set its y to the y, set its width,
+set its height.
+That specific object.
+Self.
+And then we're doing the same thing for delta y and delta x,
+only that we are setting those two random values just as we did before.
+Self.dy, self.dx.
+That belongs to whatever specific object gets instantiated using this init call
+as we'll see in the code.
+We're defining just a reset function here just to make it easy.
+Before we had a--
+several lines of code that set our ball to the middle of the screen
+and gave it a random velocity.
+We're doing that now, and this is a good way of sort
+of refactoring out groups of logic.
+We're creating a function called reset that just does that all in one function
+call, and we just call that within our main function, condensing our code.
+And then notice we have an update and a render function now.
+And we are going to call these from our own update
+and our own draw function such that every object
+that we want in our game, every entity, and we'll build upon this game
+by game in the future.
+We'll just call update and render on everything from our main.lua,
+and defer all of that to each individual class and objects
+so we don't have to have a main.lua that's like 800 lines of code.
+We just break out all of the updates that are pertinent to the ball here,
+and all the render code that's pertinent to the ball here,
+call each individual balls update and render,
+and save ourselves a lot of time in refactoring.
+We're doing the same thing if we look at paddle.
+
+Paddle's a class, as well.
+It gets the reason the class library.
+Same exact sort of thing here, xy with height, and a dy.
+In this case, we're just initialising that to zero so that we're not moving.
+And then we're calling the update function here.
+So if our dy is less than zero, we're using the math.max function as before,
+with the top edge of the screen, and then whatever our y plus our current dy
+is, so delta y.
+And then here, self.y gets math.min, virtual height
+minus self.height, self.y plus self.dy times delta time.
+So that's the clamping behavior that we saw before with the paddles, only now,
+we took it from main and we put it in our update function
+so each paddle calls its update, and we take some lines
+of code out of our main file.
+And then it has its own render function here, same as the paddle.
+The render function for the paddle and the render function for the ball
+are effectively the same.
+And so if we go to our main, we-- we're acquiring the paddle
+and we're acquiring ball so that we can use them.
+So if we go down to line 79, instead of initializing our ball dx or ball dy,
+ball x, ball y, paddle y, player 1y, player 2y,
+now, we have player one is simply paddle 10, 35, 20.
+And player two is a paddle, virtual width minus 10,
+virtual height minus 30, 520.
+Ball is a ball, virtual width divided by two minus two,
+virtual height minus two, minus two, [? five by ?] two
+minus two, four and four.
+So those paddles now have control over their own x and y, their own width
+and height, and the battle-- or the ball has its own control over the xy width
+and height.
+And the self applies to this object.
+This is whatever self was in our constructor that we saw before.
+So even now we can just call-- so we can simply
+say player 1.x player 1.width, player 1.y, and everything is contained.
+We don't need a million variables to keep track
+of all the things going on in our game.
+And this is going to be especially important as we scale, and we have--
+maybe we have 100 things on the screen at one time.
+We don't want 100 times x variables where
+x is, however many properties that thing has that we need to keep track of.
+It's all the same logic except, now, we're
+calling player one update and player two update in our update function,
+instead of having all that logic therein,
+where they're moving and then keeping track of whether
+or not they're going past the top and bottom edges of the screen.
+And then if game state is play, we're now just calling ball update.
+And these are all getting passed in delta time.
+And then same thing here.
+Instead of having all that logic for restating the ball
+as one block of code, we took it out, we refactored it,
+we put it into our ball class, and now all we have to do
+is just one line of code, ball or reset.
+And then here down on line 169 in our draw function,
+we just have player one render, player two render, ball render.
+And later on as we scale and we make games
+that have a lot more things on the screen, a lot more entities,
+we can just do these renders in a loop.
+We can just say for each entity in our screen, just render it.
+For each entity in our screen, just update it.
+We can condense thousands-- hundreds of lines of code
+into just a few lines of code by deferring update logic
+and rendering logic to each individual entity,
+thanks to object oriented programming.
+And so that's how we're going to refactor using classes.
+So any questions on how any of that works so far?
+
+Cool.
+This is a good point, I think, to take a five minute break.
+And once we come back, we'll talk about how to look at frames per second.
+All right.
+So we're going to take a minute just to look at something kind of small,
+but often it's the case where in games if we
+want to make sure that we are performing like our applications performing well,
+we want to-- some way to monitor our frames per second.
+And so I figured I would just take a second
+to illustrate this quickly so that we can use this in the future.
+The two functions that are going to be important for us here--
+well, the first of these is just a little small cosmetic addition
+to the application.
+It's just love.window.setTitle.
+Title, so far our application, I'm not entirely sure what the--
+it says by default, I think it says--
+what does it say-- untitled.
+Yeah.
+So that's not-- it's a layer of lack of polish, more or less.
+And it'd be nice just to solve that problem quickly.
+So we're going to call a function called love.window.setTitle, some string,
+which will solve that problem quickly.
+We can make it look as if we have that detail down.
+And then the thing that's actually going to let us determine whether or not
+we are running well or we're running very poorly
+is a function called love.timer.getframespersecond.getFPS,
+which is something that LOVE graciously gives us for free
+and allows us to very easily slap it wherever we want.
+We can print it to the console, or we can just
+draw it straight to our application.
+In this case, we're going to do the latter.
+So I'm going to go ahead and go into LOVE--
+or Pong 6 in our main.
+If we go ahead and look at line--
+
+where is it-- line 64.
+love.window.setTitlePong, just quick and easy.
+Now, our window header is set appropriately,
+and if we go down to line 198, here I've decided
+to sort of split out this in a separate function,
+called display FPS on line 198.
+And the function is defined on line 207, so a function display FPS,
+takes no parameters.
+Its only goal is to just draw our current FPS to the screen.
+So we're going to set our current font to a small font.
+We're going to set our color-- so this is what I alluded to before in that we
+can set LOVE's rendering color to some RGBA quadruple,
+and anything that we draw beyond that point will then be drawn at--
+it'll be drawn into whatever that color is.
+So, in this case, we're giving it red of zero, 255 on the green, zero blue, 255
+fully opaque, which has the effect of setting our color to just
+completely green.
+And then love.graphics.print, our current FPS--
+string, and then our current FPS here, which is love.timer.getFPS.
+But it's going to return that as a number, and by default,
+Lua does not allow you to concatenate strings and numbers,
+so we're going to concatenate here with this ..operator,
+which is the way of doing string concatenation in Lua.
+We're going to call the two string function.
+So we're going to take in love.timer.FPS,
+we're going to make it a string, and then
+we're going to concatenate it here.
+And then we're going to call love.graphics.print on that value,
+and then we're going to put it at 10, 10.
+So shift it just a little bit from the top left edge of the screen.
+So that's going to have the effect of the go to Pong 6, and we run it.
+We can see now it starts at zero and 52 because it
+has to gather a few frames of data before it
+has a number we can actually use.
+But we see there FPS at 60, and so our game runs, otherwise, just the same.
+Completely random.
+A little bit broken, but that's OK, we'll fix it up.
+But currently we have a problem, and that's
+that our ball is just going straight through our paddles.
+So how can we fix this problem?
+
+We need some way of detecting collision.
+So in 2D games, generally, there's a concept of aa bb collision detection.
+And what this is is axis aligned bounding box collision detection, which
+means that we have bounding boxes, just rectangles, quads,
+which have an x and a y and a width and a height which are nonrotated.
+So they're completely aligned with our axes.
+They're completely parallel perpendicular.
+So the only way that we can get this easy math, the aa bb collision
+detection working is if we have no rotation of our boxes.
+They have to be completely aligned.
+But if they are, we have a very simple algorithm,
+which is we're just making sure that no edges of our boxes
+are outside the opposite edges of our-- of the other rectangle.
+So if we have one rectangle-- and I'll illustrate this on the screen here.
+We have two rectangles.
+If this top edge is below this edge, we know
+no matter what, they're not going to inter-- they're not intersecting.
+There is no way it can because it's below here.
+So no matter where it is on the x and the y, if it's below here,
+it's not a collision.
+If this edge is on this side of this rectangle,
+we know, as well, there's no way those two boxes can overlap.
+And it applies to every edge as long as it is the opposite edge.
+So if this edge is below this one, if this edge is above this one,
+if this edge is on the right, and this edge is on the left,
+it means that no matter what, those boxes aren't colliding.
+So we can simply do four conditions.
+We can say, if rec1.x is not greater than rec 2.x, plus rec2.width,
+and rec1.x plus rec1.width is not less than rec2.x,
+so if the two edges are not beyond their opposite edges, same thing with the y,
+and the y plus rec1.height, we know that we have a collision.
+We know that because we haven't fulfilled any of those criteria.
+But we know that if that's not true, if the--
+one of the edges is not beyond the opposite edge, then it's--
+we do have a collision.
+So it is going to be true.
+So we'll see that here in our code.
+The go to Pongs 7, at line 113, we have a function
+that we're calling called ball collides.
+Our ball class has a function called collides.
+So let's go ahead and take a look at our ball class.
+
+And in this case, we've defined our function such
+that it takes in a paddle parameter, so it's
+going to compare against another rectangle that
+has an xy and a width and a height.
+And we're saying that if rx is greater than the paddle x, plus the paddle
+width, which means if rx is greater than the right edge.
+So if our top left is greater than the--
+or just our left-- is greater than the right edge,
+we know that we can't collide.
+Same thing if it's greater than the other rectangles,
+self.x plus self.width.
+No, sorry.
+In that case, if the paddle's x is--
+it basically the same operation but from the paddle's perspective.
+If the paddle is greater than the rectangle on the right side,
+if it's farther along the right side past the right edge,
+we know that there can be no collision.
+It's just impossible.
+Same thing with y.
+If the y-- self.y, so this ball is y--
+is greater than the paddle's y, plus the paddle height.
+So if it's below the edge of the paddle, because we're
+taking the height into consideration, or if the paddle's y is greater
+than this ball's y plus self.height, then we
+know that that also can't be a collision.
+But if that's not true, then we need to return true.
+
+And so if we go back to our main-- no, that's the wrong main.
+We go back to main.lua here.
+We're calling ball.collides.
+So if we're in our game state, if we're in our-- sorry,
+if we're in our play state, if game state is equal to play,
+if the ball collides with player one, so player one is the left paddle.
+So if there's a collision detected, the ball.dx and dx is our x velocity.
+So it's whatever direction it's moving on the x-axis.
+So it's going to be moving to the left if it's gone--
+if we detected a collision.
+And it doesn't matter whether it's moving left or right,
+but we needed-- what we need to do is set it to its negative value.
+Because if it's moving left and we said--
+let's say it's moving left at its negative 20 pixels and we set to 20,
+the dx is now 20, it's going to start moving to the right.
+It's going to have the effect of inverting its x velocity
+and, therefore, reversing its direction.
+But what we're also doing here with times 1.03
+is we're multiplying a little bit just to speed up the game.
+Because we don't want the game to into perpetuity just have the same velocity.
+It's not going to ramp up the excitement.
+We want to keep things going, we want to get some momentum going,
+so what we're going to do is call ball.dx
+equals its negative value times a scaler that we've determined arbitrarily.
+In this case, I've decided it should be point--
+1.03 so it'll increase it by 3% every time.
+And then in the event that we have a--
+our ball-- because it's getting added, its x velocity is getting
+added each frame to its position, we want
+to make sure that it's not like inside of our paddle.
+Because it is possible that it could shift a certain number of pixels
+to the left, or to the right, because the same operation applies.
+Such that the two are sort of like on top of each other.
+We want to re-- we want to shift it, we want to reset it.
+So what we're going to do-- because it'll detect another collision
+immediately if that's the case.
+If it, on the next frame, it's within that paddle,
+it's going to say that it's still colliding with that paddle
+so it's going to shift its velocity again.
+And it's going to have the effect of it infinitely sort of bouncing
+back and forth within the paddle.
+We don't want that to happen.
+So if we detect a collision, we want to shift it.
+We want to make sure it's completely outside of the paddle's collision box.
+So we're saying ball.x gets player one.x, plus five.
+Plus five because that's the width of the paddle.
+So that has the effect of just once you detect a collision, negative set--
+x velocity to negative, and then instantly
+shift it right on the right edge of the left paddle.
+And we're doing the same thing here.
+If ball collides a play or two, we're doing the-- we're negating or inverting
+its x velocity.
+And then-- this is the same exact operation,
+but since it's based on the-- the left top left corner,
+we can't minus it by five, that wouldn't make sense.
+We're going to minus it by four because that's the width of the ball.
+So if we minused it by five, we would have one pixel of space.
+We plussed it by five on this example, because we're
+coming in from the right side.
+We want to just make sure that it's right on the right edge of the paddle,
+so we're setting it to player one.x.
+And in this case, we're using the minus four
+because that's the width of the ball.
+So we want to shift it to the left, the width of the ball,
+and that will have the effect of the right paddle, if there is a collision,
+it'll just get shifted over, and the right-- the ball
+will be touching the paddle right on their two edges.
+Here on line 118, we're solving the problem we had before of what
+happens when the--
+oh, sorry, that's actually not what I was thinking of.
+This is the-- if there's a collision, then we want the ball's y velocity
+to randomize every time.
+So this has the effect of when we're playing the game
+and we've detected a collision between the two paddles,
+we don't want the same angle back and forth every time
+because then the game will just infinitely take place the exact same--
+the same angle will just keep happening over and over again.
+We don't that to happen.
+We want some variability in terms of how the ball bounces off the paddle.
+So what this does is, still within the condition,
+if the ball collides with player one, we're
+going to, say, if the y velocity of the ball is negative,
+then we want to keep it going negative.
+We still want the ball-- like if the ball's coming
+at a sort of an upward angle and it bounces off the paddle,
+we want the x velocity to shift.
+We want it to go to opposite direction, but we want the ball to keep going up.
+We don't want the ball to like bounce back down, which
+wouldn't make any sense.
+We don't want to negate the y velocity.
+So we're going to keep the y velocity negative,
+we're going to set it to a negative value between 10 and 150.
+And it's just arbitrary.
+You can set that to whatever you want.
+And then we're going to do the same thing if the y velocity is positive.
+We want the ball to--
+we want the ball to go in the positive direction if it's already coming down.
+So we're doing the exact same thing here.
+It's the same logic in the player two instance.
+And then this was what I thought I was looking at before for a second,
+but this is how we fix the issue of the upper and lower boundary of the screen.
+Right.
+Because it's one thing to solve the fact that we have the paddles
+now deflecting the ball, but we don't want the ball
+to infinitely go above the top edge of the screen,
+or the bottom edge of the screen.
+So this is just a simple if condition.
+We're just saying if the ball's less than or equal to
+zero, which means if the ball's at the top edge of the screen,
+just set it to zero, so make sure it doesn't
+go above the edge of the screen, and then negate its wide velocity,
+so it's instantly going to start going downwards.
+Yes.
+AUDIENCE: This question is about Pong 7, line 113.
+Couldn't the shifting of the balls dx and y
+be done in the ball collides function, if there is a collision?
+COLTON OGDEN: The shifting of the ball's function if ball collide-- no,
+collides the ball-- the collides function
+is a-- it just returns true or false.
+So it would be--
+I mean, I think you probably could refactor it out that way,
+but the purpose of collides isn't to have
+any sort of side effects like that.
+Its only purpose is just to return true or false.
+Because we can do any-- we could have any sort of behavior we want.
+In a collides function, we may not necessarily want to shift the ball
+or do anything, we might just want it return true
+and print something to the console.
+So, in terms of, I think, in an engineering perspective,
+it makes more sense just to have a simple true or false function,
+and then determine how you want that to actually influence your game
+state inside your main function, or inside some other function.
+OK.
+
+And so, Yeah, we went down here.
+The top edge of the screen, and then bottom edge of the screen.
+If the ball.y, it's same exact thing, just the bottom edge of the screen.
+If the ball.y is greater than or equal to virtual height minus four,
+and we're doing virtual high minus four, why?
+AUDIENCE: [INAUDIBLE]
+COLTON OGDEN: Exactly.
+So we want to make sure that we write-- as soon as we--
+the bottom edge of the ball touches the bottom of the screen,
+we want to detect a collision, then we want to say ball.y, the--
+gets virtual height minus four in case it overshot the bottom edge
+based on how much time has elapsed and how much the velocity is,
+you want to instantly put it right up so that it's at the edge
+so it's a clean bounce.
+And then we want to negate the y velocity just the same
+as we did up above.
+And so if we run our program here, Pong 7, looks the same,
+but now the ball's bouncing.
+And note that it got a neg-- it got a random-- it
+looks like it's going below the bottom edge
+because the monitor is currently at 720 and that's the window resolution,
+but it is bouncing off the bottom edge as well.
+And the angle, if you'll note, is a little bit different every time,
+because we are giving it a random y velocity, a y--
+yeah.
+And then that's influencing-- oh, I messed up.
+I wanted to illustrate the speed increase.
+It's going to take a little bit of time.
+But every time it detects a collision, it is going to be scaling its--
+the x velocity by 1.03.
+So it's going to make it a little bit faster.
+Now, currently, the y angle's a bit steep,
+so it's going to take forever to illustrate that.
+But we'll see that in a later example.
+So we have the basics of our game.
+But how are we keeping score?
+What's the determining factor for how we keep score in Pong?
+Left or right.
+As long as it goes past the left or right edge of the screen.
+So what do we need to thereby do?
+AUDIENCE: [INAUDIBLE]
+COLTON OGDEN: We do need a counter, and we
+need to also monitor whether the ball has
+collided with the left or the right boundary of the screen.
+And then have that increment that counter.
+So we're going to go ahead and take a look at Pong 8
+to see how this is implemented.
+We have here on line 88 and 89 some counter variables, player one score,
+player two score.
+We've had those for a long time, but we haven't used them.
+We've only used them to draw to the screen.
+We're actually going to now increment them, and show them as scorekeeping
+variables in our code here.
+I thought I had implemented it in Pong 8,
+but I think I might have left out the actual incrementing of the score.
+But this is the logic that's pertinent to that example.
+So if ball.x is less than zero, which just
+means if we've gone past the left edge of the screen,
+ignore serving player for now.
+The important thing is now we are doing player two score,
+gets player twp score, plus one.
+Just a simple increment.
+And then we're resetting the ball.
+Same thing for here.
+If the ball.x is greater than virtual width,
+so pass the right edge of the screen, and actually it could be ver--
+if ball x plus four is greater than virtual width,
+then and it will have the same effect.
+But, actually, no, because we want to make sure
+that we don't see the ball at all when they score.
+So, yeah, this is actually correct.
+If ball.x is greater than virtual width, then serving player gets two,
+player one score is player one score plus one.
+And then we're going to reset the ball.
+Serving player.
+So now what we need to talk about is the idea of serving.
+So when we start up the game--
+so let's go ahead and take a look at--
+
+we're going to go to Pong now so we're going to go straight to Pong 9,
+and then we need to take a look at what a state machine is.
+So currently in the game, we've talked about state a little bit.
+We've had the start state, which means the game is ready for us
+to just press Enter and then the ball will go off in a random direction.
+And then we have the play state.
+And the play state is set to our paddles interacting with the ball,
+and then keeping track of score, basically.
+A state machine is very important.
+It's a ubiquitous concept in game development.
+It just means, how can we monitor what state we're in
+and what transitions take place between those states to bring out new states.
+And each individual state has its own logic.
+And by breaking out the logic of these states separately,
+we can scale our code much bigger and not have monolithic code for--
+this particular diagram is an example of what you might have as a state
+machine for a character like Mario where you have a ducking state, a release
+state which takes the down-- the in-- like the input of down.
+So if we're releasing down, it'll become standing.
+So ducking state, the transition is release the down key,
+he becomes standing.
+Standing key, press the down key.
+He becomes ducking, these are states and transitions.
+These individual states are the overall representation of his behavior
+at large, basically.
+And the same logic applies to our game.
+We have a play state, we have a serve state.
+We want to have maybe a game over state.
+If someone scores 10 points, then it should say, oh, the winner is x.
+And you can define any arbitrary number of states, it--
+which depends upon your model, whatever game you want to develop.
+For example, like Super Mario has a title screen,
+maybe your game has like a high score state.
+You want to display all the high scores in your game
+and we'll actually show that in a lecture next week.
+But this is what a state machine is.
+It's just a-- it can be in any one particular state at one time,
+and the transitions are what allow you to go in between your states.
+And each state does have transitions in and out of other states.
+And we're going to use this in Pong 9.
+So beyond illustrating the score, we're going
+to start keeping track of more than just the start and the play state.
+We're actually going to start modeling the serve state.
+And so let me go ahead and illustrate what this looks like.
+
+So if we're here, I just pressed Enter.
+We started at the start state as normal, but I pressed Enter
+and now it says player one serve.
+So we're actually serving.
+And so if I press Enter again as it instructs me,
+player one is on the left, the ball should move to the right.
+Which it does.
+So I'm going to go ahead and lose on purpose as player two.
+And now it's player two's serve.
+So whichever character, whichever player loses should get to serve again.
+And so now if I press Enter, note when we
+were player one, the ball moved to the right.
+So for player two, the ball moves to the left.
+So we have now a little bit more interaction.
+We have different states.
+We start off the game, and then we serve, and we play.
+So when the ball's live, when we're actually doing this,
+we're in the play state.
+Now we're in the serve state.
+So what's the transition between the--
+sort of the play state and the serve state?
+What's the transition there?
+
+We score a point.
+So if we are looking at our state diagram and we're in the play state,
+the transition to the serve state is x player scores a point.
+And then if we're in the serve state, the transition
+is someone presses enter.
+Enter key gets pressed.
+And so that's how we want to think about our games
+if we have a bunch of different sets of, sort of logic,
+that we can sort of take out of our game and think about conceptually,
+it allows us to break our game up into a bunch of different modes and states,
+and not really get overburdened by all these variables
+that maybe need to keep track of-- or what state are we in?
+Like what are all these variables doing?
+And we'll see how we can break this out in a more
+modular fashion in future weeks.
+Note that right now, currently all we're doing is
+we're setting a state variable to some string here,
+and just doing if conditions on it, which
+works fantastically for small examples.
+So if, like, for example, if we're in the update function and game state--
+see, over here we're saying if the game state is set to serve,
+then we're initializing all of the variables.
+And if the game state is play, then we need
+to actually perform our logic here.
+So if the-- if we're in play, this is going to get called,
+each frame, and we're going to say, if ball collides with player one,
+do all this stuff.
+And then this allows us to sort of think of our game.
+It's almost like having separate update functions within our update function.
+And we'll actually see how we can take these out of one update
+function in future weeks with a actual state machine class
+and implement things a little bit more abstractly.
+But suffice to say, now, whenever we want to like, for example,
+make a transition, if someone scores here,
+like if we're going to the left side of the screen,
+it's ball x is less than zero.
+All we have to do is just set this state to serve
+and our update function is then going to update appropriately.
+So any questions on how sort of state machines or the state
+works here in the context of Pong?
+Yes.
+AUDIENCE: So the state machine is the relationship to the state
+or is the container of the states?
+COLTON OGDEN: The state machine is sort of a--
+the overall conceptual look at what your different states
+are and their transitions, yes.
+And in future weeks we're not implementing a state machine
+object or a class here.
+But in future weeks, we will see the state machine class
+that manages transitions between different states in a more
+modular and clean fashion.
+All we're doing here is our state machine
+is just if statements and saying if the state is equal to this, then do this.
+And then change the state to some value.
+AUDIENCE: So the state machine is a concept?
+COLTON OGDEN: It is a concept.
+Yeah.
+But we will see an implementation of a state machine as an object next week.
+Any more questions?
+OK.
+Cool.
+So currently we have scoring.
+As we saw, the player one score and player two score are getting
+incremented now and, therefore, getting rendered to the screen
+whenever we go to the left or the right edge.
+So we're keeping track of score.
+But what do we need now in order for someone to win?
+AUDIENCE: [INAUDIBLE].
+COLTON OGDEN: Sorry?
+AUDIENCE: [INAUDIBLE].
+COLTON OGDEN: Yes it does.
+Exactly.
+So it's actually quite simple.
+All we need to really do is just an if statement, right?
+If someone's score is equal to some value, 10, then some player has won.
+So if we look at player-- if you look at Pong 10, we go to main,
+and go to here, line 174, and also line 160,
+we can see that all it literally is is in our logic
+from before, where we're just testing to see whether the ball is
+gone beyond the left or the right edge.
+Because this is effectively where you need to do your check anyway
+to see whether someone scored a point.
+So all we're doing is adding logic to that part of the program
+and saying after we increment their score.
+If it's equal to 10 we're setting a value called the winning player.
+We're going to set it to two.
+So if the ball.x is less than zero, then that means that player one got
+scored on because it went pass the left edge of the screen.
+Therefore, player two score should go up.
+And, therefore, the winning player should be, too, if the player two or--
+two score is equal to 10.
+And in this case, see, we're here, we're setting a new state done,
+and then if that's not the case, or if their score is still less than 10,
+we should still-- we should set it back to serve, and then reset the ball.
+And so if we go to our update function, here--
+actually, we're doing it in our update phase.
+So, currently, if it's the done state, the ball gets reset
+but no update is being applied to the ball in that case.
+We still have scores 10.
+It'll still render the score, so score whoever's got 10
+and it'll show the other player's score.
+And the actual logic that applies here, whenever
+we want to break out of that state, is in our love.keypressed key function.
+We see you're on line 227.
+If game state is equal to done, which we set it to before,
+and this will only execute if they've pressed
+Enter or return, so it's effectively waiting
+for them to press Enter or Return.
+You want to set game save back to serve.
+We want to reset the ball.
+We want to initialize those scores back to zero.
+So we're setting up a brand new game, effectively.
+If the winning player is one, then we'll give serving player to two
+so that they have the advantage on the next game,
+and then otherwise set it to one.
+And if we go down to our render function, so down to line 275,
+if we're in the done state, then we should render to the screen player
+and then winning player, because, remember,
+we set winning player to one or two, depending on whether--
+depending on who won and who scored the tenth point.
+We'll say player one or two wins, and we'll just render that and then
+press Enter to restart after that.
+And that's the logic for that.
+And we can see this in playoffs.
+If it's too slow, we might not have to go through an entire run.
+But I sped up the--
+whoops-- I want to actually get the ball back.
+I set up the speed so it's-- we're in the serve state,
+we're in the play state, it's up-- the ball bounced back.
+It's going to be a bit tedious, but suffice to say, it's a big payoff.
+Don't worry.
+
+Should have set the speed a little faster.
+Almost there.
+
+It's getting tense.
+And player one wins.
+So there we-- we're also setting the font to a larger size, and in the code
+I create a new font object that's basically
+between the small font and the score font, which is a large font.
+So 16 size font.
+And so player one wins, and that's really all it boils down to.
+Just keeping track of your counter and just making sure that when you do
+hit 10 in your logic for detecting the screen collisions,
+that you set the state to done.
+And if the state is done, then you just need to monitor keyboard input
+and see whenever someone presses enter.
+Someone press Enter in our love.keypressed,
+it does the-- it has the effect of setting
+player-- it's player two serve because player one won so that's only fair.
+We're going to press Enter to serve and then we begin a brand new game.
+And that's simple.
+So now we have an infinitely playable game with a bunch of simple states.
+We're missing a very important detail, though, in my opinion,
+and that's sound.
+Currently, our game is just very--
+it's great, the gameplay all works.
+Everything is working fine, but just missing a little polish.
+And so what we're going to do is we're going
+to start adding audio to the game, which is, in my opinion,
+one of the more fun things to add because it also means you're
+close to the end of your project.
+Love.audio.newsource is a function we're going to look at here.
+All this is going to do is take a path and then optionally a type.
+And this path is going to be to a sound file,
+and it's going to create an audio object that you can play back
+at any point in your application.
+So what we're going to effectively do is just whenever a collision happens,
+depending on what type of collision it is, we'll just play a particular sound.
+And a program that I really like to use for all of this,
+and I-- what I encourage you guys to download
+if you want to start tinkering with your own sounds for your project,
+is a program called bfxr.
+It's free on Windows and Mac.
+I'm not sure if they have a Linux port.
+They might have a Linux port of a similar program called sfxr
+which is what this is based off of.
+But what this allows you to do is just generate a bunch of random sounds.
+And I can illustrate that shortly for you.
+If you would like to grab it, it's on bfxr.net.
+It's a super quick download and--
+here, I'll actually-- I'll demonstrate it just so we can see how it plays out.
+So this is the interface.
+Make sure I have some audio.
+And then there is a lot of different presets here.
+So there's pickup slash coin, laser slash shoot.
+It's meant for sort of like small games like this,
+like implementing on the fly prototype audio type stuff.
+But you can see, it just implements--
+I'll turn that down, it's a little loud.
+It-- we have power-ups, for example.
+So every time I click on this, it's going to give us a random power-up so.
+[COMPUTER SOUND EFFECTS]
+
+And then randomized, you get all sorts of weird nasty stuff.
+And then-- the stuff that we'll use is blip slash select.
+Most of the things in our in like interfaces and games like Pong you
+just want simple sounds like this.
+So I've already done the work of generating a few sounds
+that I thought fit pretty well.
+I'll go ahead and show you the code first in Pong 11.
+If we go to-- if you'll see-- if you look at the directory structure,
+you'll see we have a sounds folder.
+In the sounds folder, I've created three sounds, paddle hit, which
+is anytime the paddle hits the ball.
+Score, which is when any-- anytime the ball
+goes past the left or the right boundary of the screen.
+And then wall hit, so any time the ball touches
+the top or the bottom of the screen.
+And so the logic of this is extremely simple.
+All we need to do is whenever--
+we already have it implemented, so all we need to do is--
+
+oh, first thing, I should say, and this is a good illustration of a table.
+And we'll start to see this a lot more in the future.
+We didn't really use tables much in this lecture,
+but the table is Lua's like sort of be all, end all, data structure.
+It's the dictionary-- Python dictionary, JavaScript object.
+It's an array, it's everything that you need for anything
+beyond simple variables in Lua.
+It's what everything, even like classes in other libraries are made out of.
+In this case, we're just initializing a table here called sounds,
+and we're passing in three keys so it takes-- it can take in key value pairs,
+or you can just give it a list of values and it will create indices for them
+implicitly.
+Here, we're just passing in like you would do in Python or JavaScript.
+Paddle hit, and note that it does need these square brackets in order
+to initialize key value pairs in a table like-- in this format here.
+Paddle hit gets love.audio.newsource.
+And in this case, it just takes in a path,
+so sounds slash paddle head dot wave.
+And we're giving it the key word-- or the string static,
+which is the type of asset it is--
+it's stored as.
+So you can have either static or stream audio assets.
+So if they're static, they're loaded in memory
+and they're kept in memory for the execution of your program.
+If they're stream, then they're loaded on the fly as needed
+by your game engine.
+And streamed audio assets can be helpful if you
+have a huge game with a ton of sounds and a long like large audio files.
+You don't want to keep all those in memory, necessarily,
+because that could take up many, many, many megs or gigs of audio.
+And if you're sort of loading assets on the fly,
+if you have dynamic loading in your game,
+then that's another thing you should take into consideration.
+In this case, these are very tiny sound files,
+because they're like-- like a fraction of a second long.
+So we're just setting them all to static so they get preserved in memory,
+and we're just loading all three of them into this table.
+And if we want to refer to these later on, all we need to do is sounds--
+we can either reference sounds.paddlehit, like that,
+if we wanted to.
+Because by default, Lua just gives you a dot keyword, sort of the way JavaScript
+does its objects, with the same name as the key that you passed in,
+or you can do it the Pythonic way, which is, without the dot, sorry--
+with just square brackets and now have the same of-- those two are equivalent.
+It won't work, though, if you decided to put a space in your key,
+it will, I believe, it will--
+just won't work at all, but it may inject an underscore.
+I'll have to test it out and find out.
+But, generally, it's not best practice to use dot
+when you already have the keys lined up like this, anyway.
+And what you can do with strings that you
+can't do with dot using the dot notation,
+is dynamically generate a lookup of your table with you--
+which you can do with strings, which you-- yeah,
+because you can't in a four loop do four something in table,
+and then table dot something, that just won't work.
+But you can do for everything in your table
+and then look up the key as that value, that iterated value in your table.
+We'll see examples of that in future lectures.
+But that's just something to keep in mind.
+So we have our table here, a sounds table.
+Oh, and-- and we have our sounds ready, they're loaded in memory.
+All we need to do now is wherever we have
+anything that, like any collision in our code, we just do this.
+It's as simple as the table.
+At the key that we want, colon, which is Lua's
+way of calling a function of a class or a table.
+Colon play, and the play function is part of the new source audio
+object in LOVE that we created in the table,
+and that will just have the effect of just playing it once.
+You can set it to looping.
+You can say the sounds paddle hit, set looping to true,
+and it will just infinitely play over and over again,
+which we wouldn't want for a sound like this.
+It would sound obnoxious.
+But if you have a music track, for example,
+in a level, or something like that, you would
+want set looping to be true so that when it finally ends,
+your user isn't just playing a game in silence.
+So we're doing it with paddle hit, we're doing it with wall hit as well.
+So I've named them appropriately so that it's easy to infer where
+and for what purpose the sound files are used.
+So whenever they're at the upper or lower boundaries, play the wall
+hit sound, and then whenever the ball reaches
+the left or the right edge of the screen,
+just play the score sound effect.
+And so if we play our game, and this is always one of my more favorite parts
+is playing the game with audio because it just makes
+such a difference, in my opinion.
+We get sound effects.
+It's a little thing, and it's very easy, but it adds-- it adds so much flavor.
+And then (explosion), and there we go.
+And then our game is practically implemented at this point.
+There's just one more example that I would
+like to show you guys, a small example, because all of the examples
+thus far have had the resize equal-- resizable equals false.
+Sort of key in the push setup screen initializer,
+and in case you want to have a game where you can resize your window,
+all we need to do is call a function called love.resize,
+which takes a width and a height.
+And what we're going to end up doing with that,
+specifically, for our use case, because we're using push,
+we're going to go to Pong 12.
+And then if we go to main.lua we see here on line 85,
+I've changed resizable to equal true now so that it will actually
+allow us to resize the application.
+If that's false, you won't even be able to click and drag
+the bottom corner of the screen, it just won't let you do it.
+And then all you have to do is call love.resizewidthheight,
+and then pass in push resize with height.
+Because push underneath the hood takes a texture and renders to it,
+and then upscaled it to fill your window,
+and so it needs to know what your current window dimensions are so
+that it can upscale it to fit the right dimensions.
+And push also adds things like letterboxing,
+which is convenient if you want to maintain the exact same aspect ratio.
+And in a game where maybe you have the UI that's
+driven by the size of your application, this function
+will be important because then you can resize your--
+you can resize and reposition your UI elements appropriately.
+Because if your game is small, maybe you want certain parts of UI
+to be invisible, or in a different location
+altogether, just so that you don't take up a ton of screen space,
+and just to accommodate all possible users of your application.
+But that has the effect now of-- if we go into Pong 12
+and then run it, actually, might not even be able to use the but-- yeah,
+I can just do this now.
+I can resize it, and it'll maintain the virtual width and height
+that we set it to before, because that's like first and foremost
+what push will do and it'll letterbox no matter
+what size your application is to make sure that it maintains that aspect
+ratio.
+So if you're beyond that aspect ratio vertically or horizontally,
+you'll get the appropriate letterboxing for it.
+So it's super convenient.
+You don't have to worry about your users getting super distorted aspect ratios,
+because they are using some sort of unforeseen resolution.
+That will always maintain it even if it's super tiny
+because their monitor is super thin.
+It will always maintain the aspect ratio.
+But that's pretty much it for Pong, actually.
+We have a complete game, start to finish, and if you have any questions,
+I'd be happy to answer them.
+
+Any questions?
+Cool.
+All right.
+Well, I'm excited to teach the rest of this course to you guys.
+We've only scratched the surface.
+We have a lot more to cover.
+Next week, we'll actually be covering Flappy Bird
+so we'll get some nice colorful graphics, which
+is a stark difference to our black and white aesthetics today.
+But that's it for Pong.
+So thanks for coming.
